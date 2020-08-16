@@ -1,0 +1,14 @@
+{
+  "name": "avenidaz-node",
+  "version": "1.0.0",
+  "description": "back end of avenida z",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Luis Ho Ku",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
