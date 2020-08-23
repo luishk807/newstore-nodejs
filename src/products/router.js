@@ -22,12 +22,15 @@ router.delete('/products', (req, res, next) => {
 
 router.post('/products', (req, res, next) => {
   // add / update products
-  client.query('SELECT * FROM employees where id = $1', [1], function (err, result) {
-      if (err) {
-          res.status(400).send(err);
-      }
-      console.log(result)
-      res.status(200).json(result.rows);
+  // client.query('SELECT * FROM employees where id = $1', [1], function (err, result) {
+  //     if (err) {
+  //         res.status(400).send(err);
+  //     }
+  //     console.log(result)
+  //     res.status(200).json(result.rows);
+  // });
+  Employee.create(req.body.form).then((employee) => {
+    res.status(200).json(employee);
   });
 });
 
