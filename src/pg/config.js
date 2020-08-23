@@ -16,15 +16,10 @@ const sequelize = new Sequelize(PGDATABASE, PGUSER, PGPASSWORD, {
   dialect: 'postgres'
 });
 
-
-const Employee = pgconfig.sequelize.define('employee', {
-  name: {
-    type: Sequelize.TEXT
-  },
-  rollnumber: {
-    type: Sequelize.INTEGER
-  }
-});
+//var connectionString = `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGHOST}/${PGDATABASE}`;
+//const client = new Client({
+//   connectionString: connectionString
+// });
 
 sequelize.authenticate().then(() => {
   console.log('Connection has been established successfully.');
@@ -32,4 +27,8 @@ sequelize.authenticate().then(() => {
   console.error('Unable to connect to the database:', err);
 });
 
-exports.sequelize = sequelize;
+const getSequelize = () => {
+  return sequelize;
+}
+
+module.exports.getSequelize = getSequelize;
