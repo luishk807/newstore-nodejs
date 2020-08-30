@@ -4,7 +4,6 @@ const pgconfig = require('../config')
 const sequelize = pgconfig.getSequelize();
 
 const Product = sequelize.define('product', {
-  id: { type: Sequelize.BIGINT, primaryKey: true },
   name: { type: Sequelize.TEXT },
   amount: { type: Sequelize.DECIMAL },
   category: { type: Sequelize.BIGINT },

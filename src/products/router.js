@@ -7,7 +7,7 @@ const EmployeeModel = require('../pg/models/Employees');
 const ProductModel = require('../pg/models/Products');
 
 const Employee = EmployeeModel.getEmployeeModel();
-const Product = ProductModel.getProductModel();
+ const Product = ProductModel.getProductModel();
 
 router.all('*', cors());
 
@@ -43,21 +43,30 @@ router.post('/products', (req, res, next) => {
 
 router.get('/products', async(req, res, next) => {
   // get products
-  Product.findOne({
-    where: {
-      id: 1
-    }
-  }).on("success", (product) => {
-    if (product) {
-      product.update({
-        name: "jane"
-      }).success((data) => {
-        res.send(data)
-      }).error((err) => {
-        res.send(err)
-      })
-    }
-  })
+  let product = null;
+
+  // if (req.body.id) {
+  //   product = await Product.findAll({ where: {id: req.body.id}});
+  // } else {
+  //   product = await Product.findAll();
+  // }
+  product = await Product.findAll();
+  if(Object.keys(product).length) {
+    res.send(product)
+  }else{
+    res.send("empty")
+  }
+  // .on("success", (product) => {
+  //   if (product) {
+  //     product.update({
+  //       name: "jane"
+  //     }).then((data) => {
+  //       res.send(data)
+  //     }, (err) => {
+  //       res.send(err)
+  //     })
+  //   }
+  // })
   // Product.create({
   //   // 'name': 'test',
   //   // 'stock': 2,
