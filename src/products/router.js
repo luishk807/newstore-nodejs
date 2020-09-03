@@ -28,34 +28,42 @@ router.delete('/products', (req, res, next) => {
 
 router.post('/products', (req, res, next) => {
   // add / update products
-  if (req.body.id) {
-
-  } else {
-    Employee.create({ name: 'Jane Doe', rollnumber: 111 }).then((employee) => {
-      res.status(200).json(employee);
+    const body = req.params;
+    Product.create(
+    {
+      'name': body.name,
+      'stock': body.stock,
+      'amount': body.amount,
+      'category': body.category,
+      'brand': body.brand,
+      'model': body.model,
+      'code': body.code,
+      'description': body.description,
+      'vendor': body.vendor,
+      'image[]': body.image,
+    }
+  ).then((product) => {
+      res.status(200).json(product);
     })
-  }
-  // res.json(req.body);
-  // // Employee.create(req.body.form).then((employee) => {
-  // //   res.status(200).json(employee);
-  // // });
+});
+
+router.get('/products/:id', async(req, res, next) => {
+    product = await Product.findAll({ where: {id: req.params.id}});
+    res.json(product)
 });
 
 router.get('/products', async(req, res, next) => {
   // get products
   let product = null;
-
-  // if (req.body.id) {
-  //   product = await Product.findAll({ where: {id: req.body.id}});
-  // } else {
-  //   product = await Product.findAll();
-  // }
   product = await Product.findAll();
-  if(Object.keys(product).length) {
-    res.send(product)
-  }else{
-    res.send("empty")
-  }
+
+  res.json(product)
+  // product = await Product.findAll();
+  // if(Object.keys(product).length) {
+  //   res.send(product)
+  // }else{
+  //   res.send("empty")
+  // }
   // .on("success", (product) => {
   //   if (product) {
   //     product.update({
