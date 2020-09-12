@@ -1,11 +1,11 @@
 const router = require('express').Router();
 const cors = require('cors');
-const config = require('../config.js');
-const data = require('../samples/products.json');
+const config = require('../../config.js');
+const data = require('../../samples/products.json');
 
-const BrandModel = require('../pg/models/Brands');
+const Model = require('../../pg/models/Brands');
 
-const Brand = BrandModel.getBrandModel();
+const Brand = Model.getModel();
 
 router.all('*', cors());
 
@@ -28,14 +28,6 @@ router.post('/brands', (req, res, next) => {
 });
 
 router.get('/brands', async(req, res, next) => {
-  // get products
-  // client.query('SELECT * FROM employee where id = $1', [1], function (err, result) {
-  //     if (err) {
-  //         res.status(400).send(err);
-  //     }
-  //     console.log(result)
-  //     res.status(200).json(result.rows);
-  // });
   Brand.findAll().then((brand) => {
       res.status(200).json(brand);
     });

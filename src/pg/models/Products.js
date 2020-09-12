@@ -20,4 +20,4 @@ const getProduct = () => {
   return Product;
 }
 
-module.exports.getProductModel = getProduct;
+module.exports.getModel = getProduct;

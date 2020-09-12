@@ -16,4 +16,4 @@ const getEmployee = () => {
   return Employee;
 }
 
-module.exports.getEmployeeModel = getEmployee;
+module.exports.getModel = getEmployee;

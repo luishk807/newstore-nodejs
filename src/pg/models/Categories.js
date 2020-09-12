@@ -3,14 +3,14 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const Brand = sequelize.define('brand', {
+const Category = sequelize.define('category', {
   name: {
     type: Sequelize.TEXT
   }
 });
 
-const getBrand = () => {
-  return Brand;
+const getCategory = () => {
+  return Category;
 }
 
-module.exports.getModel = getBrand;
+module.exports.getModel = getCategory;
