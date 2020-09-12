@@ -44,10 +44,12 @@ router.post('/products', (req, res, next) => {
       'image[]': body.image,
     }
   ).then((product) => {
+    let counter = 1;
     const newImages = images.map((image) => {
       return {
         'product_id': product.id,
-        'img_url': image
+        'img_url': image,
+        'position': counter++
       }
     })
     ProductImages.bulkCreate(newImages).then((images) => {
