@@ -3,17 +3,20 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductsImaage = sequelize.define('products_images', {
+const ProductImaage = sequelize.define('product_images', {
   product_id: {
     type: Sequelize.BIGINT
   },
   img_url: {
     type: Sequelize.TEXT
+  },
+  position: {
+    type: Sequelize.BIGINT
   }
 });
 
-const getProductsImages = () => {
-  return ProductsImaage;
+const getProductImages = () => {
+  return ProductImaage;
 }
 
-module.exports.getModel = getProductsImages;
+module.exports.getModel = getProductImages;

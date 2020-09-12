@@ -3,10 +3,10 @@ const cors = require('cors');
 const config = require('../../config.js');
 const data = require('../../samples/products.json');
 
-const ProductsImagesModel = require('../../pg/models/ProductsImages');
+const ProductImagesModel = require('../../pg/models/ProductImages');
 const Model = require('../../pg/models/Products');
 
-const ProductsImages = ProductsImagesModel.getModel();
+const ProductImages = ProductImagesModel.getModel();
 const Product = Model.getModel();
 
 router.all('*', cors());
@@ -50,7 +50,7 @@ router.post('/products', (req, res, next) => {
         'img_url': image
       }
     })
-    ProductsImages.bulkCreate(newImages).then((images) => {
+    ProductImages.bulkCreate(newImages).then((images) => {
       res.status(200).json(product);
     })
   })
