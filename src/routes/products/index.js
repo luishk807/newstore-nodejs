@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const cors = require('cors');
+const multer = require('multer');
 const config = require('../../config.js');
 const data = require('../../samples/products.json');
 
@@ -10,6 +11,17 @@ const ProductImages = ProductImagesModel.getModel();
 const Product = Model.getModel();
 
 router.all('*', cors());
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/images/products')
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' +file.originalname )
+  }
+})
+
+var upload = multer({ storage: storage }).array('image')
 
 router.delete('/products', (req, res, next) => {
   // delete products
@@ -28,45 +40,56 @@ router.delete('/products', (req, res, next) => {
 
 router.post('/products', (req, res, next) => {
   // add / update products
-    const body = req.query;
-    const images = body.image;
-    Product.create(
-    {
-      'name': body.name,
-      'stock': body.stock,
-      'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
-      'model': body.model,
-      'code': body.code,
-      'description': body.description,
-      'vendor': body.vendor,
-      'image[]': body.image,
+  upload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+        return res.status(500).json(err)
+    } else if (err) {
+        return res.status(500).json(err)
     }
-  ).then((product) => {
-    let counter = 1;
-    const newImages = images.map((image) => {
-      return {
-        'product_id': product.id,
-        'img_url': image,
-        'position': counter++
+    const body = req.body;
+    Product.create(
+      {
+        'name': body.name,
+        'stock': body.stock,
+        'amount': body.amount,
+        'category': body.category,
+        'brand': body.brand,
+        'model': body.model,
+        'code': body.code,
+        'description': body.description,
+        'vendor': body.vendor,
       }
-    })
-    ProductImages.bulkCreate(newImages).then((images) => {
-      res.status(200).json(product);
+    ).then((product) => {
+      let counter = 1;
+      const newImages = req.files.map((data) => {
+        return {
+          'product_id': product.id,
+          'img_url': data.filename,
+          'position': counter++
+        }
+      })
+      ProductImages.bulkCreate(newImages).then((images) => {
+        res.status(200).json(product);
+      })
     })
   })
 });
 
 router.get('/products/:id', async(req, res, next) => {
-    product = await Product.findAll({ where: {id: req.params.id}});
+  console.log('hey you', req)
+    let product = await Product.findAll({ where: {id: req.params.id}});
     res.json(product)
 });
 
 router.get('/products', async(req, res, next) => {
   // get products
   let product = null;
-  product = await Product.findAll();
+  if (req.query.id) {
+    product = await Product.findAll({ where: {id: req.query.id}});
+    res.json(product)
+  } else {
+    product = await Product.findAll();
+  }
 
   res.json(product)
 });
