@@ -30,7 +30,9 @@ router.post('/brands', (req, res, next) => {
 router.get('/brands', async(req, res, next) => {
   Brand.findAll().then((brand) => {
       res.status(200).json(brand);
-    });
+    }).catch((err) => {
+      res.send(err);
+    })
 });
 
 module.exports = router

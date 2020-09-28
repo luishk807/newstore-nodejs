@@ -29,7 +29,9 @@ router.post('/product-images', (req, res, next) => {
 router.get('/product-images', async(req, res, next) => {
   ProductImage.findAll().then((pimage) => {
       res.status(200).json(pimages);
-    });
+    }).catch((err) => {
+      res.send(err)
+    })
 });
 
 module.exports = router

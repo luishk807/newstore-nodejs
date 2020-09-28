@@ -85,13 +85,20 @@ router.get('/products', async(req, res, next) => {
   // get products
   let product = null;
   if (req.query.id) {
-    product = await Product.findAll({ where: {id: req.query.id}});
-    res.json(product)
+    try {
+      product = await Product.findAll({ where: {id: req.query.id}});
+      res.json(product)
+    } catch(err) {
+      res.send(err)
+    }
   } else {
-    product = await Product.findAll();
+    try {
+      product = await Product.findAll();
+      res.json(product)
+    } catch(err) {
+      res.send(err)
+    }
   }
-
-  res.json(product)
 });
 
 module.exports = router

@@ -28,7 +28,9 @@ router.post('/categories', (req, res, next) => {
 router.get('/categories', async(req, res, next) => {
   Category.findAll().then((category) => {
       res.status(200).json(category);
-    });
+    }).catch((err) => {
+      res.send(err)
+    })
 });
 
 module.exports = router
