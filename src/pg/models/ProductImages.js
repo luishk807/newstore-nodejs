@@ -4,7 +4,7 @@ const pgconfig = require('../config')
 const sequelize = pgconfig.getSequelize();
 
 const ProductImaage = sequelize.define('product_images', {
-  product_id: {
+  productId: {
     type: Sequelize.BIGINT
   },
   img_url: {

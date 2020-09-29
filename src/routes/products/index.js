@@ -10,6 +10,12 @@ const Model = require('../../pg/models/Products');
 const ProductImages = ProductImagesModel.getModel();
 const Product = Model.getModel();
 
+Product.hasMany(ProductImages, { as: "product_images" });
+ProductImages.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+});
+
 router.all('*', cors());
 
 var storage = multer.diskStorage({
@@ -63,7 +69,7 @@ router.post('/products', (req, res, next) => {
       let counter = 1;
       const newImages = req.files.map((data) => {
         return {
-          'product_id': product.id,
+          'productId': product.id,
           'img_url': data.filename,
           'position': counter++
         }
@@ -86,7 +92,7 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findAll({ where: {id: req.query.id}});
+      product = await Product.findAll({ where: {id: req.query.id},include:['product_images']});
       res.json(product)
     } catch(err) {
       res.send(err)
