@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
 const multer = require('multer');
+const fs = require('fs');
 const config = require('../../config.js');
 const data = require('../../samples/products.json');
 
@@ -14,6 +15,7 @@ Product.hasMany(ProductImages, { as: "product_images" });
 ProductImages.belongsTo(Product, {
   foreignKey: "productId",
   as: "product",
+  onDelete: 'CASCADE',
 });
 
 router.all('*', cors());
@@ -29,18 +31,35 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage }).array('image')
 
-router.delete('/products', (req, res, next) => {
+router.delete('/products/:id', (req, res, next) => {
   // delete products
-  Product.destroy({
-    where: {
-      id: '1'
-    }
-  }).then((deleteRecord) => {
-    if (deleteRecord) {
-      res.json({ data: 'deleted'});
-    }
-  }, (err) => {
-      res.json(err);
+  Product.findAll({ where: {id: req.params.id},include:['product_images']})
+  .then((product) => {
+    const mapFiles = product[0].product_images.map(data => {
+      return './public/images/products/'+data.img_url;
+    })
+    Product.destroy({
+      where: {
+        id: product[0].id
+      }
+    }).then((deletedRecord) => {
+      if (deletedRecord) {
+        // console.log(deletedRecord, mapFiles)
+        try {
+          mapFiles.forEach(data => {
+            console.log('deletiung',data)
+            // if (fs.existsSync(data)) {
+              fs.unlinkSync(data);
+            //}
+          })
+          res.status(200).json({ message: "Product successfully deleted" });
+        } catch (e) {
+          res.status(400).json({ message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
+        }
+      }
+    }, (err) => {
+        res.json(err);
+    })
   })
 });
 
@@ -125,7 +144,6 @@ router.post('/products', (req, res, next) => {
 });
 
 router.get('/products/:id', async(req, res, next) => {
-  console.log('hey you', req)
     let product = await Product.findAll({ where: {id: req.params.id}});
     res.json(product)
 });
