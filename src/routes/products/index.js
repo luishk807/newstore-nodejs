@@ -72,15 +72,9 @@ router.put('/products/:id', (req, res, next) => {
     }
     const body = req.body;
     const pid = req.params.id;
-
     
-    Product.findAll({ where: {id: req.params.id},include:['product_images']})
-    .then(function (product) {
-      // Check if record exists in db
-      const mapFiles = product[0].product_images.map(data => {
-        return './public/images/products/'+data.img_url;
-      })
-      product.update({
+    Product.update(
+      {
         'name': body.name,
         'stock': body.stock,
         'amount': body.amount,
@@ -90,38 +84,111 @@ router.put('/products/:id', (req, res, next) => {
         'code': body.code,
         'description': body.description,
         'vendor': body.vendor,
-      })
-      .success(function (new_product) {
-        let counter = 1;
-        if (req.files) {
-          
-          // delete all saved images
-          try {
-            mapFiles.forEach(data => {
-              fs.unlinkSync(data);
-            })
-          } catch (e) {
-            res.status(400).json({ message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
-          }
-          
-          ProductImages.destroy({ where: { productId: [pid] }})
-          .then((newProduct) => {
-            const newImages = req.files.map((data) => {
-              return {
-                'productId': new_product.id,
-                'img_url': data.filename,
-                'position': counter++
-              }
-            })
-            ProductImages.bulkCreate(newImages).then((images) => {
-              res.status(200).json(new_product);
+      },{
+        where: {
+          id: pid
+        }
+      }
+    ).then((updated) => {
+      console.log("confirmed")
+
+      let message = "Product Updated";
+      // delete all images first in servers
+      if (body.saved) {
+        const mapFiles = body.saved.map(data => {
+          return './public/images/products/'+data.img_url;
+        })
+        try {
+          mapFiles.forEach(data => {
+            fs.unlinkSync(data);
+          })
+
+          ProductImages.destroy({ where: body.saved.map(function (el) {
+            return parseInt(el.id, 10)
             })
           })
-        } else {
-          res.status(200).json(new_product);
+        } catch (e) {
+          message += " .Error on deleting image!";
         }
-      })
+      }
+
+      let counter = 1;
+      // save all data to product images
+      if (req.files) {
+        let newImages = req.files.map((data) => {
+          return {
+            'productId': new_product.id,
+            'img_url': data.filename,
+            'position': counter++
+          }
+        })
+
+        // save entired bulk to product images
+        ProductImages.bulkCreate(newImages).then((images) => {
+          res.status(200).json({
+            data: new_product,
+            message: message
+          });
+        })
+      } else {
+        res.status(200).json({
+          data: new_product,
+          message: message
+        });
+      }
     })
+
+
+
+
+    // Product.findAll({ where: {id: req.params.id},include:['product_images']})
+    // .then(function (product) {
+    //   // Check if record exists in db
+    //   const mapFiles = product[0].product_images.map(data => {
+    //     return './public/images/products/'+data.img_url;
+    //   })
+    //   product.update({
+    //     'name': body.name,
+    //     'stock': body.stock,
+    //     'amount': body.amount,
+    //     'category': body.category,
+    //     'brand': body.brand,
+    //     'model': body.model,
+    //     'code': body.code,
+    //     'description': body.description,
+    //     'vendor': body.vendor,
+    //   })
+    //   .success(function (new_product) {
+    //     let counter = 1;
+    //     if (req.files) {
+          
+    //       // delete all saved images
+    //       try {
+    //         mapFiles.forEach(data => {
+    //           fs.unlinkSync(data);
+    //         })
+    //       } catch (e) {
+    //         res.status(400).json({ message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
+    //       }
+          
+    //       ProductImages.destroy({ where: { productId: [pid] }})
+    //       .then((newProduct) => {
+    //         const newImages = req.files.map((data) => {
+    //           return {
+    //             'productId': new_product.id,
+    //             'img_url': data.filename,
+    //             'position': counter++
+    //           }
+    //         })
+    //         ProductImages.bulkCreate(newImages).then((images) => {
+    //           res.status(200).json(new_product);
+    //         })
+    //       })
+    //     } else {
+    //       res.status(200).json(new_product);
+    //     }
+    //   })
+    // })
   })
 });
 
