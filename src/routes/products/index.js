@@ -90,27 +90,33 @@ router.put('/products/:id', (req, res, next) => {
         }
       }
     ).then((updated) => {
-      console.log("confirmed")
+      console.log("confirmed", pid)
 
       let message = "Product Updated";
       // delete all images first in servers
       const partBodySaved = JSON.parse(req.body.saved);
-      if (partBodySaved.length) {
-        console.log(partBodySaved)
-        const mapFiles = partBodySaved.map(data => {
-          return './public/images/products/'+data.img_url;
+      console.log(typeof partBodySaved)
+      if (partBodySaved && Object.keys(partBodySaved).length) {
+        let mapFiles = []
+        let index = []
+        Object.keys(partBodySaved).forEach((key) => {
+          mapFiles.push('./public/images/products/'+partBodySaved[key].img_url)
+          index.push(partBodySaved[key])
         })
+        
+        // delete image selected
         try {
           mapFiles.forEach(data => {
             fs.unlinkSync(data);
           })
-
-          ProductImages.destroy({ where: partBodySaved.map(function (el) {
-            return parseInt(el.id, 10)
-            })
-          })
         } catch (e) {
           message += " .Error on deleting image!";
+        }
+        // delete data from db
+        try{
+          ProductImages.destroy({ where: index })
+        } catch (e) {
+          console.log(e)
         }
       }
 
