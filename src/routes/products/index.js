@@ -94,9 +94,9 @@ router.put('/products/:id', (req, res, next) => {
 
       let message = "Product Updated";
       // delete all images first in servers
-      console.log("saved",body.saved)
-      if (body.saved) {
-        const mapFiles = body.saved.map(data => {
+      const partBodySaved = JSON.parse(req.body.saved);
+      if (partBodySaved) {
+        const mapFiles = partBodySaved.map(data => {
           return './public/images/products/'+data.img_url;
         })
         try {
@@ -104,7 +104,7 @@ router.put('/products/:id', (req, res, next) => {
             fs.unlinkSync(data);
           })
 
-          ProductImages.destroy({ where: body.saved.map(function (el) {
+          ProductImages.destroy({ where: partBodySaved.map(function (el) {
             return parseInt(el.id, 10)
             })
           })
