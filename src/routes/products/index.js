@@ -95,7 +95,8 @@ router.put('/products/:id', (req, res, next) => {
       let message = "Product Updated";
       // delete all images first in servers
       const partBodySaved = JSON.parse(req.body.saved);
-      if (partBodySaved) {
+      if (partBodySaved.length) {
+        console.log(partBodySaved)
         const mapFiles = partBodySaved.map(data => {
           return './public/images/products/'+data.img_url;
         })
