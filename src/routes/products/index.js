@@ -94,6 +94,7 @@ router.put('/products/:id', (req, res, next) => {
 
       let message = "Product Updated";
       // delete all images first in servers
+      console.log("saved",body.saved)
       if (body.saved) {
         const mapFiles = body.saved.map(data => {
           return './public/images/products/'+data.img_url;
@@ -117,7 +118,7 @@ router.put('/products/:id', (req, res, next) => {
       if (req.files) {
         let newImages = req.files.map((data) => {
           return {
-            'productId': new_product.id,
+            'productId': pid,
             'img_url': data.filename,
             'position': counter++
           }
@@ -126,13 +127,13 @@ router.put('/products/:id', (req, res, next) => {
         // save entired bulk to product images
         ProductImages.bulkCreate(newImages).then((images) => {
           res.status(200).json({
-            data: new_product,
+            data: updated,
             message: message
           });
         })
       } else {
         res.status(200).json({
-          data: new_product,
+          data: updated,
           message: message
         });
       }
