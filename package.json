@@ -10,12 +10,14 @@
   "author": "Luis Ho Ku",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.768.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "multer": "^1.4.2",
     "pg": "^8.3.2",
     "pgtools": "^0.3.0",
-    "sequelize": "^6.3.4"
+    "sequelize": "^6.3.4",
+    "uuid": "^8.3.1"
   }
 }
