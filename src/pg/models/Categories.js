@@ -6,6 +6,12 @@ const sequelize = pgconfig.getSequelize();
 const Category = sequelize.define('category', {
   name: {
     type: Sequelize.TEXT
+  },
+  icon: {
+    type: Sequelize.TEXT
+  },
+  status: {
+    type: Sequelize.BIGINT
   }
 });
 
