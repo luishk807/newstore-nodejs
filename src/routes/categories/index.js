@@ -8,8 +8,15 @@ const Model = require('../../pg/models/Categories');
 
 const Category = Model.getModel();
 
-
 router.all('*', cors());
+
+var storage = multer.memoryStorage({
+  destination: function (req, file, cb) {
+    cb(null, '')
+  },
+})
+
+var upload = multer({ storage: storage }).single('image')
 
 router.delete('/categories/:id', (req, res, next) => {
   // delete brands
@@ -28,11 +35,12 @@ router.delete('/categories/:id', (req, res, next) => {
 });
 
 
-router.put('/categories/:id', (req, res, next) => {
+router.put('/categories/:id', upload, (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const bid = req.params.id;
 
+  console.log(req)
   Category.update(
     {
       'name': body.name,
@@ -54,7 +62,7 @@ router.put('/categories/:id', (req, res, next) => {
   })
 });
 
-router.post('/categories', (req, res, next) => {
+router.post('/categories', upload, (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
 
