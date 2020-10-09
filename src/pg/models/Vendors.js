@@ -18,6 +18,12 @@ const Vendor = sequelize.define('vendor', {
   },
   img: {
     type: Sequelize.TEXT
+  },
+  status: {
+    type: Sequelize.BIGINT
+  },
+  last_login: {
+    type: Sequelize.TIME
   }
 });
 

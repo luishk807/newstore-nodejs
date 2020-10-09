@@ -39,8 +39,7 @@ router.put('/categories/:id', upload, (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const bid = req.params.id;
-
-  console.log(req)
+  
   Category.update(
     {
       'name': body.name,
