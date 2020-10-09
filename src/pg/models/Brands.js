@@ -6,6 +6,12 @@ const sequelize = pgconfig.getSequelize();
 const Brand = sequelize.define('brand', {
   name: {
     type: Sequelize.TEXT
+  },
+  img: {
+    type: Sequelize.TEXT
+  },
+  status: {
+    type: Sequelize.BIGINT
   }
 });
 
