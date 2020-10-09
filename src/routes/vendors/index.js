@@ -61,7 +61,7 @@ router.delete('/vendors/:id', (req, res, next) => {
 router.put('/vendors/:id', upload, (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
-  const bid = req.params.id;
+  const vid = req.params.id;
   if (req.file) {
     // insert image
     let myFile = req.file.originalname.split('.');
@@ -80,7 +80,7 @@ router.put('/vendors/:id', upload, (req, res, next) => {
     })
 
     // delete current image
-    Vendor.findAll({ where: {id: bid}}).then((vendor) => {
+    Vendor.findAll({ where: {id: vid}}).then((vendor) => {
       const paramsDelete = {
         Bucket: aw3Bucket,
         Key: Vendor.img,
@@ -93,21 +93,27 @@ router.put('/vendors/:id', upload, (req, res, next) => {
     })
 
     dataInsert = {
-      'name': body.name,
-      'status': body.status,
-      'img': fileName,
+      'last_name': body.last_name,
+      'first_name': body.first_name,
+      'password': body.password,
+      'position': body.position,
+      'email': body.email,
+      'img':fileName
     }
   } else {
     dataInsert = {
-      'name': body.name,
-      'status': body.status,
+      'last_name': body.last_name,
+      'first_name': body.first_name,
+      'password': body.password,
+      'position': body.position,
+      'email': body.email,
     }
   }
   Vendor.update(
     dataInsert,
     {
       where: {
-        id: bid
+        id: vid
       }
     }
   ).then((updated) => {
@@ -125,7 +131,6 @@ router.put('/vendors/:id', upload, (req, res, next) => {
 router.post('/vendors', upload, (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
-  
   if (req.file) {
     let myFile = req.file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
@@ -144,17 +149,25 @@ router.post('/vendors', upload, (req, res, next) => {
     })
     
     dataEntry = {
-      'name': body.name,
+      'last_name': body.last_name,
+      'first_name': body.first_name,
+      'password': body.password,
+      'position': body.position,
+      'email': body.email,
       'img':fileName
     }
   } else {
     dataEntry = {
-      'name': body.name,
+      'last_name': body.last_name,
+      'first_name': body.first_name,
+      'password': body.password,
+      'position': body.position,
+      'email': body.email,
     }
   }
 
-  Vendor.create(dataEntry).then((product) => {
-    res.status(200).json(product);
+  Vendor.create(dataEntry).then((vendor) => {
+    res.status(200).json(vendor);
   })
 })
 

@@ -13,6 +13,9 @@ const Vendor = sequelize.define('vendor', {
   position: {
     type: Sequelize.TEXT
   },
+  password: {
+    type: Sequelize.TEXT
+  },
   email: {
     type: Sequelize.TEXT
   },
