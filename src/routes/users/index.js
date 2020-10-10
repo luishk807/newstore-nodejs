@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
-
+const bcrypt = require('bcryptjs');
 const Model = require('../../pg/models/Users');
 const UserAddressModel = require('../../pg/models/UserAddresses');
 
@@ -93,7 +93,7 @@ router.put('/users/:id', upload, (req, res, next) => {
     User.findAll({ where: {id: vid}}).then((user) => {
       const paramsDelete = {
         Bucket: aw3Bucket,
-        Key: User.img,
+        Key: user.img,
       }
       s3.deleteObject(paramsDelete, (err, data) => {
         if (err) {
@@ -125,6 +125,12 @@ router.put('/users/:id', upload, (req, res, next) => {
       'status': body.status,
       'email': body.email,
     }
+  }
+
+  if (body.password) {
+    console.log('passsword: ',cUser.password)
+  } else {
+    console.log("no password chage");
   }
   User.update(
     dataInsert,

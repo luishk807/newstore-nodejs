@@ -19,6 +19,12 @@ const User = sequelize.define('user', {
   email: {
     type: Sequelize.TEXT
   },
+  mobile: {
+    type: Sequelize.TEXT
+  },
+  phone: {
+    type: Sequelize.TEXT
+  },
   img: {
     type: Sequelize.TEXT
   },
