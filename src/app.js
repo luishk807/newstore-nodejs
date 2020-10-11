@@ -14,5 +14,6 @@ app.use('/api', require('./routes/userAddresses'));
 app.use('/api', require('./routes/countries'));
 app.use('/api', require('./routes/users'));
 app.use('/api', require('./routes/genders'));
+app.use('/api', require('./routes/userRoles'));
 
 module.exports = app

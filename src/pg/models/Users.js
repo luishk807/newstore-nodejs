@@ -22,6 +22,9 @@ const User = sequelize.define('user', {
   mobile: {
     type: Sequelize.TEXT
   },
+  userRole: {
+    type: Sequelize.BIGINT
+  },
   phone: {
     type: Sequelize.TEXT
   },

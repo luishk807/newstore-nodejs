@@ -74,7 +74,6 @@ router.put('/users/:id', upload, (req, res, next) => {
   const id = req.params.id;
 
   const partBodySaved = JSON.parse(body.saved)
-  console.log(partBodySaved[0])
 
     // delete current image
   if (partBodySaved[0] || req.file) {
@@ -112,6 +111,7 @@ router.put('/users/:id', upload, (req, res, next) => {
       'gender': body.gender,
       'mobile': body.mobile,
       'status': body.status,
+      'userRoleId': body.userRoleId,
       'img':fileName
     }
   } else {
@@ -122,6 +122,7 @@ router.put('/users/:id', upload, (req, res, next) => {
       'phone': body.phone,
       'gender': body.gender,
       'mobile': body.mobile,
+      'userRoleId': body.userRoleId,
       'status': body.status,
       'email': body.email,
     }
@@ -159,6 +160,7 @@ router.put('/users/:id', upload, (req, res, next) => {
 router.post('/users', upload, (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
+
   if (req.file) {
     let myFile = req.file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
@@ -185,6 +187,7 @@ router.post('/users', upload, (req, res, next) => {
       'gender': body.gender,
       'mobile': body.mobile,
       'email': body.email,
+      'userRoleId': body.userRoleId,
       'img':fileName
     }
   } else {
@@ -193,6 +196,7 @@ router.post('/users', upload, (req, res, next) => {
       'first_name': body.first_name,
       'password': body.password,
       'date_of_birth': body.date_of_birth,
+      'userRoleId': body.userRoleId,
       'phone': body.phone,
       'gender': body.gender,
       'mobile': body.mobile,
@@ -201,6 +205,12 @@ router.post('/users', upload, (req, res, next) => {
   }
 
   User.create(dataEntry).then((user) => {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(body.password, salt, (err, hash) => {
+        User.update({password: hash },{where: {id: user.id }})
+      });
+    })
+  
     res.status(200).json(user);
   })
 })
