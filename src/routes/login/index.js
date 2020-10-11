@@ -28,26 +28,24 @@ router.post('/login', upload, (req, res, next) => {
 
   if (body.email) {
     try {
-
-      bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(body.password, salt, (err, hash) => {
-            User.findAll({ where: {email: body.email},include:['user_addresses']}).then((user) => {
-              console.log(user[0].dataValues.email)
-              // bcrypt.compare(hash, user.password, function(err, res) {
-              // })
-            }).catch((err)=>{
-              console.log("error findint")
-            })
-        });
-          
-        // console.log
-        // bcrypt.compare(body.password, user.password, function(err, res) {
-        //     // res == true
-        //     console.log(res);
-        // });
-
+      User.findAll({ where: {email: body.email}}).then((user) => {
+        if (user.length) {
+          bcrypt.compare(body.password, user[0].dataValues.password, function(err, response) {
+              // res == true
+            if (response) {
+              res.status(200).json({data: response, message: "Login successful", user: user[0]})
+            } else {
+              res.status(200).json({data: response, message: "Invalid user credentials"})
+            }
+          })
+        } else {
+          res.status(200).json({data:false, message: 'user not found'})
+        }
+        // bcrypt.compare(hash, user.password, function(err, res) {
+        // })
+      }).catch((err)=>{
+        res.status(200).json({data:false, message: err})
       })
-      res.status(200).json(user)
     } catch(err) {
       res.status(500).json(err)
     }

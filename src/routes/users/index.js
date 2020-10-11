@@ -208,15 +208,13 @@ router.post('/users', upload, (req, res, next) => {
           'email': body.email,
         }
       }
-    
-      User.create(dataEntry).then((user) => {
-        bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(body.password, salt, (err, hash) => {
-            User.update({password: hash },{where: {id: user.id }})
-          });
-        })
       
-        res.status(200).json(user);
+
+      User.create(dataEntry).then((user) => {
+        bcrypt.hash(body.password, 10, function(err, hash){
+          User.update({password: hash },{where: {id: user.id }})
+        })
+        res.status(200).json({data: true, message: "User succesfully created"});
       })
     }
   });
