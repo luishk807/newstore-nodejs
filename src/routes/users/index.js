@@ -161,58 +161,65 @@ router.post('/users', upload, (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
 
-  if (req.file) {
-    let myFile = req.file.originalname.split('.');
-    const fileType = myFile[myFile.length - 1];
-    const fileName = `${uuid.v4()}.${fileType}`;
-  
-    const params = {
-      Bucket: aw3Bucket,
-      Key: fileName,
-      Body: req.file.buffer,
-    }
-  
-    s3.upload(params, (err, data) => {
-      if (err) {
-        res.status(500).send(err)
+  User.count({where: { email: body.email}}).then((count) => {
+    console.log(count, 'count')
+    if (count) {
+      res.status(200).json({data: false, message: 'email already registered'})
+    } else {
+      if (req.file) {
+        let myFile = req.file.originalname.split('.');
+        const fileType = myFile[myFile.length - 1];
+        const fileName = `${uuid.v4()}.${fileType}`;
+      
+        const params = {
+          Bucket: aw3Bucket,
+          Key: fileName,
+          Body: req.file.buffer,
+        }
+      
+        s3.upload(params, (err, data) => {
+          if (err) {
+            res.status(500).send(err)
+          }
+        })
+        
+        dataEntry = {
+          'last_name': body.last_name,
+          'first_name': body.first_name,
+          'password': body.password,
+          'date_of_birth': body.date_of_birth,
+          'phone': body.phone,
+          'gender': body.gender,
+          'mobile': body.mobile,
+          'email': body.email,
+          'userRoleId': body.userRoleId,
+          'img':fileName
+        }
+      } else {
+        dataEntry = {
+          'last_name': body.last_name,
+          'first_name': body.first_name,
+          'password': body.password,
+          'date_of_birth': body.date_of_birth,
+          'userRoleId': body.userRoleId,
+          'phone': body.phone,
+          'gender': body.gender,
+          'mobile': body.mobile,
+          'email': body.email,
+        }
       }
-    })
     
-    dataEntry = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
-      'password': body.password,
-      'date_of_birth': body.date_of_birth,
-      'phone': body.phone,
-      'gender': body.gender,
-      'mobile': body.mobile,
-      'email': body.email,
-      'userRoleId': body.userRoleId,
-      'img':fileName
+      User.create(dataEntry).then((user) => {
+        bcrypt.genSalt(10, (err, salt) => {
+          bcrypt.hash(body.password, salt, (err, hash) => {
+            User.update({password: hash },{where: {id: user.id }})
+          });
+        })
+      
+        res.status(200).json(user);
+      })
     }
-  } else {
-    dataEntry = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
-      'password': body.password,
-      'date_of_birth': body.date_of_birth,
-      'userRoleId': body.userRoleId,
-      'phone': body.phone,
-      'gender': body.gender,
-      'mobile': body.mobile,
-      'email': body.email,
-    }
-  }
-
-  User.create(dataEntry).then((user) => {
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(body.password, salt, (err, hash) => {
-        User.update({password: hash },{where: {id: user.id }})
-      });
-    })
-  
-    res.status(200).json(user);
-  })
+  });
 })
 
 router.get('/users/:id', async(req, res, next) => {
