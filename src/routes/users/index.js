@@ -71,9 +71,28 @@ router.delete('/users/:id', (req, res, next) => {
 router.put('/users/:id', upload, (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
-  const vid = req.params.id;
+  const id = req.params.id;
+
+  const partBodySaved = JSON.parse(body.saved)
+  console.log(partBodySaved[0])
+
+    // delete current image
+  if (partBodySaved[0] || req.file) {
+    const paramsDelete = {
+      Bucket: aw3Bucket,
+      Key: partBodySaved[0],
+    }
+    s3.deleteObject(paramsDelete, (err, data) => {
+      if (!err) {
+        User.update({ img: null },{
+          where: {
+            id: id
+          }
+        });
+      }
+    })
+  }
   if (req.file) {
-    // insert image
     let myFile = req.file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
     const fileName = `${uuid.v4()}.${fileType}`;
@@ -83,29 +102,11 @@ router.put('/users/:id', upload, (req, res, next) => {
       Body: req.file.buffer,
     }
   
-    s3.upload(params, (err, data) => {
-      if (err) {
-        //res.status(500).json(err)
-      }
-    })
-
-    // delete current image
-    User.findAll({ where: {id: vid}}).then((user) => {
-      const paramsDelete = {
-        Bucket: aw3Bucket,
-        Key: user.img,
-      }
-      s3.deleteObject(paramsDelete, (err, data) => {
-        if (err) {
-        //  res.status(500).json(err)
-        }
-      })
-    })
+    s3.upload(params, (err, data) => {})
 
     dataInsert = {
       'last_name': body.last_name,
       'first_name': body.first_name,
-      'password': body.password,
       'date_of_birth': body.date_of_birth,
       'phone': body.phone,
       'gender': body.gender,
@@ -117,7 +118,6 @@ router.put('/users/:id', upload, (req, res, next) => {
     dataInsert = {
       'last_name': body.last_name,
       'first_name': body.first_name,
-      'password': body.password,
       'date_of_birth': body.date_of_birth,
       'phone': body.phone,
       'gender': body.gender,
@@ -128,15 +128,20 @@ router.put('/users/:id', upload, (req, res, next) => {
   }
 
   if (body.password) {
-    console.log('passsword: ',cUser.password)
-  } else {
-    console.log("no password chage");
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(body.password, salt, (err, hash) => {
+        if (err) {
+          res.status(500).json({data: false, message: err});
+        }
+        User.update({password: hash },{where: {id: id }})
+      });
+    })
   }
   User.update(
     dataInsert,
     {
       where: {
-        id: vid
+        id: id
       }
     }
   ).then((updated) => {
