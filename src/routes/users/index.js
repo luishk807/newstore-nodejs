@@ -3,10 +3,11 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Model = require('../../pg/models/Users');
 const UserAddressModel = require('../../pg/models/UserAddresses');
-
+const verify = require('../verifyToken');
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
@@ -225,7 +226,7 @@ router.get('/users/:id', async(req, res, next) => {
     res.json(user)
 });
 
-router.get('/users', async(req, res, next) => {
+router.get('/users', verify, async(req, res, next) => {
   // get products
   let user = null;
   if (req.query.id) {
