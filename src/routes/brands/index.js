@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
-
+const verify = require('../verifyToken');
 const Model = require('../../pg/models/Brands');
 
 const AWS = require('aws-sdk');
@@ -28,7 +28,7 @@ var upload = multer({ storage: storage }).single('image')
 
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/brands`;
 
-router.delete('/brands/:id', (req, res, next) => {
+router.delete('/brands/:id', verify,  (req, res, next) => {
   // delete brands
   Brand.findAll({ where: {id: req.params.id}})
   .then((brand) => {
@@ -58,7 +58,7 @@ router.delete('/brands/:id', (req, res, next) => {
 });
 
 
-router.put('/brands/:id', upload, (req, res, next) => {
+router.put('/brands/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const bid = req.params.id;
@@ -122,7 +122,7 @@ router.put('/brands/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/brands', upload, (req, res, next) => {
+router.post('/brands', [verify, upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
   

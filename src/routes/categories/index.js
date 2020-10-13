@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
+const verify = require('../verifyToken');
 
 const Model = require('../../pg/models/Categories');
 
@@ -18,7 +19,7 @@ var storage = multer.memoryStorage({
 
 var upload = multer({ storage: storage }).single('image')
 
-router.delete('/categories/:id', (req, res, next) => {
+router.delete('/categories/:id', verify, (req, res, next) => {
   // delete brands
   Category.findAll({ where: {id: req.params.id}})
   .then((brand) => {
@@ -35,7 +36,7 @@ router.delete('/categories/:id', (req, res, next) => {
 });
 
 
-router.put('/categories/:id', upload, (req, res, next) => {
+router.put('/categories/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const bid = req.params.id;
@@ -61,7 +62,7 @@ router.put('/categories/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/categories', upload, (req, res, next) => {
+router.post('/categories', verify, upload, (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
 

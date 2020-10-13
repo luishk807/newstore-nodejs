@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
+const verify = require('../verifyToken');
 
 const Model = require('../../pg/models/Vendors');
 
@@ -28,7 +29,7 @@ var upload = multer({ storage: storage }).single('image')
 
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/vendors`;
 
-router.delete('/vendors/:id', (req, res, next) => {
+router.delete('/vendors/:id', verify, (req, res, next) => {
   // delete brands
   Vendor.findAll({ where: {id: req.params.id}})
   .then((vendor) => {
@@ -58,7 +59,7 @@ router.delete('/vendors/:id', (req, res, next) => {
 });
 
 
-router.put('/vendors/:id', upload, (req, res, next) => {
+router.put('/vendors/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const vid = req.params.id;
@@ -128,7 +129,7 @@ router.put('/vendors/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/vendors', upload, (req, res, next) => {
+router.post('/vendors', [verify, upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
   if (req.file) {

@@ -39,7 +39,7 @@ var upload = multer({ storage: storage }).single('image')
 
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/users`;
 
-router.delete('/users/:id', (req, res, next) => {
+router.delete('/users/:id',verify, (req, res, next) => {
   // delete brands
   User.findAll({ where: {id: req.params.id}, include:['user_addresses']})
   .then((user) => {
@@ -69,7 +69,7 @@ router.delete('/users/:id', (req, res, next) => {
 });
 
 
-router.put('/users/:id', upload, (req, res, next) => {
+router.put('/users/:id',[verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const id = req.params.id;
@@ -158,7 +158,7 @@ router.put('/users/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/users', upload, (req, res, next) => {
+router.post('/users', [verify, upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
 
@@ -221,7 +221,7 @@ router.post('/users', upload, (req, res, next) => {
   });
 })
 
-router.get('/users/:id', async(req, res, next) => {
+router.get('/users/:id', verify, async(req, res, next) => {
     let user = await User.findAll({ where: {id: req.params.id}});
     res.json(user)
 });

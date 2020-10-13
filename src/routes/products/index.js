@@ -4,6 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const data = require('../../samples/products.json');
+const verify = require('../verifyToken');
 
 const ProductImagesModel = require('../../pg/models/ProductImages');
 const Model = require('../../pg/models/Products');
@@ -37,7 +38,7 @@ var storage = multer.memoryStorage({
 
 var upload = multer({ storage: storage }).array('image')
 
-router.delete('/products/:id', (req, res, next) => {
+router.delete('/products/:id', verify, (req, res, next) => {
   // delete products
   Product.findAll({ where: {id: req.params.id},include:['product_images']})
   .then((product) => {
@@ -76,7 +77,7 @@ router.delete('/products/:id', (req, res, next) => {
 });
 
 
-router.put('/products/:id', upload, (req, res, next) => {
+router.put('/products/:id', [verify, upload], (req, res, next) => {
 
 
   const imagesUploaded = req.files.map((file) => {
@@ -186,7 +187,7 @@ router.put('/products/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/products', upload, (req, res, next) => {
+router.post('/products', [verify, upload], (req, res, next) => {
   // add / update products
 
   const imagesUploaded = req.files.map((file) => {

@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
-
+const verify = require('../verifyToken');
 const Model = require('../../pg/models/Stores');
 
 const Store = Model.getModel();
@@ -18,7 +18,7 @@ var storage = multer.memoryStorage({
 
 var upload = multer({ storage: storage }).single('image')
 
-router.delete('/stores/:id', (req, res, next) => {
+router.delete('/stores/:id', verify, (req, res, next) => {
   // delete brands
   Store.findAll({ where: {id: req.params.id}})
   .then((store) => {
@@ -35,7 +35,7 @@ router.delete('/stores/:id', (req, res, next) => {
 });
 
 
-router.put('/stores/:id', upload, (req, res, next) => {
+router.put('/stores/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const sid = req.params.id;
   Store.update(
@@ -67,7 +67,7 @@ router.put('/stores/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/stores', upload, (req, res, next) => {
+router.post('/stores',[verify, upload], (req, res, next) => {
   const body = req.body;
 
   Store.create({

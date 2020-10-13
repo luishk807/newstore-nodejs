@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
-
+const verify = require('../verifyToken');
 const Model = require('../../pg/models/UserAddresses');
 const UserModel = require('../../pg/models/Users');
 
@@ -20,7 +20,7 @@ var storage = multer.memoryStorage({
 
 var upload = multer({ storage: storage }).single('image')
 
-router.delete('/useraddresses/:id', (req, res, next) => {
+router.delete('/useraddresses/:id', verify, (req, res, next) => {
   // delete brands
   UserAddress.findAll({ where: {id: req.params.id}})
   .then((address) => {
@@ -37,7 +37,7 @@ router.delete('/useraddresses/:id', (req, res, next) => {
 });
 
 
-router.put('/useraddresses/:id', upload, (req, res, next) => {
+router.put('/useraddresses/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const sid = req.params.id;
   UserAddress.update(
@@ -69,7 +69,7 @@ router.put('/useraddresses/:id', upload, (req, res, next) => {
   })
 });
 
-router.post('/useraddresses', upload, (req, res, next) => {
+router.post('/useraddresses', [verify, upload], (req, res, next) => {
   const body = req.body;
 
   UserAddress.create({
@@ -88,12 +88,12 @@ router.post('/useraddresses', upload, (req, res, next) => {
   })
 })
 
-router.get('/useraddresses/:id', async(req, res, next) => {
+router.get('/useraddresses/:id', verify, async(req, res, next) => {
     let address = await UserAddress.findAll({ where: {id: req.params.id}});
     res.json(address)
 });
 
-router.get('/useraddresses', async(req, res, next) => {
+router.get('/useraddresses', verify, async(req, res, next) => {
   // get products
   let address = null;
   if (req.query.id) {
