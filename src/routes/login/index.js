@@ -38,7 +38,7 @@ router.post('/login', upload, async(req, res, next) => {
       const validate = await bcrypt.compare(body.password, user[0].dataValues.password);
 
       if (!validate) {
-        return res.status(400).json({data: false, message: "Invalid user credentials"});
+        return res.status(401).json({data: false, message: "Invalid user credentials"});
       }
 
        const token = jwt.sign({id: user[0].id}, process.env.TOKEN_SECRET)
@@ -46,7 +46,7 @@ router.post('/login', upload, async(req, res, next) => {
       res.status(200).json({data: true, message: "Login successful", authorization: token})
 
     } catch(err) {
-      return res.status(500).json(err)
+      return res.status(500).json({data: false, message: "Unable to find user"})
     }
   } else {
       return res.status(500).json({data:false, message: 'email required'})

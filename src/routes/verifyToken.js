@@ -13,6 +13,6 @@ module.exports = function(req, res, next) {
     req.user = verified;
     next()
   } catch(err) {
-    req.status('400').json({data: false, message:'invalid token'})
+    req.status('401').json({data: false, message:'invalid token'})
   }
 }

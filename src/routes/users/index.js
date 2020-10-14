@@ -69,7 +69,7 @@ router.delete('/users/:id',verify, (req, res, next) => {
 });
 
 
-router.put('/users/:id',[verify, upload], (req, res, next) => {
+router.put('/users/:id',[verify,upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const id = req.params.id;
@@ -129,7 +129,7 @@ router.put('/users/:id',[verify, upload], (req, res, next) => {
     }
   }
 
-  if (body.password) {
+  if (body.password && body.password !=='null') {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(body.password, salt, (err, hash) => {
         if (err) {
@@ -234,14 +234,14 @@ router.get('/users', verify, async(req, res, next) => {
       user = await User.findAll({ where: {id: req.query.id},include:['user_addresses']});
       res.status(200).json(user)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(404).json({data:false, message: err})
     }
   } else {
     try {
       user = await User.findAll({include:['user_addresses']});
       res.status(200).json(user)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(404).json({data:false, message: err})
     }
   }
 });
