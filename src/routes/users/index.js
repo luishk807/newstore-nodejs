@@ -9,6 +9,7 @@ const Model = require('../../pg/models/Users');
 const UserAddressModel = require('../../pg/models/UserAddresses');
 const verify = require('../verifyToken');
 const AWS = require('aws-sdk');
+const Op = require('sequelize').Op
 const uuid = require('uuid');
 
 const User = Model.getModel();
@@ -238,12 +239,27 @@ router.get('/users', verify, async(req, res, next) => {
     }
   } else {
     try {
-      user = await User.findAll({include:['user_addresses']});
+      // user = await User.findAll({include:['user_addresses']});
+      let query = {}
+      if (req.user) {
+        query = {
+          where: {
+            id: { [Op.ne]: req.user.id } // This does not work
+          },
+          include:['user_addresses']
+        };
+      } else {
+        query = {
+          include:['user_addresses']
+        };
+      }
+      user = await User.findAll(query)
       res.status(200).json(user)
     } catch(err) {
       res.status(404).json({data:false, message: err})
     }
   }
 });
+
 
 module.exports = router
