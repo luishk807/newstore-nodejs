@@ -194,7 +194,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'gender': body.gender,
           'mobile': body.mobile,
           'email': body.email,
-          'userRoleId': body.userRoleId,
+          'userRole': body.userRole,
           'img':fileName
         }
       } else {
@@ -203,7 +203,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'first_name': body.first_name,
           'password': body.password,
           'date_of_birth': body.date_of_birth,
-          'userRoleId': body.userRoleId,
+          'userRole': body.userRole,
           'phone': body.phone,
           'gender': body.gender,
           'mobile': body.mobile,
