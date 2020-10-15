@@ -47,7 +47,7 @@ router.post('/adminlogin', upload, async(req, res, next) => {
 
        const token = jwt.sign({id: user.id}, process.env.TOKEN_SECRET)
        
-      res.status(200).json({data: true, message: "Login successful", authorization: token})
+      res.status(200).json({data: true, message: "Login successful", user: user, authorization: token})
 
     } catch(err) {
       return res.status(500).json({data: false, message: "Unable to find user"})

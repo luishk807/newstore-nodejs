@@ -29,21 +29,21 @@ router.post('/login', upload, async(req, res, next) => {
 
   if (body.email) {
     try {
-      const user = await User.findAll({ where: {email: body.email}});
+      const user = await User.findOne({ where: {email: body.email}});
       
       if (!user) {
         return res.status(200).json({data:false, message: 'user not found'})
       }
 
-      const validate = await bcrypt.compare(body.password, user[0].dataValues.password);
+      const validate = await bcrypt.compare(body.password, user.dataValues.password);
 
       if (!validate) {
         return res.status(401).json({data: false, message: "Invalid user credentials"});
       }
 
-       const token = jwt.sign({id: user[0].id}, process.env.TOKEN_SECRET)
+       const token = jwt.sign({id: user.id}, process.env.TOKEN_SECRET)
        
-      res.status(200).json({data: true, message: "Login successful", authorization: token})
+      res.status(200).json({data: true, message: "Login successful", user: user, authorization: token})
 
     } catch(err) {
       return res.status(500).json({data: false, message: "Unable to find user"})
