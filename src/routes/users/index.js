@@ -113,7 +113,7 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'gender': body.gender,
       'mobile': body.mobile,
       'status': body.status,
-      'userRoleId': body.userRoleId,
+      'userRole': body.userRole,
       'img':fileName
     }
   } else {
@@ -124,12 +124,12 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'phone': body.phone,
       'gender': body.gender,
       'mobile': body.mobile,
-      'userRoleId': body.userRoleId,
+      'userRole': body.userRole,
       'status': body.status,
       'email': body.email,
     }
   }
-
+  console.log(dataInsert)
   if (body.password && body.password !=='null') {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(body.password, salt, (err, hash) => {
@@ -211,7 +211,6 @@ router.post('/users', [verify, upload], (req, res, next) => {
         }
       }
       
-
       User.create(dataEntry).then((user) => {
         bcrypt.hash(body.password, 10, function(err, hash){
           User.update({password: hash },{where: {id: user.id }})
