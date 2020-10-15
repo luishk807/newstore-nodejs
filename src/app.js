@@ -16,5 +16,6 @@ app.use('/api', require('./routes/users'));
 app.use('/api', require('./routes/genders'));
 app.use('/api', require('./routes/userRoles'));
 app.use('/api', require('./routes/login'));
+app.use('/api', require('./routes/adminlogin'));
 
 module.exports = app
