@@ -5,7 +5,7 @@ module.exports = function(req, res, next) {
   const token = authToken && authToken.split(' ')[1];
 
   if (!token) {
-    return res.status("401").json({data: false, message:'access denied'})
+    return res.status("401").json({status: false, message:'access denied'})
   }
 
   try {
@@ -13,6 +13,6 @@ module.exports = function(req, res, next) {
     req.user = verified;
     next()
   } catch(err) {
-    req.status('401').json({data: false, message:'invalid token'})
+    req.status('401').json({status: false, message:'invalid token'})
   }
 }

@@ -61,13 +61,13 @@ router.delete('/products/:id', verify, (req, res, next) => {
             }
             s3.deleteObject(params, (err, data) => {
               if (err) {
-                res.status(500).send(err)
+                res.status(500).send({status: false, message: err})
               }
             })
           })
-          res.status(200).json({ message: "Product successfully deleted" });
+          res.status(200).json({ status: true, message: "Product successfully deleted" });
         } catch (e) {
-          res.status(400).json({ message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
+          res.status(400).json({ status: false, message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
         }
       }
     }, (err) => {
@@ -92,7 +92,7 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
 
     s3.upload(params, (err, data) => {
       if (err) {
-        res.status(500).send(err)
+        res.status(500).send({status: false, message: err})
       }
     })
 
@@ -141,11 +141,11 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
           }
           s3.deleteObject(params, (err, data) => {
             if (err) {
-              res.status(500).send(err)
+              res.status(500).send({status: false, message: err})
             }
           })
         })
-        res.status(200).json({ message: "Product successfully deleted" });
+       // res.status(200).json({ status: true, message: "Product successfully deleted" });
       } catch (e) {
         message += " .Error on deleting image!";
       }
@@ -161,7 +161,6 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
 
     let counter = 1;
     // save all data to product images
-    console.log(imagesUploaded);
     if (imagesUploaded && imagesUploaded.length) {
       let newImages = imagesUploaded.map((data) => {
         return {
@@ -174,13 +173,13 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
       // save entired bulk to product images
       ProductImages.bulkCreate(newImages).then((images) => {
         res.status(200).json({
-          data: updated,
+          status: updated,
           message: message
         });
       })
     } else {
       res.status(200).json({
-        data: updated,
+        status: updated,
         message: message
       });
     }
@@ -235,8 +234,10 @@ router.post('/products', [verify, upload], (req, res, next) => {
       }
     })
     ProductImages.bulkCreate(newImages).then((images) => {
-      res.status(200).json(product);
+      res.status(200).json({status: true, message: "Product added", data: product});
     })
+  }).catch(err => {
+    res.status(401).json({status: false, message: "Unable to add product"});
   })
 })
 

@@ -22,14 +22,14 @@ router.get('/workroles', async(req, res, next) => {
       workRole = await WorkRole.findAll({ where: {id: req.query.id}});
       res.json(workRole)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   } else {
     try {
       workRole = await WorkRole.findAll();
       res.json(workRole)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   }
 });

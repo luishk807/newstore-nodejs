@@ -17,14 +17,14 @@ router.get('/userroles', async(req, res, next) => {
       userRole = await UserRole.findAll({ where: {id: req.query.id}});
       res.json(userRole)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   } else {
     try {
       userRole = await UserRole.findAll();
       res.json(userRole)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   }
 });

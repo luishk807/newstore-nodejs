@@ -22,14 +22,14 @@ router.get('/statuses', async(req, res, next) => {
       product = await Status.findAll({ where: {id: req.query.id}});
       res.json(product)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   } else {
     try {
       product = await Status.findAll();
       res.json(product)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   }
 });

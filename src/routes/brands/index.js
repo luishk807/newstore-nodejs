@@ -52,7 +52,7 @@ router.delete('/brands/:id', verify,  (req, res, next) => {
         }
       }
     }, (err) => {
-        res.status(500).json(err);
+        res.status(500).json({status: false, message: err});
     })
   })
 });
@@ -171,14 +171,14 @@ router.get('/brands', async(req, res, next) => {
       brand = await Brand.findAll({ where: {id: req.query.id}});
       res.status(200).json(brand)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(500).json({status: false, message: err})
     }
   } else {
     try {
       brand = await Brand.findAll();
       res.status(200).json(brand)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(500).json({status: false, message: err})
     }
   }
 });

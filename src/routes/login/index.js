@@ -7,6 +7,7 @@ const config = require('../../config.js');
 const bcrypt = require('bcryptjs');
 const Model = require('../../pg/models/Users');
 const UserAddressModel = require('../../pg/models/UserAddresses');
+const { cleanData } = require('../../utils')
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
@@ -29,27 +30,29 @@ router.post('/login', upload, async(req, res, next) => {
 
   if (body.email) {
     try {
+      const newEmail = cleanData(body.email)
+      console.log('new text', newEmail)
       const user = await User.findOne({ where: {email: body.email}});
       
       if (!user) {
-        return res.status(200).json({data:false, message: 'user not found'})
+        return res.status(200).json({status:false, message: 'user not found'})
       }
 
       const validate = await bcrypt.compare(body.password, user.dataValues.password);
 
       if (!validate) {
-        return res.status(401).json({data: false, message: "Invalid user credentials"});
+        return res.status(401).json({status: false, message: "Invalid user credentials"});
       }
 
        const token = jwt.sign({id: user.id}, process.env.TOKEN_SECRET)
        
-      res.status(200).json({data: true, message: "Login successful", user: user, authorization: token})
+      res.status(200).json({status: true, message: "Login successful", user: user, authorization: token})
 
     } catch(err) {
-      return res.status(500).json({data: false, message: "Unable to find user"})
+      return res.status(500).json({status: false, message: "Unable to find user"})
     }
   } else {
-      return res.status(500).json({data:false, message: 'email required'})
+      return res.status(500).json({status:false, message: 'email required'})
   }
 })
 

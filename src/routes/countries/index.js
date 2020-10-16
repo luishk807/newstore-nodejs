@@ -17,7 +17,7 @@ router.get('/countries', async(req, res, next) => {
       country = await Country.findAll({ where: {id: req.query.id}});
       res.json(country)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   } else {
     try {
@@ -26,7 +26,7 @@ router.get('/countries', async(req, res, next) => {
       });
       res.json(country)
     } catch(err) {
-      res.send(err)
+      res.send({status: false, message: err})
     }
   }
 });

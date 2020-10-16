@@ -12,9 +12,8 @@ router.delete('/product-images', (req, res, next) => {
   // delete brands
   client.query('SELECT * FROM product_images where id = $1', [1], function (err, result) {
       if (err) {
-          res.status(400).send(err);
+          res.status(400).send({status: false, message: err});
       }
-      console.log(result)
       res.status(200).json(result.rows);
   });
 });
@@ -30,7 +29,7 @@ router.get('/product-images', async(req, res, next) => {
   ProductImage.findAll().then((pimage) => {
       res.status(200).json(pimages);
     }).catch((err) => {
-      res.send(err)
+      res.send({status: false, message: err})
     })
 });
 

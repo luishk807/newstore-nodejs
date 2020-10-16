@@ -47,13 +47,13 @@ router.delete('/vendors/:id', verify, (req, res, next) => {
             Key: vendorImage,
           }
           s3.deleteObject(params, (err, data) => {})
-          res.status(200).json({ message: "Vendor successfully deleted" });
+          res.status(200).json({ status: true, message: "Vendor successfully deleted" });
         } catch (e) {
-          res.status(400).json({ message: "Vendor delete, but error on deleting image!", error: e.toString(), req: req.body });
+          res.status(400).json({ status: false, message: "Vendor delete, but error on deleting image!", error: e.toString(), req: req.body });
         }
       }
     }, (err) => {
-        res.status(500).json(err);
+        res.status(500).json({status: false, message: err});
     })
   })
 });
@@ -125,7 +125,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       message: message
     });
   }).catch((err) => {
-    res.status(500).json(err)
+    res.status(500).json({status: false, message: err})
   })
 });
 
@@ -168,7 +168,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
   }
 
   Vendor.create(dataEntry).then((vendor) => {
-    res.status(200).json(vendor);
+    res.status(200).json({status: true, data: vendor});
   })
 })
 
@@ -185,14 +185,14 @@ router.get('/vendors', async(req, res, next) => {
       vendor = await Vendor.findAll({ where: {id: req.query.id}});
       res.status(200).json(vendor)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(500).json({status: false, message: err})
     }
   } else {
     try {
       vendor = await Vendor.findAll();
       res.status(200).json(vendor)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(500).json({status: false, message: err})
     }
   }
 });

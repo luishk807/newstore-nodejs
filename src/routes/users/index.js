@@ -58,13 +58,13 @@ router.delete('/users/:id',verify, (req, res, next) => {
             Key: userImage,
           }
           s3.deleteObject(params, (err, data) => {})
-          res.status(200).json({ message: "User successfully deleted" });
+          res.status(200).json({ status: true, message: "User successfully deleted" });
         } catch (e) {
-          res.status(400).json({ message: "User delete, but error on deleting image!", error: e.toString(), req: req.body });
+          res.status(400).json({ status: true, message: "User delete, but error on deleting image!", error: e.toString(), req: req.body });
         }
       }
     }, (err) => {
-        res.status(500).json(err);
+        res.status(500).json({status: false, message: err});
     })
   })
 });
@@ -134,7 +134,7 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(body.password, salt, (err, hash) => {
         if (err) {
-          res.status(500).json({data: false, message: err});
+          res.status(500).json({status: false, message: err});
         }
         User.update({password: hash },{where: {id: id }})
       });
@@ -151,11 +151,11 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
     let message = "User Updated";
     // delete all images first in servers
     res.status(200).json({
-      data: updated,
+      status: updated,
       message: message
     });
   }).catch((err) => {
-    res.status(500).json(err)
+    res.status(500).json({status: false, message: err})
   })
 });
 
@@ -166,7 +166,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
   User.count({where: { email: body.email}}).then((count) => {
     console.log(count, 'count')
     if (count) {
-      res.status(200).json({data: false, message: 'email already registered'})
+      res.status(200).json({status: false, message: 'email already registered'})
     } else {
       if (req.file) {
         let myFile = req.file.originalname.split('.');
@@ -181,7 +181,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
       
         s3.upload(params, (err, data) => {
           if (err) {
-            res.status(500).send(err)
+            res.status(500).send({status: false, message: err})
           }
         })
         
@@ -215,7 +215,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
         bcrypt.hash(body.password, 10, function(err, hash){
           User.update({password: hash },{where: {id: user.id }})
         })
-        res.status(200).json({data: true, message: "User succesfully created"});
+        res.status(200).json({status: true, message: "User succesfully created"});
       })
     }
   });
@@ -234,7 +234,7 @@ router.get('/users', verify, async(req, res, next) => {
       user = await User.findAll({ where: {id: req.query.id},include:['user_addresses']});
       res.status(200).json(user)
     } catch(err) {
-      res.status(404).json({data:false, message: err})
+      res.status(404).json({status:false, message: err})
     }
   } else {
     try {
@@ -255,7 +255,7 @@ router.get('/users', verify, async(req, res, next) => {
       user = await User.findAll(query)
       res.status(200).json(user)
     } catch(err) {
-      res.status(404).json({data:false, message: err})
+      res.status(404).json({status:false, message: err})
     }
   }
 });

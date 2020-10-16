@@ -28,9 +28,9 @@ router.delete('/categories/:id', verify, (req, res, next) => {
         id: brand[0].id
       }
     }).then((deletedRecord) => {
-      res.status(200).json({ data: deletedRecord, message: "Category successfully deleted" });
+      res.status(200).json({ status: deletedRecord, message: "Category successfully deleted" });
     }, (err) => {
-      res.status(500).json(err);
+      res.status(500).json({status: false, message: err});
     })
   })
 });
@@ -58,7 +58,7 @@ router.put('/categories/:id', [verify, upload], (req, res, next) => {
       message: 'Category Updated'
     });
   }).catch((err) => {
-    res.status(500).json(err)
+    res.status(500).json({status: false, message: err})
   })
 });
 
@@ -72,7 +72,7 @@ router.post('/categories', verify, upload, (req, res, next) => {
   }).then((product) => {
     res.status(200).json(product);
   }).catch((err) => {
-    res.status(500).json(err)
+    res.status(500).json({status: false, message: err})
   })
 })
 
@@ -89,14 +89,14 @@ router.get('/categories', async(req, res, next) => {
       category = await Category.findAll({ where: {id: req.query.id}});
       res.status(200).json(category)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(500).json({status: false, message: err})
     }
   } else {
     try {
       category = await Category.findAll();
       res.status(200).json(category)
     } catch(err) {
-      res.status(500).json(err)
+      res.status(500).json({status: false, message: err})
     }
   }
 });
