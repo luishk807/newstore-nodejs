@@ -6,10 +6,22 @@ const config = require('../../config.js');
 const verify = require('../verifyToken');
 const Model = require('../../pg/models/Brands');
 
+const ProductModel = require('../../pg/models/Products');
+const Product = ProductModel.getModel();
+
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
 const Brand = Model.getModel();
+
+Brand.hasMany(Product, { as: "products" });
+
+Product.belongsTo(Brand, {
+  foreignKey: "brandId",
+  as: "brands",
+  onDelete: 'SET NULL',
+});
+
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -94,13 +106,13 @@ router.put('/brands/:id', [verify, upload], (req, res, next) => {
 
     dataInsert = {
       'name': body.name,
-      'status': body.status,
+      'statusId': body.status,
       'img': fileName,
     }
   } else {
     dataInsert = {
       'name': body.name,
-      'status': body.status,
+      'statusId': body.status,
     }
   }
   Brand.update(

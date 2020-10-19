@@ -6,8 +6,10 @@ const config = require('../../config.js');
 const verify = require('../verifyToken');
 
 const Model = require('../../pg/models/Categories');
+const ProductModel = require('../../pg/models/Products');
 
 const Category = Model.getModel();
+const Product = ProductModel.getModel();
 
 router.all('*', cors());
 
@@ -16,6 +18,12 @@ var storage = multer.memoryStorage({
     cb(null, '')
   },
 })
+
+Product.belongsTo(Category, {
+  foreignKey: "categoryId",
+  as: "categories",
+  onDelete: 'SET NULL',
+});
 
 var upload = multer({ storage: storage }).single('image')
 
@@ -35,7 +43,6 @@ router.delete('/categories/:id', verify, (req, res, next) => {
   })
 });
 
-
 router.put('/categories/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
@@ -44,7 +51,7 @@ router.put('/categories/:id', [verify, upload], (req, res, next) => {
   Category.update(
     {
       'name': body.name,
-      'status': body.status,
+      'statusId': body.status,
       'icon': body.icon,
     },
     {

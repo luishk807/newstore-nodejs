@@ -10,7 +10,7 @@ const Category = sequelize.define('category', {
   icon: {
     type: Sequelize.TEXT
   },
-  status: {
+  statusId: {
     type: Sequelize.BIGINT
   }
 });

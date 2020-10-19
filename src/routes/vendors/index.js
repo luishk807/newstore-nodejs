@@ -6,12 +6,12 @@ const config = require('../../config.js');
 const verify = require('../verifyToken');
 
 const Model = require('../../pg/models/Vendors');
-
+const ProductModel = require('../../pg/models/Products');
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
 const Vendor = Model.getModel();
-
+const Product = ProductModel.getModel();
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
   secretAccessKey: process.env.AWS_SECRET
@@ -24,6 +24,14 @@ var storage = multer.memoryStorage({
     cb(null, '')
   },
 })
+
+Product.belongsTo(Vendor, {
+  foreignKey: "vendorId",
+  as: 'vendors',
+  onDelete: 'SET NULL'
+})
+
+Vendor.hasMany(Product, { as: "products" });
 
 var upload = multer({ storage: storage }).single('image')
 
@@ -97,7 +105,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'position': body.position,
+      'positionId': body.position,
       'email': body.email,
       'img':fileName
     }
@@ -106,7 +114,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'position': body.position,
+      'positionId': body.position,
       'email': body.email,
     }
   }
@@ -153,7 +161,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'position': body.position,
+      'positionId': body.position,
       'email': body.email,
       'img':fileName
     }
@@ -162,7 +170,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'position': body.position,
+      'positionId': body.position,
       'email': body.email,
     }
   }

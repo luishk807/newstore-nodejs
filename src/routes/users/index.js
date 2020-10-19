@@ -110,10 +110,10 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'first_name': body.first_name,
       'date_of_birth': body.date_of_birth,
       'phone': body.phone,
-      'gender': body.gender,
+      'genderId': body.gender,
       'mobile': body.mobile,
-      'status': body.status,
-      'userRole': body.userRole,
+      'statusId': body.status,
+      'userRoleId': body.userRole,
       'img':fileName
     }
   } else {
@@ -122,10 +122,10 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'first_name': body.first_name,
       'date_of_birth': body.date_of_birth,
       'phone': body.phone,
-      'gender': body.gender,
+      'genderId': body.gender,
       'mobile': body.mobile,
-      'userRole': body.userRole,
-      'status': body.status,
+      'userRoleId': body.userRole,
+      'statusId': body.status,
       'email': body.email,
     }
   }
@@ -191,10 +191,10 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'password': body.password,
           'date_of_birth': body.date_of_birth,
           'phone': body.phone,
-          'gender': body.gender,
+          'genderId': body.gender,
           'mobile': body.mobile,
           'email': body.email,
-          'userRole': body.userRole,
+          'userRoleId': body.userRole,
           'img':fileName
         }
       } else {
@@ -203,9 +203,9 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'first_name': body.first_name,
           'password': body.password,
           'date_of_birth': body.date_of_birth,
-          'userRole': body.userRole,
+          'userRoleId': body.userRole,
           'phone': body.phone,
-          'gender': body.gender,
+          'genderId': body.gender,
           'mobile': body.mobile,
           'email': body.email,
         }

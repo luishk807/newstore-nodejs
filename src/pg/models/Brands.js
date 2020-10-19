@@ -10,7 +10,7 @@ const Brand = sequelize.define('brand', {
   img: {
     type: Sequelize.TEXT
   },
-  status: {
+  statusId: {
     type: Sequelize.BIGINT
   }
 });

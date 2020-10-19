@@ -7,12 +7,14 @@ const data = require('../../samples/products.json');
 const verify = require('../verifyToken');
 
 const ProductImagesModel = require('../../pg/models/ProductImages');
+const StatusModel = require('../../pg/models/Statuses');
 const Model = require('../../pg/models/Products');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
 const ProductImages = ProductImagesModel.getModel();
+const Statuses = StatusModel.getModel();
 const Product = Model.getModel();
 
 Product.hasMany(ProductImages, { as: "product_images" });
@@ -20,6 +22,12 @@ Product.hasMany(ProductImages, { as: "product_images" });
 ProductImages.belongsTo(Product, {
   foreignKey: "productId",
   as: "product",
+  onDelete: 'CASCADE',
+});
+
+Product.belongsTo(Statuses, {
+  foreignKey: "statusId",
+  as: "status",
   onDelete: 'CASCADE',
 });
 
@@ -40,7 +48,7 @@ var upload = multer({ storage: storage }).array('image')
 
 router.delete('/products/:id', verify, (req, res, next) => {
   // delete products
-  Product.findAll({ where: {id: req.params.id},include:['product_images']})
+  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'status']})
   .then((product) => {
     const mapFiles = product[0].product_images.map(data => {
       return data.img_url;
@@ -109,12 +117,12 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
       'name': body.name,
       'stock': body.stock,
       'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
+      'categoryId': body.category,
+      'brandId': body.brand,
       'model': body.model,
       'code': body.code,
       'description': body.description,
-      'vendor': body.vendor,
+      'vendorId': body.vendor,
     },{
       where: {
         id: pid
@@ -217,12 +225,12 @@ router.post('/products', [verify, upload], (req, res, next) => {
       'name': body.name,
       'stock': body.stock,
       'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
+      'categoryId': body.category,
+      'brandId': body.brand,
       'model': body.model,
       'code': body.code,
       'description': body.description,
-      'vendor': body.vendor,
+      'vendorId': body.vendor,
     }
   ).then((product) => {
     let counter = 1;
@@ -251,14 +259,15 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findAll({ where: {id: req.query.id},include:['product_images']});
+      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','status']});
+      console.log(product)
       res.json(product)
     } catch(err) {
       res.send(err)
     }
   } else {
     try {
-      product = await Product.findAll({include:['product_images']});
+      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','status']});
       res.json(product)
     } catch(err) {
       res.send(err)
