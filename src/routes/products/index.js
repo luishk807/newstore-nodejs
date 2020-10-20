@@ -27,8 +27,8 @@ ProductImages.belongsTo(Product, {
 
 Product.belongsTo(Statuses, {
   foreignKey: "statusId",
-  as: "status",
-  onDelete: 'CASCADE',
+  as: "statuses",
+  onDelete: 'SET NULL',
 });
 
 const s3 = new AWS.S3({
@@ -48,7 +48,7 @@ var upload = multer({ storage: storage }).array('image')
 
 router.delete('/products/:id', verify, (req, res, next) => {
   // delete products
-  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'status']})
+  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'statuses']})
   .then((product) => {
     const mapFiles = product[0].product_images.map(data => {
       return data.img_url;
@@ -259,7 +259,7 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','status']});
+      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','statuses']});
       console.log(product)
       res.json(product)
     } catch(err) {
@@ -267,7 +267,7 @@ router.get('/products', async(req, res, next) => {
     }
   } else {
     try {
-      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','status']});
+      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','statuses']});
       res.json(product)
     } catch(err) {
       res.send(err)

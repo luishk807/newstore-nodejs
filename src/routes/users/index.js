@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Model = require('../../pg/models/Users');
 const UserAddressModel = require('../../pg/models/UserAddresses');
+const StatusModel = require('../../pg/models/Statuses');
 const verify = require('../verifyToken');
 const AWS = require('aws-sdk');
 const Op = require('sequelize').Op
@@ -14,6 +15,7 @@ const uuid = require('uuid');
 
 const User = Model.getModel();
 const UserAddress = UserAddressModel.getModel();
+const Statuses = StatusModel.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -28,6 +30,12 @@ UserAddress.belongsTo(User, {
   foreignKey: "userId",
   as: "user",
   onDelete: 'CASCADE',
+});
+
+User.belongsTo(Statuses, {
+  foreignKey: "statusId",
+  as: "statuses",
+  onDelete: 'SET NULL',
 });
 
 var storage = multer.memoryStorage({
@@ -129,7 +137,7 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'email': body.email,
     }
   }
-  console.log(dataInsert)
+
   if (body.password && body.password !=='null') {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(body.password, salt, (err, hash) => {
@@ -231,7 +239,7 @@ router.get('/users', verify, async(req, res, next) => {
   let user = null;
   if (req.query.id) {
     try {
-      user = await User.findOne({ where: {id: req.query.id},include:['user_addresses']});
+      user = await User.findOne({ where: {id: req.query.id},include:['user_addresses', 'statuses']});
       res.status(200).json(user)
     } catch(err) {
       res.status(404).json({status:false, message: err})
@@ -245,11 +253,11 @@ router.get('/users', verify, async(req, res, next) => {
           where: {
             id: { [Op.ne]: req.user.id } // This does not work
           },
-          include:['user_addresses']
+          include:['user_addresses', 'statuses']
         };
       } else {
         query = {
-          include:['user_addresses']
+          include:['user_addresses', 'statuses']
         };
       }
       user = await User.findAll(query)

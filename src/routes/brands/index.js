@@ -6,6 +6,7 @@ const config = require('../../config.js');
 const verify = require('../verifyToken');
 const Model = require('../../pg/models/Brands');
 
+const StatusModel = require('../../pg/models/Statuses');
 const ProductModel = require('../../pg/models/Products');
 const Product = ProductModel.getModel();
 
@@ -13,12 +14,19 @@ const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
 const Brand = Model.getModel();
+const Statuses = StatusModel.getModel();
 
 Brand.hasMany(Product, { as: "products" });
 
 Product.belongsTo(Brand, {
   foreignKey: "brandId",
   as: "brands",
+  onDelete: 'SET NULL',
+});
+
+Brand.belongsTo(Statuses, {
+  foreignKey: "statusId",
+  as: "statuses",
   onDelete: 'SET NULL',
 });
 
@@ -171,7 +179,7 @@ router.post('/brands', [verify, upload], (req, res, next) => {
 })
 
 router.get('/brands/:id', async(req, res, next) => {
-    let brand = await Brand.findAll({ where: {id: req.params.id}});
+    let brand = await Brand.findAll({ where: {id: req.params.id}, include:['statuses']});
     res.json(brand)
 });
 
@@ -180,14 +188,14 @@ router.get('/brands', async(req, res, next) => {
   let brand = null;
   if (req.query.id) {
     try {
-      brand = await Brand.findAll({ where: {id: req.query.id}});
+      brand = await Brand.findAll({ where: {id: req.query.id}, include:['statuses']});
       res.status(200).json(brand)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      brand = await Brand.findAll();
+      brand = await Brand.findAll({include:['statuses']});
       res.status(200).json(brand)
     } catch(err) {
       res.status(500).json({status: false, message: err})
