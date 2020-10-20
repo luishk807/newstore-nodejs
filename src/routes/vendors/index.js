@@ -12,6 +12,13 @@ const uuid = require('uuid');
 
 const Vendor = Model.getModel();
 const Product = ProductModel.getModel();
+
+
+const VendorRateModel = require('../../pg/models/VendorRates');
+const VendorRate = VendorRateModel.getModel();
+
+Vendor.hasMany(VendorRate, { as: "vendor_rates" });
+
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
   secretAccessKey: process.env.AWS_SECRET
@@ -190,14 +197,14 @@ router.get('/vendors', async(req, res, next) => {
   let vendor = null;
   if (req.query.id) {
     try {
-      vendor = await Vendor.findAll({ where: {id: req.query.id}});
+      vendor = await Vendor.findAll({ where: {id: req.query.id}, include: ['vendor_rates']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      vendor = await Vendor.findAll();
+      vendor = await Vendor.findAll({include: ['vendor_rates']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})

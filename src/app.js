@@ -17,5 +17,10 @@ app.use('/api', require('./routes/genders'));
 app.use('/api', require('./routes/userRoles'));
 app.use('/api', require('./routes/login'));
 app.use('/api', require('./routes/adminlogin'));
+app.use('/api', require('./routes/productAnswers'));
+app.use('/api', require('./routes/productQuestions'));
+app.use('/api', require('./routes/productRates'));
+app.use('/api', require('./routes/userWishlists'));
+app.use('/api', require('./routes/vendorRates'));
 
 module.exports = app

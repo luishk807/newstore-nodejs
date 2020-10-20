@@ -17,7 +17,18 @@ const ProductImages = ProductImagesModel.getModel();
 const Statuses = StatusModel.getModel();
 const Product = Model.getModel();
 
+const ProductRateModel = require('../../pg/models/ProductRates');
+const ProductRate = ProductRateModel.getModel();
+
+const ProductQuestionModel = require('../../pg/models/ProductQuestions');
+const ProductQuestion = ProductQuestionModel.getModel();
+
+
 Product.hasMany(ProductImages, { as: "product_images" });
+Product.hasMany(ProductQuestion, { as: "product_questions" });
+Product.hasMany(ProductQuestion, { as: "product_rates" });
+
+
 
 ProductImages.belongsTo(Product, {
   foreignKey: "productId",
@@ -48,7 +59,7 @@ var upload = multer({ storage: storage }).array('image')
 
 router.delete('/products/:id', verify, (req, res, next) => {
   // delete products
-  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'statuses']})
+  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'statuses', 'product_rates']})
   .then((product) => {
     const mapFiles = product[0].product_images.map(data => {
       return data.img_url;
@@ -259,15 +270,15 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','statuses']});
-      console.log(product)
+      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','statuses', 'product_rates', 'product_questions']});
+
       res.json(product)
     } catch(err) {
       res.send(err)
     }
   } else {
     try {
-      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','statuses']});
+      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','statuses', 'product_rates', 'product_questions']});
       res.json(product)
     } catch(err) {
       res.send(err)
