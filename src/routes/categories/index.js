@@ -51,7 +51,7 @@ router.put('/categories/:id', [verify, upload], (req, res, next) => {
   Category.update(
     {
       'name': body.name,
-      'statusId': body.status,
+      'status': body.status,
       'icon': body.icon,
     },
     {

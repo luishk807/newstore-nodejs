@@ -38,7 +38,7 @@ router.post('/adminlogin', upload, async(req, res, next) => {
         return res.status(401).json({status:false, message: 'user not found'})
       }
       
-      if (user.dataValues.userRoleId != 1) {
+      if (user.dataValues.userRole != 1) {
         return res.status(401).json({status: false, message: "Only Admins allowed"});
       }
 

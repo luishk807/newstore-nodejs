@@ -105,7 +105,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'positionId': body.position,
+      'position': body.position,
       'email': body.email,
       'img':fileName
     }
@@ -114,7 +114,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'positionId': body.position,
+      'position': body.position,
       'email': body.email,
     }
   }
@@ -161,7 +161,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'positionId': body.position,
+      'position': body.position,
       'email': body.email,
       'img':fileName
     }
@@ -170,7 +170,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
-      'positionId': body.position,
+      'position': body.position,
       'email': body.email,
     }
   }

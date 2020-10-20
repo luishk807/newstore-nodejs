@@ -117,12 +117,12 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
       'name': body.name,
       'stock': body.stock,
       'amount': body.amount,
-      'categoryId': body.category,
-      'brandId': body.brand,
+      'category': body.category,
+      'brand': body.brand,
       'model': body.model,
       'code': body.code,
       'description': body.description,
-      'vendorId': body.vendor,
+      'vendor': body.vendor,
     },{
       where: {
         id: pid
@@ -225,18 +225,18 @@ router.post('/products', [verify, upload], (req, res, next) => {
       'name': body.name,
       'stock': body.stock,
       'amount': body.amount,
-      'categoryId': body.category,
-      'brandId': body.brand,
+      'category': body.category,
+      'brand': body.brand,
       'model': body.model,
       'code': body.code,
       'description': body.description,
-      'vendorId': body.vendor,
+      'vendor': body.vendor,
     }
   ).then((product) => {
     let counter = 1;
     const newImages = imagesUploaded.map((data) => {
       return {
-        'productId': product.id,
+        'product': product.id,
         'img_url': data.Key,
         'position': counter++
       }

@@ -110,10 +110,10 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'first_name': body.first_name,
       'date_of_birth': body.date_of_birth,
       'phone': body.phone,
-      'genderId': body.gender,
+      'gender': body.gender,
       'mobile': body.mobile,
-      'statusId': body.status,
-      'userRoleId': body.userRole,
+      'status': body.status,
+      'userRole': body.userRole,
       'img':fileName
     }
   } else {
@@ -122,10 +122,10 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
       'first_name': body.first_name,
       'date_of_birth': body.date_of_birth,
       'phone': body.phone,
-      'genderId': body.gender,
+      'gender': body.gender,
       'mobile': body.mobile,
-      'userRoleId': body.userRole,
-      'statusId': body.status,
+      'userRole': body.userRole,
+      'status': body.status,
       'email': body.email,
     }
   }
@@ -191,10 +191,10 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'password': body.password,
           'date_of_birth': body.date_of_birth,
           'phone': body.phone,
-          'genderId': body.gender,
+          'gender': body.gender,
           'mobile': body.mobile,
           'email': body.email,
-          'userRoleId': body.userRole,
+          'userRole': body.userRole,
           'img':fileName
         }
       } else {
@@ -203,9 +203,9 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'first_name': body.first_name,
           'password': body.password,
           'date_of_birth': body.date_of_birth,
-          'userRoleId': body.userRole,
+          'userRole': body.userRole,
           'phone': body.phone,
-          'genderId': body.gender,
+          'gender': body.gender,
           'mobile': body.mobile,
           'email': body.email,
         }
@@ -231,7 +231,7 @@ router.get('/users', verify, async(req, res, next) => {
   let user = null;
   if (req.query.id) {
     try {
-      user = await User.findAll({ where: {id: req.query.id},include:['user_addresses']});
+      user = await User.findOne({ where: {id: req.query.id},include:['user_addresses']});
       res.status(200).json(user)
     } catch(err) {
       res.status(404).json({status:false, message: err})

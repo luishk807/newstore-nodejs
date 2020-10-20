@@ -10,8 +10,9 @@ const Vendor = sequelize.define('vendor', {
   last_name: {
     type: Sequelize.TEXT
   },
-  positionId: {
-    type: Sequelize.BIGINT
+  position: {
+    type: Sequelize.BIGINT,
+    field: 'positionId'
   },
   password: {
     type: Sequelize.TEXT
@@ -22,8 +23,9 @@ const Vendor = sequelize.define('vendor', {
   img: {
     type: Sequelize.TEXT
   },
-  statusId: {
-    type: Sequelize.BIGINT
+  status: {
+    type: Sequelize.BIGINT,
+    field: 'statusId'
   },
   last_login: {
     type: Sequelize.TIME

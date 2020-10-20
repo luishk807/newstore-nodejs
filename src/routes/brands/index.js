@@ -106,13 +106,13 @@ router.put('/brands/:id', [verify, upload], (req, res, next) => {
 
     dataInsert = {
       'name': body.name,
-      'statusId': body.status,
+      'status': body.status,
       'img': fileName,
     }
   } else {
     dataInsert = {
       'name': body.name,
-      'statusId': body.status,
+      'status': body.status,
     }
   }
   Brand.update(

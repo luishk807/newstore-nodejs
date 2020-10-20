@@ -16,8 +16,9 @@ const UserAddress = sequelize.define('user_addresses', {
   township: {
     type: Sequelize.TEXT
   },
-  countryId: {
-    type: Sequelize.BIGINT
+  country: {
+    type: Sequelize.BIGINT,
+    field: 'countryId'
   },
   state: {
     type: Sequelize.BIGINT

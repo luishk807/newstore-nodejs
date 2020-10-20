@@ -22,8 +22,9 @@ const Store = sequelize.define('store', {
   township: {
     type: Sequelize.TEXT
   },
-  countryId: {
-    type: Sequelize.BIGINT
+  country: {
+    type: Sequelize.BIGINT,
+    field: 'countryId'
   },
   state: {
     type: Sequelize.BIGINT
@@ -37,8 +38,9 @@ const Store = sequelize.define('store', {
   mobile: {
     type: Sequelize.TIME
   },
-  statusId: {
-    type: Sequelize.BIGINT
+  status: {
+    type: Sequelize.BIGINT,
+    field: 'statusId'
   },
 });
 

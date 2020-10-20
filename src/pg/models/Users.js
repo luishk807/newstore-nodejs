@@ -19,9 +19,9 @@ const User = sequelize.define('user', {
   mobile: {
     type: Sequelize.TEXT
   },
-  userRoleId: {
+  userRole: {
     type: Sequelize.BIGINT,
-    name: 'userRole',
+    field: 'userRoleId',
   },
   phone: {
     type: Sequelize.TEXT
@@ -29,11 +29,13 @@ const User = sequelize.define('user', {
   img: {
     type: Sequelize.TEXT
   },
-  statusId: {
-    type: Sequelize.BIGINT
+  status: {
+    type: Sequelize.BIGINT,
+    field: 'statusId',
   },
-  genderId: {
-    type: Sequelize.BIGINT
+  gender: {
+    type: Sequelize.BIGINT,
+    field: 'genderId',
   },
   date_of_birth: {
     type: Sequelize.DATE
