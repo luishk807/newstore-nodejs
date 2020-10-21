@@ -79,6 +79,9 @@ router.post('/productquestions', [verify, upload], (req, res, next) => {
 router.get('/productquestions', async(req, res, next) => {
   // get statuses
   let data = null;
+
+  const limit = req.query.limit ? req.query.limit : 5;
+
   if (req.query.id) {
     try {
       data = await ProductQuestion.findOne({ where: {id: req.query.id}});
@@ -88,7 +91,7 @@ router.get('/productquestions', async(req, res, next) => {
     }
   } else {
     try {
-      data = await ProductQuestion.findAll();
+      data = await ProductQuestion.findAll({ limit });
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
