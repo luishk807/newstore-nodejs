@@ -20,6 +20,9 @@ const Vendor = sequelize.define('vendor', {
     type: Sequelize.BIGINT,
     field: 'positionId'
   },
+  description: {
+    type: Sequelize.TEXT
+  },
   password: {
     type: Sequelize.TEXT
   },

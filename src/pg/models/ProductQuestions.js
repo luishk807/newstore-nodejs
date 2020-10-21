@@ -11,6 +11,10 @@ const ProductQuestion = sequelize.define('product_questions', {
   question: {
     type: Sequelize.NUMBER
   },
+  user: {
+    type: Sequelize.BIGINT,
+    field: 'userId'
+  },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'

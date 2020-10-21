@@ -8,6 +8,10 @@ const UserWishlist = sequelize.define('user_wishlists', {
     type: Sequelize.BIGINT,
     field: 'productId'
   },
+  user: {
+    type: Sequelize.BIGINT,
+    field: 'userId'
+  },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'

@@ -9,7 +9,7 @@ const ProductQuestion = Model.getModel();
 
 router.all('*', cors());
 
-router.delete('/productcomments/:id', verify, (req, res, next) => {
+router.delete('/productquestions/:id', verify, (req, res, next) => {
   // delete brands
   ProductQuestion.findOne({ where: {id: req.params.id}})
   .then((comment) => {
@@ -30,7 +30,7 @@ router.delete('/productcomments/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/productcomments/:id', [verify], (req, res, next) => {
+router.put('/productquestions/:id', [verify], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
   ProductQuestion.update(
@@ -53,8 +53,9 @@ router.put('/productcomments/:id', [verify], (req, res, next) => {
   })
 });
 
-router.post('/productcomments', [verify], (req, res, next) => {
+router.post('/productquestions', [verify], (req, res, next) => {
   const body = req.body;
+  console.log(req)
   ProductQuestion.create({
     'product': body.product,
     'question': body.question,
@@ -65,7 +66,7 @@ router.post('/productcomments', [verify], (req, res, next) => {
   })
 })
 
-router.get('/productcomments', async(req, res, next) => {
+router.get('/productquestions', async(req, res, next) => {
   // get statuses
   let data = null;
   if (req.query.id) {

@@ -97,6 +97,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
+      'description': body.description,
       'position': body.position,
       'email': body.email,
       'img':fileName
@@ -104,6 +105,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
   } else {
     dataInsert = {
       'last_name': body.last_name,
+      'description': body.description,
       'first_name': body.first_name,
       'password': body.password,
       'position': body.position,
@@ -153,6 +155,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'last_name': body.last_name,
       'first_name': body.first_name,
       'password': body.password,
+      'description': body.description,
       'position': body.position,
       'email': body.email,
       'img':fileName
@@ -161,6 +164,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
     dataEntry = {
       'last_name': body.last_name,
       'first_name': body.first_name,
+      'description': body.description,
       'password': body.password,
       'position': body.position,
       'email': body.email,
