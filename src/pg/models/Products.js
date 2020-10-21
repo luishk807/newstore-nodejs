@@ -3,6 +3,18 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const ProductRateModel = require('./ProductRates');
+const ProductRate = ProductRateModel.getModel();
+
+const ProductImagesModel = require('./ProductImages');
+const ProductImages = ProductImagesModel.getModel();
+
+const ProductQuestionModel = require('./ProductQuestions');
+const ProductQuestion = ProductQuestionModel.getModel();
+
+const StatusModel = require('./Statuses');
+const Statuses = StatusModel.getModel();
+
 const Product = sequelize.define('product', {
   name: { type: Sequelize.TEXT },
   amount: { type: Sequelize.DECIMAL },
@@ -15,6 +27,22 @@ const Product = sequelize.define('product', {
   description: { type: Sequelize.TEXT },
   model: { type: Sequelize.TEXT },
   code: { type: Sequelize.TEXT },
+});
+
+Product.hasMany(ProductRate, { as: "rates" });
+Product.hasMany(ProductQuestion, { as: "product_questions" });
+Product.hasMany(ProductImages, { as: "product_images" });
+
+ProductImages.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+  onDelete: 'CASCADE',
+});
+
+Product.belongsTo(Statuses, {
+  foreignKey: "statusId",
+  as: "statuses",
+  onDelete: 'SET NULL',
 });
 
 const getProduct = () => {

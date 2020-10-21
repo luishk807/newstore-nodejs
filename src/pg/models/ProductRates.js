@@ -11,6 +11,10 @@ const ProductRate = sequelize.define('product_rates', {
   title: {
     type: Sequelize.TEXT
   },
+  user: {
+    type: Sequelize.BIGINT,
+    field: 'userId'
+  },
   comment: {
     type: Sequelize.TEXT
   },

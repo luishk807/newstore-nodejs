@@ -37,6 +37,7 @@ router.put('/productrates/:id', [verify], (req, res, next) => {
     {
       'rate': body.rate,
       'title': body.title,
+      'user': body.user,
       'comment': body.comment,
       'status': body.status
     },
@@ -60,6 +61,7 @@ router.post('/productrates', [verify], (req, res, next) => {
   ProductRate.create({
     'product': body.product,
     'title': body.title,
+    'user': body.user,
     'comment': body.comment,
     'rate': body.rate,
   }).then((data) => {

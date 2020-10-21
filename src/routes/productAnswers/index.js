@@ -7,9 +7,6 @@ const verify = require('../verifyToken');
 const Model = require('../../pg/models/ProductAnswers');
 const ProductAnswer = Model.getModel();
 
-const ProductQuestionModel = require('../../pg/models/ProductQuestions');
-const ProductQuestion = ProductQuestionModel.getModel();
-
 router.all('*', cors());
 
 router.delete('/productanswers/:id', verify, (req, res, next) => {

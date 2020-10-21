@@ -7,17 +7,6 @@ const verify = require('../verifyToken');
 const Model = require('../../pg/models/VendorRates');
 const VendorRate = Model.getModel();
 
-const VendorModel = require('../../pg/models/Vendors');
-const Vendor = VendorModel.getModel();
-
-
-VendorRate.belongsTo(Vendor, {
-  foreignKey: "vendorId",
-  as: 'vendors',
-  onDelete: 'CASCADE'
-})
-
-
 router.all('*', cors());
 
 router.delete('/vendorrates/:id', verify, (req, res, next) => {
@@ -48,6 +37,7 @@ router.put('/vendorrates/:id', [verify], (req, res, next) => {
     {
       'rate': body.rate,
       'title': body.title,
+      'user': body.user,
       'comment': body.comment,
       'status': body.status
     },
@@ -71,6 +61,7 @@ router.post('/vendorrates', [verify], (req, res, next) => {
   VendorRate.create({
     'vendor': body.vendor,
     'title': body.title,
+    'user': body.user,
     'comment': body.comment,
     'rate': body.rate,
   }).then((data) => {

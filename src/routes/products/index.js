@@ -6,41 +6,12 @@ const config = require('../../config.js');
 const data = require('../../samples/products.json');
 const verify = require('../verifyToken');
 
-const ProductImagesModel = require('../../pg/models/ProductImages');
-const StatusModel = require('../../pg/models/Statuses');
 const Model = require('../../pg/models/Products');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
-const ProductImages = ProductImagesModel.getModel();
-const Statuses = StatusModel.getModel();
 const Product = Model.getModel();
-
-const ProductRateModel = require('../../pg/models/ProductRates');
-const ProductRate = ProductRateModel.getModel();
-
-const ProductQuestionModel = require('../../pg/models/ProductQuestions');
-const ProductQuestion = ProductQuestionModel.getModel();
-
-
-Product.hasMany(ProductImages, { as: "product_images" });
-Product.hasMany(ProductQuestion, { as: "product_questions" });
-Product.hasMany(ProductQuestion, { as: "product_rates" });
-
-
-
-ProductImages.belongsTo(Product, {
-  foreignKey: "productId",
-  as: "product",
-  onDelete: 'CASCADE',
-});
-
-Product.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -59,7 +30,7 @@ var upload = multer({ storage: storage }).array('image')
 
 router.delete('/products/:id', verify, (req, res, next) => {
   // delete products
-  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'statuses', 'product_rates']})
+  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'statuses', 'rates']})
   .then((product) => {
     const mapFiles = product[0].product_images.map(data => {
       return data.img_url;
@@ -270,7 +241,7 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','statuses', 'product_rates', 'product_questions']});
+      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','statuses', 'rates', 'product_questions']});
 
       res.json(product)
     } catch(err) {
@@ -278,7 +249,7 @@ router.get('/products', async(req, res, next) => {
     }
   } else {
     try {
-      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','statuses', 'product_rates', 'product_questions']});
+      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','statuses', 'rates', 'product_questions']});
       res.json(product)
     } catch(err) {
       res.send(err)

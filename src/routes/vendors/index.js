@@ -6,18 +6,11 @@ const config = require('../../config.js');
 const verify = require('../verifyToken');
 
 const Model = require('../../pg/models/Vendors');
-const ProductModel = require('../../pg/models/Products');
+
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
 const Vendor = Model.getModel();
-const Product = ProductModel.getModel();
-
-
-const VendorRateModel = require('../../pg/models/VendorRates');
-const VendorRate = VendorRateModel.getModel();
-
-Vendor.hasMany(VendorRate, { as: "vendor_rates" });
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -31,14 +24,6 @@ var storage = multer.memoryStorage({
     cb(null, '')
   },
 })
-
-Product.belongsTo(Vendor, {
-  foreignKey: "vendorId",
-  as: 'vendors',
-  onDelete: 'SET NULL'
-})
-
-Vendor.hasMany(Product, { as: "products" });
 
 var upload = multer({ storage: storage }).single('image')
 
@@ -188,7 +173,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
 })
 
 router.get('/vendors/:id', async(req, res, next) => {
-    let vendor = await Vendor.findAll({ where: {id: req.params.id}});
+    let vendor = await Vendor.findAll({ where: {id: req.params.id}, include: ['vendor_rates']});
     res.json(vendor)
 });
 

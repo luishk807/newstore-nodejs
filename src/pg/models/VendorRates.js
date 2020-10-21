@@ -11,6 +11,10 @@ const VendorRate = sequelize.define('vendor_rates', {
   rate: {
     type: Sequelize.NUMBER
   },
+  user: {
+    type: Sequelize.BIGINT,
+    field: 'userId'
+  },
   title: {
     type: Sequelize.TEXT
   },

@@ -3,6 +3,9 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const ProductQuestionModel = require('./ProductQuestions');
+const ProductQuestion = ProductQuestionModel.getModel();
+
 const ProductAnswer = sequelize.define('product_answers', {
   question: {
     type: Sequelize.BIGINT,
@@ -15,6 +18,12 @@ const ProductAnswer = sequelize.define('product_answers', {
     type: Sequelize.BIGINT,
     field: 'statusId'
   }
+});
+
+ProductAnswer.belongsTo(ProductQuestion, {
+  foreignKey: "questionId",
+  as: "questions",
+  onDelete: 'CASCADE',
 });
 
 const getProductAnswers = () => {
