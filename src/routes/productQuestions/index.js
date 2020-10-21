@@ -9,6 +9,14 @@ const ProductQuestion = Model.getModel();
 
 router.all('*', cors());
 
+var storage = multer.memoryStorage({
+  destination: function (req, file, cb) {
+    cb(null, '')
+  },
+})
+
+var upload = multer({ storage: storage }).array('image')
+
 router.delete('/productquestions/:id', verify, (req, res, next) => {
   // delete brands
   ProductQuestion.findOne({ where: {id: req.params.id}})
@@ -30,9 +38,10 @@ router.delete('/productquestions/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/productquestions/:id', [verify], (req, res, next) => {
+router.put('/productquestions/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
+  
   ProductQuestion.update(
     {
       'question': body.question,
@@ -53,14 +62,15 @@ router.put('/productquestions/:id', [verify], (req, res, next) => {
   })
 });
 
-router.post('/productquestions', [verify], (req, res, next) => {
+router.post('/productquestions', [verify, upload], (req, res, next) => {
   const body = req.body;
-  console.log(req)
+  console.log("user", req.user.id)
   ProductQuestion.create({
-    'product': body.product,
+    'productId': body.product,
     'question': body.question,
+    'user': req.user.id
   }).then((data) => {
-    res.status(200).json({status: true, data: data});
+    res.status(200).json({status: true, data: data, message: 'Success: questions sent'});
   }).catch((err) => {
     res.status(500).json({status: false, message: err})
   })
