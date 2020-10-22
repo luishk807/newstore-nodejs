@@ -14,13 +14,21 @@ const ProductQuestion = sequelize.define('product_questions', {
   question: {
     type: Sequelize.NUMBER
   },
-  userId: {
+  user: {
     type: Sequelize.BIGINT,
     field: 'userId'
   },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'
+  },
+  created: {
+    type: Sequelize.DATE,
+    field: 'createdAt'
+  },
+  updated: {
+    type: Sequelize.DATE,
+    field: 'updatedAt'
   }
 });
 

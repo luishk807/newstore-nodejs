@@ -64,11 +64,10 @@ router.put('/productquestions/:id', [verify, upload], (req, res, next) => {
 
 router.post('/productquestions', [verify, upload], (req, res, next) => {
   const body = req.body;
-  console.log("user", req.user.id)
   ProductQuestion.create({
-    'productId': body.product,
+    'product': body.product,
     'question': body.question,
-    'user': req.user.id
+    'user': req.user.id,
   }).then((data) => {
     res.status(200).json({status: true, data: data, message: 'Success: questions sent'});
   }).catch((err) => {
@@ -91,7 +90,7 @@ router.get('/productquestions', async(req, res, next) => {
     }
   } else {
     try {
-      data = await ProductQuestion.findAll({limit, include:['product_answers', 'users']});
+      data = await ProductQuestion.findAll({limit, include:['product_answers', 'users'], order: [['created', 'DESC']]});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
