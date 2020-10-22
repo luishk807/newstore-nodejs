@@ -84,14 +84,14 @@ router.get('/productquestions', async(req, res, next) => {
 
   if (req.query.id) {
     try {
-      data = await ProductQuestion.findOne({ where: {id: req.query.id}, include:['product_answers']});
+      data = await ProductQuestion.findOne({ where: {id: req.query.id}, include:['product_answers', 'users']});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      data = await ProductQuestion.findAll({limit, include:['product_answers']});
+      data = await ProductQuestion.findAll({limit, include:['product_answers', 'users']});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})

@@ -3,7 +3,13 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const User = sequelize.define('user', {
+const ProductAnswerModel = require('./ProductAnswers');
+const ProductAnswer = ProductAnswerModel.getModel();
+
+const ProductQuestionModel = require('./ProductQuestions');
+const ProductQuestion = ProductQuestionModel.getModel();
+
+const User = sequelize.define('users', {
   first_name: {
     type: Sequelize.TEXT
   },
@@ -41,6 +47,25 @@ const User = sequelize.define('user', {
     type: Sequelize.DATE
   },
 });
+
+//User.hasMany(ProductAnswer, { as: "product_answers" });
+
+User.hasMany(ProductQuestion, { as: "product_questions" });
+
+ProductAnswer.belongsTo(User, {
+  foreignKey: "userId",
+  as: "users",
+  onDelete: 'CASCADE',
+});
+
+ProductQuestion.belongsTo(User, {
+  foreignKey: "userId",
+  as: "users",
+  onDelete: 'CASCADE',
+});
+
+User.belongsToMany(ProductAnswer, { through: "UserAnswer" });
+ProductAnswer.belongsToMany(User, { through: "UserAnswer" });
 
 const getUser = () => {
   return User;

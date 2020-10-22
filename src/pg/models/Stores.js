@@ -3,7 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const Store = sequelize.define('store', {
+const Store = sequelize.define('stores', {
   name: {
     type: Sequelize.TEXT
   },

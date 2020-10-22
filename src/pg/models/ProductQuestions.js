@@ -14,7 +14,7 @@ const ProductQuestion = sequelize.define('product_questions', {
   question: {
     type: Sequelize.NUMBER
   },
-  user: {
+  userId: {
     type: Sequelize.BIGINT,
     field: 'userId'
   },
