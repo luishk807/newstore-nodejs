@@ -3,6 +3,9 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const ProductAnswerModel = require('./ProductAnswers');
+const ProductAnswer = ProductAnswerModel.getModel();
+
 const ProductQuestion = sequelize.define('product_questions', {
   product: {
     type: Sequelize.BIGINT,
@@ -20,6 +23,8 @@ const ProductQuestion = sequelize.define('product_questions', {
     field: 'statusId'
   }
 });
+
+ProductQuestion.hasMany(ProductAnswer, { as: "product_answers" });
 
 const getProductQuestions = () => {
   return ProductQuestion;

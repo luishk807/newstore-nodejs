@@ -70,14 +70,14 @@ router.get('/productanswers', async(req, res, next) => {
   let userRole = null;
   if (req.query.id) {
     try {
-      userRole = await ProductAnswer.findOne({ where: {id: req.query.id}});
+      userRole = await ProductAnswer.findOne({ where: {id: req.query.id}, include: ['users']});
       res.json(userRole)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      userRole = await ProductAnswer.findAll();
+      userRole = await ProductAnswer.findAll({include: ['users']});
       res.json(userRole)
     } catch(err) {
       res.send({status: false, message: err})

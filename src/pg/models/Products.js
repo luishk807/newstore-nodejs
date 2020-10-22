@@ -9,8 +9,8 @@ const ProductRate = ProductRateModel.getModel();
 const ProductImagesModel = require('./ProductImages');
 const ProductImages = ProductImagesModel.getModel();
 
-const ProductQuestionModel = require('./ProductQuestions');
-const ProductQuestion = ProductQuestionModel.getModel();
+// const ProductQuestionModel = require('./ProductQuestions');
+// const ProductQuestion = ProductQuestionModel.getModel();
 
 const StatusModel = require('./Statuses');
 const Statuses = StatusModel.getModel();
@@ -30,14 +30,14 @@ const Product = sequelize.define('product', {
 });
 
 Product.hasMany(ProductRate, { as: "rates" });
-Product.hasMany(ProductQuestion, { as: "product_questions" });
+// Product.hasMany(ProductQuestion, { as: "product_questions" });
 Product.hasMany(ProductImages, { as: "product_images" });
 
-ProductImages.belongsTo(Product, {
-  foreignKey: "productId",
-  as: "product",
-  onDelete: 'CASCADE',
-});
+// ProductImages.belongsTo(Product, {
+//   foreignKey: "productId",
+//   as: "product",
+//   onDelete: 'CASCADE',
+// });
 
 Product.belongsTo(Statuses, {
   foreignKey: "statusId",
