@@ -3,6 +3,10 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const UserModel = require('./Users');
+const User = UserModel.getModel();
+
+
 const ProductRate = sequelize.define('product_rates', {
   product: {
     type: Sequelize.BIGINT,
@@ -25,6 +29,12 @@ const ProductRate = sequelize.define('product_rates', {
     type: Sequelize.BIGINT,
     field: 'statusId'
   }
+});
+
+ProductRate.belongsTo(User, {
+  foreignKey: "user",
+  as: "users",
+  onDelete: 'CASCADE',
 });
 
 const getProductRates = () => {

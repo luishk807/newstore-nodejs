@@ -91,4 +91,19 @@ router.get('/productrates', async(req, res, next) => {
   }
 });
 
+router.get('/productallrates', async(req, res, next) => {
+  // get statuses
+  let data = null;
+  if (req.query.id) {
+    try {
+      data = await ProductRate.findAll({ where: {productId: req.query.id}, include: ['users']});
+      res.json(data)
+    } catch(err) {
+      res.send({status: false, message: err})
+    }
+  } else { 
+      res.send({status: false, message: 'product missing'})
+  }
+});
+
 module.exports = router
