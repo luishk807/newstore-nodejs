@@ -9,7 +9,15 @@ const UserWishlist = Model.getModel();
 
 router.all('*', cors());
 
-router.delete('/productrates/:id', verify, (req, res, next) => {
+var storage = multer.memoryStorage({
+  destination: function (req, file, cb) {
+    cb(null, '')
+  },
+})
+
+var upload = multer({ storage: storage }).array('image')
+
+router.delete('/wishlists/:id', verify, (req, res, next) => {
   // delete brands
   UserWishlist.findOne({ where: {id: req.params.id}})
   .then((comment) => {
@@ -30,12 +38,14 @@ router.delete('/productrates/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/productrates/:id', [verify], (req, res, next) => {
+router.put('/wishlists/:id', [upload, verify], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
+  const user = req.user.id;
   UserWishlist.update(
     {
       'product': body.product,
+      'user': user,
       'status': body.status
     },
     {
@@ -53,10 +63,12 @@ router.put('/productrates/:id', [verify], (req, res, next) => {
   })
 });
 
-router.post('/productrates', [verify], (req, res, next) => {
+router.post('/wishlists', [upload, verify], (req, res, next) => {
   const body = req.body;
+  const user = req.user.id;
   UserWishlist.create({
     'product': body.product,
+    'user': user
   }).then((data) => {
     res.status(200).json({status: true, data: data});
   }).catch((err) => {
@@ -64,7 +76,7 @@ router.post('/productrates', [verify], (req, res, next) => {
   })
 })
 
-router.get('/productrates', async(req, res, next) => {
+router.get('/wishlists', async(req, res, next) => {
   // get statuses
   let data = null;
   if (req.query.id) {
@@ -83,5 +95,28 @@ router.get('/productrates', async(req, res, next) => {
     }
   }
 });
+
+
+router.get('/userwishlists', [upload, verify], async(req, res, next) => {
+  // get statuses
+  const body = req.body;
+  const user = req.user.id;
+  if (body.product) {
+    try {
+      data = await UserWishlist.findOne({where: {user: user, product: body.product}});
+      res.json(data)
+    } catch(err) {
+      res.send({status: false, message: err})
+    }
+  } else {
+    try {
+      data = await UserWishlist.findAll({ where: {user: user}});
+      res.json(data)
+    } catch(err) {
+      res.send({status: false, message: err})
+    }
+  }
+});
+
 
 module.exports = router
