@@ -45,7 +45,8 @@ router.put('/productquestions/:id', [verify, upload], (req, res, next) => {
   ProductQuestion.update(
     {
       'question': body.question,
-      'status': body.status
+      'status': body.status,
+      'user': req.user.id,
     },
     {
       where: {
