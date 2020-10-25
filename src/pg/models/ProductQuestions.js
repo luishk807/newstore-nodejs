@@ -21,6 +21,14 @@ const ProductQuestion = sequelize.define('product_questions', {
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'
+  },
+  created: {
+    type: Sequelize.DATE,
+    field: 'createdAt'
+  },
+  updated: {
+    type: Sequelize.DATE,
+    field: 'updatedAt'
   }
 });
 

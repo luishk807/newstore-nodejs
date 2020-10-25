@@ -186,7 +186,7 @@ router.get('/vendors', async(req, res, next) => {
   let vendor = null;
   if (req.query.id) {
     try {
-      vendor = await Vendor.findAll({ where: {id: req.query.id}, include: ['vendor_rates']});
+      vendor = await Vendor.findOne({ where: {id: req.query.id}, include: ['vendor_rates']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
