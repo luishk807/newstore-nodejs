@@ -9,6 +9,14 @@ const ProductRate = Model.getModel();
 
 router.all('*', cors());
 
+var storage = multer.memoryStorage({
+  destination: function (req, file, cb) {
+    cb(null, '')
+  },
+})
+
+var upload = multer({ storage: storage }).array('image')
+
 router.delete('/productrates/:id', verify, (req, res, next) => {
   // delete brands
   ProductRate.findOne({ where: {id: req.params.id}})
@@ -30,7 +38,7 @@ router.delete('/productrates/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/productrates/:id', [verify], (req, res, next) => {
+router.put('/productrates/:id', [upload, verify], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
   ProductRate.update(
@@ -56,12 +64,13 @@ router.put('/productrates/:id', [verify], (req, res, next) => {
   })
 });
 
-router.post('/productrates', [verify], (req, res, next) => {
+router.post('/productrates', [upload, verify], (req, res, next) => {
   const body = req.body;
+  const id = req.user.id;
   ProductRate.create({
     'product': body.product,
     'title': body.title,
-    'user': body.user,
+    'user': id,
     'comment': body.comment,
     'rate': body.rate,
   }).then((data) => {
@@ -93,10 +102,21 @@ router.get('/productrates', async(req, res, next) => {
 
 router.get('/productallrates', async(req, res, next) => {
   // get statuses
+  const limit = req.query.limit ? req.query.limit : null;
+
   let data = null;
   if (req.query.id) {
     try {
-      data = await ProductRate.findAll({ where: {productId: req.query.id}, include: ['users']});
+      const query = limit ? { 
+        limit,
+        where: {productId: req.query.id}, 
+        include: ['users']
+      } : {
+        where: {productId: req.query.id}, 
+        include: ['users']
+      }
+      
+      data = await ProductRate.findAll(query);
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
