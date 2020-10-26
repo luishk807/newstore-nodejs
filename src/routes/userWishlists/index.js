@@ -70,7 +70,7 @@ router.post('/wishlists', [upload, verify], (req, res, next) => {
     'product': body.product,
     'user': user
   }).then((data) => {
-    res.status(200).json({status: true, data: data});
+    res.status(200).json({status: true, message: 'Success: Wishlist Added', data: data});
   }).catch((err) => {
     res.status(500).json({status: false, message: err})
   })
@@ -96,14 +96,34 @@ router.get('/wishlists', async(req, res, next) => {
   }
 });
 
-
-router.get('/userwishlists', [upload, verify], async(req, res, next) => {
-  // get statuses
-  const body = req.body;
+router.delete('/userwishlists/:id', verify, (req, res, next) => {
+  // delete brands
   const user = req.user.id;
-  if (body.product) {
+
+  UserWishlist.findOne({ where: {user: user, product: req.params.id}})
+  .then((data) => {
+    UserWishlist.destroy({
+      where: {
+        id: data.id
+      }
+    }).then((deletedRecord) => {
+      if (deletedRecord) {
+        res.status(200).json({ status: true, message: "Wishlist successfully deleted" });
+      } else {
+        res.status(400).json({ status: false, message: "Error on deleting Wishlist!", error: e.toString(), req: req.body });
+      }
+    }, (err) => {
+        res.status(500).json({status: false, message: err});
+    })
+  })
+});
+
+router.get('/userwishlists', [verify], async(req, res, next) => {
+  // get statuses
+  const user = req.user.id;
+  if (req.query.product) {
     try {
-      data = await UserWishlist.findOne({where: {user: user, product: body.product}});
+      data = await UserWishlist.findOne({where: {user: user, product: req.query.product}});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
@@ -117,6 +137,5 @@ router.get('/userwishlists', [upload, verify], async(req, res, next) => {
     }
   }
 });
-
 
 module.exports = router
