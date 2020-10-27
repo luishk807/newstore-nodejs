@@ -3,6 +3,12 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const StatusModel = require('./Statuses');
+const Statuses = StatusModel.getModel();
+
+const ProductModel = require('./Products');
+const Product = ProductModel.getModel();
+
 const Brand = sequelize.define('brand', {
   name: {
     type: Sequelize.TEXT
@@ -15,6 +21,12 @@ const Brand = sequelize.define('brand', {
     field: 'statusId'
   }
 });
+
+Brand.hasMany(Product);
+
+Product.belongsTo(Brand, { foreignKey: 'brand', as: 'productBrand'});
+
+Brand.belongsTo(Statuses, {as: 'brandStatus'});
 
 const getBrand = () => {
   return Brand;

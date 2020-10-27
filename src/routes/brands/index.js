@@ -6,30 +6,10 @@ const config = require('../../config.js');
 const verify = require('../verifyToken');
 const Model = require('../../pg/models/Brands');
 
-const StatusModel = require('../../pg/models/Statuses');
-const ProductModel = require('../../pg/models/Products');
-const Product = ProductModel.getModel();
-
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
 const Brand = Model.getModel();
-const Statuses = StatusModel.getModel();
-
-Brand.hasMany(Product, { as: "products" });
-
-Product.belongsTo(Brand, {
-  foreignKey: "brandId",
-  as: "brands",
-  onDelete: 'SET NULL',
-});
-
-Brand.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
-
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,

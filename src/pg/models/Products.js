@@ -31,19 +31,15 @@ const Product = sequelize.define('product', {
 
 Product.hasMany(ProductRate, { as: "rates" });
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
-Product.hasMany(ProductImages, { as: "product_images" });
+Product.hasMany(ProductImages);
 
-// ProductImages.belongsTo(Product, {
-//   foreignKey: "productId",
-//   as: "product",
-//   onDelete: 'CASCADE',
-// });
+//Statuses.hasMany(Product, { as: 'productStatus', foreignKey: 'product'})
+// Product.belongsToMany(ProductImages, { through: "product_img" });
+// ProductImages.belongsToMany(Product, { through: "product_img" });
 
-Product.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
+ProductImages.belongsTo(Product);
+
+Product.belongsTo(Statuses, { foreignKey: 'statusId', as: 'productStatus'});
 
 const getProduct = () => {
   return Product;

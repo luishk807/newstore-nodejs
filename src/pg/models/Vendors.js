@@ -41,13 +41,9 @@ const Vendor = sequelize.define('vendor', {
   }
 });
 
-Vendor.hasMany(VendorRate, { as: "vendor_rates" });
-Vendor.hasMany(Product, { as: "products" });
-Product.belongsTo(Vendor, {
-  foreignKey: "vendorId",
-  as: 'vendors',
-  onDelete: 'SET NULL'
-})
+Vendor.hasMany(VendorRate);
+Vendor.hasMany(Product);
+Product.belongsTo(Vendor, {foreignKey: 'vendor', as: 'productVendor'})
 
 const getVendor = () => {
   return Vendor;

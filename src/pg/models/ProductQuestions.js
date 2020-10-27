@@ -32,7 +32,7 @@ const ProductQuestion = sequelize.define('product_questions', {
   }
 });
 
-ProductQuestion.hasMany(ProductAnswer, { as: "product_answers" });
+ProductQuestion.hasMany(ProductAnswer);
 
 const getProductQuestions = () => {
   return ProductQuestion;

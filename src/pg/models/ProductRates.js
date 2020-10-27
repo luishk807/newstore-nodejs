@@ -31,11 +31,9 @@ const ProductRate = sequelize.define('product_rates', {
   }
 });
 
-ProductRate.belongsTo(User, {
-  foreignKey: "user",
-  as: "users",
-  onDelete: 'CASCADE',
-});
+ProductRate.belongsTo(User, {as: 'rateUser'});
+
+User.hasMany(ProductRate)
 
 const getProductRates = () => {
   return ProductRate;

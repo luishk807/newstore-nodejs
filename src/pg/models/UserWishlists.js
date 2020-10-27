@@ -3,6 +3,9 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const ProductModel = require('./Products');
+const Product = ProductModel.getModel();
+
 const UserWishlist = sequelize.define('user_wishlists', {
   product: {
     type: Sequelize.BIGINT,
@@ -17,6 +20,8 @@ const UserWishlist = sequelize.define('user_wishlists', {
     field: 'statusId'
   }
 });
+
+UserWishlist.belongsTo(Product, {as: 'wishlistProduct'});
 
 const getUserWishlists = () => {
   return UserWishlist;

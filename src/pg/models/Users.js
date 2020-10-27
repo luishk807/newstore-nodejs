@@ -9,6 +9,9 @@ const ProductAnswer = ProductAnswerModel.getModel();
 const ProductQuestionModel = require('./ProductQuestions');
 const ProductQuestion = ProductQuestionModel.getModel();
 
+const StatusesModel = require('./Statuses');
+const Status = StatusesModel.getModel();
+
 const User = sequelize.define('users', {
   first_name: {
     type: Sequelize.TEXT
@@ -50,22 +53,15 @@ const User = sequelize.define('users', {
 
 //User.hasMany(ProductAnswer, { as: "product_answers" });
 
-User.hasMany(ProductQuestion, { as: "product_questions" });
+User.hasMany(ProductQuestion);
 
-ProductAnswer.belongsTo(User, {
-  foreignKey: "userId",
-  as: "users",
-  onDelete: 'CASCADE',
-});
+User.hasOne(Status, { foreignKey: 'status', as: 'UserStatus'});
 
-ProductQuestion.belongsTo(User, {
-  foreignKey: "userId",
-  as: "users",
-  onDelete: 'CASCADE',
-});
+Status.hasMany(User, { foreignKey: 'user', as: 'StatusUser'});
 
-User.belongsToMany(ProductAnswer, { through: "UserAnswer" });
-ProductAnswer.belongsToMany(User, { through: "UserAnswer" });
+ProductAnswer.belongsTo(User);
+
+ProductQuestion.belongsTo(User, { as: 'productQuestion'});
 
 const getUser = () => {
   return User;

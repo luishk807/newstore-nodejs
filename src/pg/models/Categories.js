@@ -3,6 +3,9 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const ProductModel = require('./Products');
+const Product = ProductModel.getModel();
+
 const Category = sequelize.define('category', {
   name: {
     type: Sequelize.TEXT
@@ -15,6 +18,13 @@ const Category = sequelize.define('category', {
     field: 'statusId'
   }
 });
+
+Product.belongsTo(Category, {
+  foreignKey: "categoryId",
+  as: "categories",
+  onDelete: 'SET NULL',
+});
+
 
 const getCategory = () => {
   return Category;

@@ -6,16 +6,16 @@ const config = require('../../config.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Model = require('../../pg/models/Users');
-const UserAddressModel = require('../../pg/models/UserAddresses');
-const StatusModel = require('../../pg/models/Statuses');
+// const UserAddressModel = require('../../pg/models/UserAddresses');
+// const StatusModel = require('../../pg/models/Statuses');
 const verify = require('../verifyToken');
 const AWS = require('aws-sdk');
 const Op = require('sequelize').Op
 const uuid = require('uuid');
 
 const User = Model.getModel();
-const UserAddress = UserAddressModel.getModel();
-const Statuses = StatusModel.getModel();
+// const UserAddress = UserAddressModel.getModel();
+// const Statuses = StatusModel.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -24,19 +24,19 @@ const s3 = new AWS.S3({
 
 router.all('*', cors());
 
-User.hasMany(UserAddress, { as: "user_addresses" });
+// User.hasMany(UserAddress, { as: "user_addresses" });
 
-UserAddress.belongsTo(User, {
-  foreignKey: "userId",
-  as: "user",
-  onDelete: 'CASCADE',
-});
+// UserAddress.belongsTo(User, {
+//   foreignKey: "userId",
+//   as: "user",
+//   onDelete: 'CASCADE',
+// });
 
-User.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
+// User.belongsTo(Statuses, {
+//   foreignKey: "statusId",
+//   as: "statuses",
+//   onDelete: 'SET NULL',
+// });
 
 var storage = multer.memoryStorage({
   destination: function (req, file, cb) {
