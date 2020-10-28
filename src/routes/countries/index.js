@@ -4,8 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 
-const Model = require('../../pg/models/Countries');
-const Country = Model.getModel();
+const Country = require('../../pg/models/Countries');
 
 router.all('*', cors());
 

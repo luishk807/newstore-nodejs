@@ -9,8 +9,4 @@ const WorkRole = sequelize.define('work_roles', {
   },
 });
 
-const getWorkRole = () => {
-  return WorkRole;
-}
-
-module.exports.getModel = getWorkRole;
+module.exports = WorkRole;

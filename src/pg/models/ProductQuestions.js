@@ -3,8 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductAnswerModel = require('./ProductAnswers');
-const ProductAnswer = ProductAnswerModel.getModel();
+const ProductAnswer = require('./ProductAnswers');
 
 const ProductQuestion = sequelize.define('product_questions', {
   product: {
@@ -32,10 +31,9 @@ const ProductQuestion = sequelize.define('product_questions', {
   }
 });
 
-ProductQuestion.hasMany(ProductAnswer);
+ProductQuestion.hasMany(ProductAnswer, { foreignKey: 'productQuestionId', as: 'questionAnswers'});
 
-const getProductQuestions = () => {
-  return ProductQuestion;
-}
 
-module.exports.getModel = getProductQuestions;
+// ProductAnswer.belongsTo(ProductQuestion, { foreignKey: 'question', as: 'answerQuestion'});
+
+module.exports = ProductQuestion;

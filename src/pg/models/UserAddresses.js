@@ -37,8 +37,4 @@ const UserAddress = sequelize.define('user_addresses', {
   },
 });
 
-const getUserAddress = () => {
-  return UserAddress;
-}
-
-module.exports.getModel = getUserAddress;
+module.exports = UserAddress;

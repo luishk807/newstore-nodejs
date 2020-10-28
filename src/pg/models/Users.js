@@ -3,14 +3,13 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductAnswerModel = require('./ProductAnswers');
-const ProductAnswer = ProductAnswerModel.getModel();
+const ProductAnswer = require('./ProductAnswers');
 
-const ProductQuestionModel = require('./ProductQuestions');
-const ProductQuestion = ProductQuestionModel.getModel();
+const ProductQuestion = require('./ProductQuestions');
 
-const StatusesModel = require('./Statuses');
-const Status = StatusesModel.getModel();
+const UserWishlist = require('./UserWishlists');
+
+const Status = require('./Statuses');
 
 const User = sequelize.define('users', {
   first_name: {
@@ -51,20 +50,18 @@ const User = sequelize.define('users', {
   },
 });
 
-//User.hasMany(ProductAnswer, { as: "product_answers" });
+User.hasMany(ProductAnswer, {  foreignKey: 'userId', as: "userAnswers" });
 
-User.hasMany(ProductQuestion);
+// User.hasMany(ProductQuestion, { foreignKey: 'userId', as: 'userQuestions'});
 
-User.hasOne(Status, { foreignKey: 'status', as: 'UserStatus'});
+ProductQuestion.belongsTo(User, { foreignKey: 'id', as: 'questionUser'});
+
+User.hasMany(UserWishlist, { as: 'userWishlist'})
 
 Status.hasMany(User, { foreignKey: 'user', as: 'StatusUser'});
 
-ProductAnswer.belongsTo(User);
+ProductAnswer.hasOne(User, { foreignKey: 'user', as: 'answerUser'});
 
-ProductQuestion.belongsTo(User, { as: 'productQuestion'});
+// ProductQuestion.belongsTo(User, { foreignKey: '', as: 'productQuestion'});
 
-const getUser = () => {
-  return User;
-}
-
-module.exports.getModel = getUser;
+module.exports = User;

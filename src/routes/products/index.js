@@ -6,12 +6,10 @@ const config = require('../../config.js');
 const data = require('../../samples/products.json');
 const verify = require('../verifyToken');
 
-const Model = require('../../pg/models/Products');
+const Product = require('../../pg/models/Products');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const Product = Model.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -242,7 +240,7 @@ router.get('/products', async(req, res, next) => {
   if (req.query.id) {
     try {
       // product = await Product.findOne({ where: {id: req.query.id},include:['productImages','vendors', 'brands', 'categories','statuses', 'rates']});
-      product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus']});
+      product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus', 'productImages']});
 
       res.json(product)
     } catch(err) {

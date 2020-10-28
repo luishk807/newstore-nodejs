@@ -4,12 +4,10 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const Model = require('../../pg/models/Brands');
+const Brand = require('../../pg/models/Brands');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const Brand = Model.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,

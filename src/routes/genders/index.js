@@ -4,8 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 
-const Model = require('../../pg/models/Genders');
-const Gender = Model.getModel();
+const Gender = require('../../pg/models/Genders');
 
 router.all('*', cors());
 

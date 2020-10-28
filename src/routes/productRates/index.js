@@ -4,8 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const Model = require('../../pg/models/ProductRates');
-const ProductRate = Model.getModel();
+const ProductRate = require('../../pg/models/ProductRates');
 
 router.all('*', cors());
 

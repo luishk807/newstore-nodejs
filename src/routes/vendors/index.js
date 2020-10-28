@@ -5,12 +5,10 @@ const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
 
-const Model = require('../../pg/models/Vendors');
+const Vendor = require('../../pg/models/Vendors');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const Vendor = Model.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,

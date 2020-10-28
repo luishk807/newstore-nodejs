@@ -3,10 +3,6 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const UserModel = require('./Users');
-const User = UserModel.getModel();
-
-
 const ProductRate = sequelize.define('product_rates', {
   product: {
     type: Sequelize.BIGINT,
@@ -31,12 +27,4 @@ const ProductRate = sequelize.define('product_rates', {
   }
 });
 
-ProductRate.belongsTo(User, {as: 'rateUser'});
-
-User.hasMany(ProductRate)
-
-const getProductRates = () => {
-  return ProductRate;
-}
-
-module.exports.getModel = getProductRates;
+module.exports = ProductRate;

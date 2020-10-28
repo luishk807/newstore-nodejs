@@ -9,8 +9,4 @@ const Gender = sequelize.define('gender', {
   },
 });
 
-const getGender = () => {
-  return Gender;
-}
-
-module.exports.getModel = getGender;
+module.exports = Gender;

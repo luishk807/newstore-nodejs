@@ -2,9 +2,7 @@ const router = require('express').Router();
 const cors = require('cors');
 const config = require('../../config.js');
 
-const Model = require('../../pg/models/ProductImages');
-
-const ProductImage = Model.getModel();
+const ProductImage = require('../../pg/models/ProductImages');
 
 router.all('*', cors());
 
@@ -26,7 +24,7 @@ router.post('/product-images', (req, res, next) => {
 });
 
 router.get('/product-images', async(req, res, next) => {
-  ProductImage.findAll().then((pimage) => {
+  ProductImage.findAll({ include: ['ProductImageProduct']}).then((pimage) => {
       res.status(200).json(pimages);
     }).catch((err) => {
       res.send({status: false, message: err})

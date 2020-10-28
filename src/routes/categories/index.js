@@ -5,9 +5,7 @@ const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
 
-const Model = require('../../pg/models/Categories');
-
-const Category = Model.getModel();
+const Category = require('../../pg/models/Categories');
 
 router.all('*', cors());
 

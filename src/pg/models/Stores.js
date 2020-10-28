@@ -44,8 +44,4 @@ const Store = sequelize.define('stores', {
   },
 });
 
-const getStore = () => {
-  return Store;
-}
-
-module.exports.getModel = getStore;
+module.exports = Store;

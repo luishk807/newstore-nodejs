@@ -3,8 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductModel = require('./Products');
-const Product = ProductModel.getModel();
+// const Product = require('./Products');
 
 const UserWishlist = sequelize.define('user_wishlists', {
   product: {
@@ -21,10 +20,6 @@ const UserWishlist = sequelize.define('user_wishlists', {
   }
 });
 
-UserWishlist.belongsTo(Product, {as: 'wishlistProduct'});
+// UserWishlist.belongsTo(Product, {as: 'wishlistProduct'});
 
-const getUserWishlists = () => {
-  return UserWishlist;
-}
-
-module.exports.getModel = getUserWishlists;
+module.exports = UserWishlist;

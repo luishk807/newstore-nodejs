@@ -3,9 +3,6 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-// const UserModel = require('./Users');
-// const User = UserModel.getModel();
-
 const ProductAnswer = sequelize.define('product_answers', {
   question: {
     type: Sequelize.BIGINT,
@@ -24,14 +21,4 @@ const ProductAnswer = sequelize.define('product_answers', {
   }
 });
 
-// ProductAnswer.belongsTo(User, {
-//   foreignKey: "userId",
-//   as: "users",
-//   onDelete: 'CASCADE',
-// });
-
-const getProductAnswers = () => {
-  return ProductAnswer;
-}
-
-module.exports.getModel = getProductAnswers;
+module.exports = ProductAnswer;

@@ -3,8 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductModel = require('./Products');
-const Product = ProductModel.getModel();
+const Product = require('./Products');
 
 const Category = sequelize.define('category', {
   name: {
@@ -25,9 +24,4 @@ Product.belongsTo(Category, {
   onDelete: 'SET NULL',
 });
 
-
-const getCategory = () => {
-  return Category;
-}
-
-module.exports.getModel = getCategory;
+module.exports = Category;

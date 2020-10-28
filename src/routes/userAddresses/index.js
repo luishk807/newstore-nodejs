@@ -4,11 +4,8 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const Model = require('../../pg/models/UserAddresses');
-const UserModel = require('../../pg/models/Users');
-
-const UserAddress = Model.getModel();
-const User = UserModel.getModel();
+const User = require('../../pg/models/UserAddresses');
+const UserAddress = require('../../pg/models/Users');
 
 router.all('*', cors());
 
