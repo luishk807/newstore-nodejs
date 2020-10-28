@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const config = require('../../config.js');
 const bcrypt = require('bcryptjs');
 const User = require('../../pg/models/Users');
-const UserAddress = require('../../pg/models/UserAddresses');
 const { cleanData } = require('../../utils')
 
 const AWS = require('aws-sdk');
@@ -29,7 +28,7 @@ router.post('/login', upload, async(req, res, next) => {
     try {
       const newEmail = cleanData(body.email)
       console.log('new text', newEmail)
-      const user = await User.findOne({ where: {email: body.email}});
+      const user = await User.findOne({ where: {email: body.email}, include: ['useStatus']});
       
       if (!user) {
         return res.status(200).json({status:false, message: 'user not found'})

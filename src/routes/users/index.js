@@ -219,7 +219,7 @@ router.get('/users', verify, async(req, res, next) => {
   let user = null;
   if (req.query.id) {
     try {
-      user = await User.findOne({ where: {id: req.query.id},include:['user_addresses', 'statuses']});
+      user = await User.findOne({ where: {id: req.query.id}, include: ['useStatus','userRoles']});
       res.status(200).json(user)
     } catch(err) {
       res.status(404).json({status:false, message: err})
@@ -233,11 +233,11 @@ router.get('/users', verify, async(req, res, next) => {
           where: {
             id: { [Op.ne]: req.user.id } // This does not work
           },
-          include:['user_addresses', 'statuses']
+          include:['useStatus','userRoles']
         };
       } else {
         query = {
-          include:['user_addresses', 'statuses']
+          include:['useStatus','userRoles']
         };
       }
       user = await User.findAll(query)
