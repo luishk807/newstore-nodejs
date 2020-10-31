@@ -7,7 +7,7 @@ const ProductRate = require('./ProductRates');
 
 const ProductImages = require('./ProductImages');
 
-// const UserWishlist = require('./UserWishlist');
+const UserWishlist = require('./UserWishlists');
 
 // const ProductQuestionModel = require('./ProductQuestions');
 // const ProductQuestion = ProductQuestionModel.getModel();
@@ -32,6 +32,8 @@ Product.hasMany(ProductRate, { as: "rates" });
 
 ProductRate.belongsTo(Product, { foreignKey: "productId", as: "rateProduct"})
 
+UserWishlist.belongsTo(Product, {foreignKey: 'productId', as: 'wishlistProduct'});
+
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
 Product.hasMany(ProductImages, { as: "productImages"});
 
@@ -39,5 +41,6 @@ Product.hasMany(ProductImages, { as: "productImages"});
 ProductImages.belongsTo(Product, { foreignKey: 'productId', as: 'ProductImageProduct'});
 
 Product.belongsTo(Statuses, { foreignKey: 'statusId', as: 'productStatus'});
+
 
 module.exports = Product;

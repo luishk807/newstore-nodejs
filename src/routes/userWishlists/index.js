@@ -129,7 +129,7 @@ router.get('/userwishlists', [verify], async(req, res, next) => {
     }
   } else {
     try {
-      data = await UserWishlist.findAll({ where: {user: user}, include: ['wishlistProduct']});
+      data = await UserWishlist.findAll({ where: {user: user}, include: ['wishlistProduct','userWishlistUser','userWishlistStatus']});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})

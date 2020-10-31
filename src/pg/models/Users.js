@@ -64,6 +64,8 @@ ProductQuestion.belongsTo(User, { foreignKey: 'id', as: 'questionUser'});
 User.belongsTo(UserRole, { foreignKey: 'userRole', as: 'userRoles'})
 User.hasMany(UserWishlist, { as: 'userWishlist'})
 
+UserWishlist.belongsTo(User, { foreignKey: 'userId', as: 'userWishlistUser'});
+
 User.hasMany(Rates, {foreignKey: 'userId', as: "userRates"});
 
 Rates.belongsTo(User, { foreignKey: 'userId', as: 'rateUsers'});
