@@ -11,6 +11,8 @@ const UserWishlist = require('./UserWishlists');
 
 const UserRole = require('./UserRoles');
 
+const Rates = require('./ProductRates');
+
 const Status = require('./Statuses');
 
 const User = sequelize.define('users', {
@@ -61,6 +63,10 @@ ProductQuestion.belongsTo(User, { foreignKey: 'id', as: 'questionUser'});
 
 User.belongsTo(UserRole, { foreignKey: 'userRole', as: 'userRoles'})
 User.hasMany(UserWishlist, { as: 'userWishlist'})
+
+User.hasMany(Rates, {foreignKey: 'userId', as: "userRates"});
+
+Rates.belongsTo(User, { foreignKey: 'userId', as: 'rateUsers'});
 
 // Status.hasMany(User, { foreignKey: 'user', as: 'StatusUser'});
 

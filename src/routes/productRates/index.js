@@ -109,19 +109,19 @@ router.get('/productallrates', async(req, res, next) => {
       const query = limit ? { 
         limit,
         where: {productId: req.query.id}, 
-        include: ['users']
+        include: ['rateUsers', 'rateProduct', 'rateStatus']
       } : {
         where: {productId: req.query.id}, 
-        include: ['users']
+        include: ['rateUsers', 'rateProduct', 'rateStatus']
       }
-      
+      console.log("jquery", query);
       data = await ProductRate.findAll(query);
       res.json(data)
     } catch(err) {
-      res.send({status: false, message: err})
+      res.send({})
     }
   } else { 
-      res.send({status: false, message: 'product missing'})
+      res.send({})
   }
 });
 

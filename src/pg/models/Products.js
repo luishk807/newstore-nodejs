@@ -29,6 +29,9 @@ const Product = sequelize.define('product', {
 });
 
 Product.hasMany(ProductRate, { as: "rates" });
+
+ProductRate.belongsTo(Product, { foreignKey: "productId", as: "rateProduct"})
+
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
 Product.hasMany(ProductImages, { as: "productImages"});
 

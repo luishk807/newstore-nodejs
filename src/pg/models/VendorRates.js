@@ -28,4 +28,5 @@ const VendorRate = sequelize.define('vendor_rates', {
 });
 
 
+
 module.exports = VendorRate;

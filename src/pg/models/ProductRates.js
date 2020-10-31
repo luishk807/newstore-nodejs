@@ -3,6 +3,8 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const Statuses = require('./Statuses');
+
 const ProductRate = sequelize.define('product_rates', {
   product: {
     type: Sequelize.BIGINT,
@@ -26,5 +28,7 @@ const ProductRate = sequelize.define('product_rates', {
     field: 'statusId'
   }
 });
+
+ProductRate.belongsTo(Statuses, { foreignKey: 'statusId', as: 'rateStatus'});
 
 module.exports = ProductRate;
