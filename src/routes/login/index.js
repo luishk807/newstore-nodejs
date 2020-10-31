@@ -5,15 +5,11 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const config = require('../../config.js');
 const bcrypt = require('bcryptjs');
-const Model = require('../../pg/models/Users');
-const UserAddressModel = require('../../pg/models/UserAddresses');
+const User = require('../../pg/models/Users');
 const { cleanData } = require('../../utils')
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const User = Model.getModel();
-const UserAddress = UserAddressModel.getModel();
 
 router.all('*', cors());
 
@@ -32,7 +28,7 @@ router.post('/login', upload, async(req, res, next) => {
     try {
       const newEmail = cleanData(body.email)
       console.log('new text', newEmail)
-      const user = await User.findOne({ where: {email: body.email}});
+      const user = await User.findOne({ where: {email: body.email}, include: ['useStatus']});
       
       if (!user) {
         return res.status(200).json({status:false, message: 'user not found'})

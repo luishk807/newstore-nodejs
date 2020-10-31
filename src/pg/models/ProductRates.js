@@ -3,9 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const UserModel = require('./Users');
-const User = UserModel.getModel();
-
+const Statuses = require('./Statuses');
 
 const ProductRate = sequelize.define('product_rates', {
   product: {
@@ -31,14 +29,6 @@ const ProductRate = sequelize.define('product_rates', {
   }
 });
 
-ProductRate.belongsTo(User, {
-  foreignKey: "user",
-  as: "users",
-  onDelete: 'CASCADE',
-});
+ProductRate.belongsTo(Statuses, { foreignKey: 'statusId', as: 'rateStatus'});
 
-const getProductRates = () => {
-  return ProductRate;
-}
-
-module.exports.getModel = getProductRates;
+module.exports = ProductRate;

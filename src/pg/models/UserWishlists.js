@@ -3,6 +3,8 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
+const Status = require('./Statuses');
+
 const UserWishlist = sequelize.define('user_wishlists', {
   product: {
     type: Sequelize.BIGINT,
@@ -18,8 +20,6 @@ const UserWishlist = sequelize.define('user_wishlists', {
   }
 });
 
-const getUserWishlists = () => {
-  return UserWishlist;
-}
+UserWishlist.belongsTo(Status, { foreignKey: 'statusId', as: 'userWishlistStatus'});
 
-module.exports.getModel = getUserWishlists;
+module.exports = UserWishlist;

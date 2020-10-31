@@ -4,8 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const Model = require('../../pg/models/ProductQuestions');
-const ProductQuestion = Model.getModel();
+const ProductQuestion = require('../../pg/models/ProductQuestions');
 
 router.all('*', cors());
 
@@ -84,14 +83,14 @@ router.get('/productquestions', async(req, res, next) => {
 
   if (req.query.id) {
     try {
-      data = await ProductQuestion.findOne({ where: {id: req.query.id}, include:['product_answers', 'users']});
+      data = await ProductQuestion.findOne({ where: {id: req.query.id}, include:['questionAnswers', 'questionUser']});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      data = await ProductQuestion.findAll({limit, include:['product_answers', 'users'], order: [['created', 'DESC']]});
+      data = await ProductQuestion.findAll({limit, include:['questionAnswers','questionUser'], order: [['created', 'DESC']]});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})

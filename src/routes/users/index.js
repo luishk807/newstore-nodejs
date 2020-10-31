@@ -5,17 +5,11 @@ const fs = require('fs');
 const config = require('../../config.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const Model = require('../../pg/models/Users');
-const UserAddressModel = require('../../pg/models/UserAddresses');
-const StatusModel = require('../../pg/models/Statuses');
+const User = require('../../pg/models/Users');
 const verify = require('../verifyToken');
 const AWS = require('aws-sdk');
 const Op = require('sequelize').Op
 const uuid = require('uuid');
-
-const User = Model.getModel();
-const UserAddress = UserAddressModel.getModel();
-const Statuses = StatusModel.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -23,20 +17,6 @@ const s3 = new AWS.S3({
 })
 
 router.all('*', cors());
-
-User.hasMany(UserAddress, { as: "user_addresses" });
-
-UserAddress.belongsTo(User, {
-  foreignKey: "userId",
-  as: "user",
-  onDelete: 'CASCADE',
-});
-
-User.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
 
 var storage = multer.memoryStorage({
   destination: function (req, file, cb) {
@@ -239,7 +219,7 @@ router.get('/users', verify, async(req, res, next) => {
   let user = null;
   if (req.query.id) {
     try {
-      user = await User.findOne({ where: {id: req.query.id},include:['user_addresses', 'statuses']});
+      user = await User.findOne({ where: {id: req.query.id}, include: ['useStatus','userRoles']});
       res.status(200).json(user)
     } catch(err) {
       res.status(404).json({status:false, message: err})
@@ -253,11 +233,11 @@ router.get('/users', verify, async(req, res, next) => {
           where: {
             id: { [Op.ne]: req.user.id } // This does not work
           },
-          include:['user_addresses', 'statuses']
+          include:['useStatus','userRoles']
         };
       } else {
         query = {
-          include:['user_addresses', 'statuses']
+          include:['useStatus','userRoles']
         };
       }
       user = await User.findAll(query)

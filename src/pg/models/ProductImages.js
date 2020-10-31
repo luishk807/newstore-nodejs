@@ -15,8 +15,4 @@ const ProductImaage = sequelize.define('product_images', {
   }
 });
 
-const getProductImages = () => {
-  return ProductImaage;
-}
-
-module.exports.getModel = getProductImages;
+module.exports = ProductImaage;

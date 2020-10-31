@@ -6,12 +6,10 @@ const config = require('../../config.js');
 const data = require('../../samples/products.json');
 const verify = require('../verifyToken');
 
-const Model = require('../../pg/models/Products');
+const Product = require('../../pg/models/Products');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const Product = Model.getModel();
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -241,7 +239,7 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id},include:['product_images','vendors', 'brands', 'categories','statuses', 'rates']});
+      product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus', 'product_images']});
 
       res.json(product)
     } catch(err) {
@@ -249,7 +247,7 @@ router.get('/products', async(req, res, next) => {
     }
   } else {
     try {
-      product = await Product.findAll({include:['product_images','vendors', 'brands','categories','statuses', 'rates']});
+      product = await Product.findAll({include:['product_images','productVendor', 'productBrand','categories','productStatus', 'rates']});
       res.json(product)
     } catch(err) {
       res.send(err)

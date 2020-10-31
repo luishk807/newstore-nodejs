@@ -4,32 +4,10 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const Model = require('../../pg/models/Brands');
-
-const StatusModel = require('../../pg/models/Statuses');
-const ProductModel = require('../../pg/models/Products');
-const Product = ProductModel.getModel();
+const Brand = require('../../pg/models/Brands');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const Brand = Model.getModel();
-const Statuses = StatusModel.getModel();
-
-Brand.hasMany(Product, { as: "products" });
-
-Product.belongsTo(Brand, {
-  foreignKey: "brandId",
-  as: "brands",
-  onDelete: 'SET NULL',
-});
-
-Brand.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
-
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -179,7 +157,7 @@ router.post('/brands', [verify, upload], (req, res, next) => {
 })
 
 router.get('/brands/:id', async(req, res, next) => {
-    let brand = await Brand.findAll({ where: {id: req.params.id}, include:['statuses']});
+    let brand = await Brand.findAll({ where: {id: req.params.id}, include:['brandStatus']});
     res.json(brand)
 });
 
@@ -188,14 +166,14 @@ router.get('/brands', async(req, res, next) => {
   let brand = null;
   if (req.query.id) {
     try {
-      brand = await Brand.findAll({ where: {id: req.query.id}, include:['statuses']});
+      brand = await Brand.findAll({ where: {id: req.query.id}, include:['brandStatus']});
       res.status(200).json(brand)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      brand = await Brand.findAll({include:['statuses']});
+      brand = await Brand.findAll({include:['brandStatus']});
       res.status(200).json(brand)
     } catch(err) {
       res.status(500).json({status: false, message: err})

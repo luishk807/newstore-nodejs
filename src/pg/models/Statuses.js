@@ -9,8 +9,4 @@ const Status = sequelize.define('statuses', {
   },
 });
 
-const getStatus = () => {
-  return Status;
-}
-
-module.exports.getModel = getStatus;
+module.exports = Status;

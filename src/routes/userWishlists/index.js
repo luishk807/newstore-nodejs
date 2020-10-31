@@ -4,8 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const Model = require('../../pg/models/UserWishlists');
-const UserWishlist = Model.getModel();
+const UserWishlist = require('../../pg/models/UserWishlists');
 
 router.all('*', cors());
 
@@ -130,7 +129,7 @@ router.get('/userwishlists', [verify], async(req, res, next) => {
     }
   } else {
     try {
-      data = await UserWishlist.findAll({ where: {user: user}});
+      data = await UserWishlist.findAll({ where: {user: user}, include: ['wishlistProduct','userWishlistUser','userWishlistStatus']});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})

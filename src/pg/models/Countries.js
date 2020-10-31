@@ -9,8 +9,4 @@ const Country = sequelize.define('country', {
   },
 });
 
-const getCountry = () => {
-  return Country;
-}
-
-module.exports.getModel = getCountry;
+module.exports = Country;

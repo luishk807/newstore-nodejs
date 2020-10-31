@@ -3,11 +3,9 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const VendorRateModel = require('./VendorRates');
-const VendorRate = VendorRateModel.getModel();
+const VendorRate = require('./VendorRates');
 
-const ProductModel = require('./Products');
-const Product = ProductModel.getModel();
+const Product = require('./Products');
 
 const Vendor = sequelize.define('vendor', {
   first_name: {
@@ -41,16 +39,8 @@ const Vendor = sequelize.define('vendor', {
   }
 });
 
-Vendor.hasMany(VendorRate, { as: "vendor_rates" });
-Vendor.hasMany(Product, { as: "products" });
-Product.belongsTo(Vendor, {
-  foreignKey: "vendorId",
-  as: 'vendors',
-  onDelete: 'SET NULL'
-})
+Vendor.hasMany(VendorRate);
+Vendor.hasMany(Product);
+Product.belongsTo(Vendor, {foreignKey: 'vendor', as: 'productVendor'})
 
-const getVendor = () => {
-  return Vendor;
-}
-
-module.exports.getModel = getVendor;
+module.exports = Vendor;

@@ -5,11 +5,7 @@ const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
 
-const Model = require('../../pg/models/Categories');
-const ProductModel = require('../../pg/models/Products');
-
-const Category = Model.getModel();
-const Product = ProductModel.getModel();
+const Category = require('../../pg/models/Categories');
 
 router.all('*', cors());
 
@@ -18,12 +14,6 @@ var storage = multer.memoryStorage({
     cb(null, '')
   },
 })
-
-Product.belongsTo(Category, {
-  foreignKey: "categoryId",
-  as: "categories",
-  onDelete: 'SET NULL',
-});
 
 var upload = multer({ storage: storage }).single('image')
 

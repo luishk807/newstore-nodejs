@@ -27,8 +27,6 @@ const VendorRate = sequelize.define('vendor_rates', {
   }
 });
 
-const getVendorRates = () => {
-  return VendorRate;
-}
 
-module.exports.getModel = getVendorRates;
+
+module.exports = VendorRate;

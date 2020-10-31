@@ -3,17 +3,16 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductRateModel = require('./ProductRates');
-const ProductRate = ProductRateModel.getModel();
+const ProductRate = require('./ProductRates');
 
-const ProductImagesModel = require('./ProductImages');
-const ProductImages = ProductImagesModel.getModel();
+const ProductImages = require('./ProductImages');
+
+const UserWishlist = require('./UserWishlists');
 
 // const ProductQuestionModel = require('./ProductQuestions');
 // const ProductQuestion = ProductQuestionModel.getModel();
 
-const StatusModel = require('./Statuses');
-const Statuses = StatusModel.getModel();
+const Statuses = require('./Statuses');
 
 const Product = sequelize.define('product', {
   name: { type: Sequelize.TEXT },
@@ -30,23 +29,18 @@ const Product = sequelize.define('product', {
 });
 
 Product.hasMany(ProductRate, { as: "rates" });
+
+ProductRate.belongsTo(Product, { foreignKey: "productId", as: "rateProduct"})
+
+UserWishlist.belongsTo(Product, {foreignKey: 'productId', as: 'wishlistProduct'});
+
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
-Product.hasMany(ProductImages, { as: "product_images" });
+Product.hasMany(ProductImages, { as: "product_images"});
 
-// ProductImages.belongsTo(Product, {
-//   foreignKey: "productId",
-//   as: "product",
-//   onDelete: 'CASCADE',
-// });
+//Product.hasMany(UserWishlist, { foreignKey: 'productId', as: 'productWishlist'})
+ProductImages.belongsTo(Product, { foreignKey: 'productId', as: 'ProductImageProduct'});
 
-Product.belongsTo(Statuses, {
-  foreignKey: "statusId",
-  as: "statuses",
-  onDelete: 'SET NULL',
-});
+Product.belongsTo(Statuses, { foreignKey: 'statusId', as: 'productStatus'});
 
-const getProduct = () => {
-  return Product;
-}
 
-module.exports.getModel = getProduct;
+module.exports = Product;
