@@ -239,7 +239,7 @@ router.get('/products', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus', 'product_images']});
+      product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus', 'productImages']});
 
       res.json(product)
     } catch(err) {
@@ -247,7 +247,7 @@ router.get('/products', async(req, res, next) => {
     }
   } else {
     try {
-      product = await Product.findAll({include:['product_images','productVendor', 'productBrand','categories','productStatus', 'rates']});
+      product = await Product.findAll({include:['productImages','productVendor', 'productBrand','categories','productStatus', 'rates']});
       res.json(product)
     } catch(err) {
       res.send(err)

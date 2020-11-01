@@ -35,7 +35,7 @@ ProductRate.belongsTo(Product, { foreignKey: "productId", as: "rateProduct"})
 UserWishlist.belongsTo(Product, {foreignKey: 'productId', as: 'wishlistProduct'});
 
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
-Product.hasMany(ProductImages, { as: "product_images"});
+Product.hasMany(ProductImages, { as: "productImages"});
 
 //Product.hasMany(UserWishlist, { foreignKey: 'productId', as: 'productWishlist'})
 ProductImages.belongsTo(Product, { foreignKey: 'productId', as: 'ProductImageProduct'});
