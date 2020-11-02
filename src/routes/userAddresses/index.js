@@ -37,58 +37,52 @@ router.delete('/useraddresses/:id', verify, (req, res, next) => {
 router.put('/useraddresses/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const sid = req.params.id;
+  const user = req.user.id;
   UserAddress.update(
     {
-      'name': body.name,
       'address': body.address,
+      'name': body.name,
       'city': body.city,
-      'phone': body.phone,
+      'zip': body.zip,
+      'user': user,
       'country': body.country,
+      'phone': body.phone,
       'mobile': body.mobile,
       'township': body.township,
       'province': body.province,
-      'email': body.email,
     },
     {
       where: {
         id: sid
       }
     }
-  ).then((updated) => {
-    let message = "User address Updated";
-    // delete all images first in servers
-    res.status(200).json({
-      data: updated,
-      message: message
-    });
+  ).then((address) => {
+    res.status(200).json({status: true, message: 'Success: Adddress Saved', data: address});
   }).catch((err) => {
-    res.status(500).json(err)
+    res.status(500).json({status: false, message: err})
   })
 });
 
 router.post('/useraddresses', [verify, upload], (req, res, next) => {
   const body = req.body;
-
+  const user = req.user.id;
   UserAddress.create({
-    'name': body.name,
     'address': body.address,
+    'name': body.name,
     'city': body.city,
-    'userId': body.userId,
+    'zip': body.zip,
+    'user': user,
     'country': body.country,
     'phone': body.phone,
     'mobile': body.mobile,
     'township': body.township,
     'province': body.province,
-    'email': body.email,
   }).then((address) => {
-    res.status(200).json(address);
+    res.status(200).json({status: true, message: 'Success: Adddress Saved', data: address});
+  }).catch((err) => {
+    res.status(500).json({status: false, message: err})
   })
 })
-
-router.get('/useraddresses/:id', verify, async(req, res, next) => {
-    let address = await UserAddress.findAll({ where: {id: req.params.id}});
-    res.json(address)
-});
 
 router.get('/useraddresses', verify, async(req, res, next) => {
   // get products
@@ -97,14 +91,14 @@ router.get('/useraddresses', verify, async(req, res, next) => {
   let address = null;
   if (user) {
     try {
-      address = await UserAddress.findAll({ where: {user: user}, include:['addressesUsers']});
+      address = await UserAddress.findAll({ where: {user: user}, include:['addressesUsers', 'addressCountry']});
       res.status(200).json(address)
     } catch(err) {
       res.status(500).json(err)
     }
   } else {
     try {
-      address = await UserAddress.findAll({ where: {id: req.query.id}, include:['addressesUsers']});
+      address = await UserAddress.findAll({ where: {id: req.query.id}, include:['addressesUsers', 'addressCountry']});
       res.status(200).json(address)
     } catch(err) {
       res.status(500).json(err)
@@ -120,7 +114,7 @@ router.get('/usersaddresses', [verify, upload], async(req, res, next) => {
   let address = null;
   if (user) {
     try {
-      address = await UserAddress.findAll({ where: {user: user}, include:['addressesUsers']});
+      address = await UserAddress.findAll({ where: {user: user}, include:['addressesUsers', 'addressCountry']});
       res.status(200).json(address)
     } catch(err) {
       res.status(500).json(err)

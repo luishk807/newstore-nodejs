@@ -4,7 +4,12 @@ const pgconfig = require('../config')
 const sequelize = pgconfig.getSequelize();
 const User = require('./Users');
 
+const Country = require('./Countries');
+
 const UserAddress = sequelize.define('user_addresses', {
+  name: {
+    type: Sequelize.TEXT
+  },
   address: {
     type: Sequelize.TEXT
   },
@@ -40,6 +45,8 @@ const UserAddress = sequelize.define('user_addresses', {
 });
 
 UserAddress.belongsTo(User, { foreignKey: 'userId', as: 'addressesUsers'})
+
+UserAddress.belongsTo(Country, { foreignKey: 'countryId', as: 'addressCountry'});
 
 User.hasMany(UserAddress, { foreignKey: 'userId', as: 'userAddresses' })
 
