@@ -2,6 +2,7 @@ const Sequelize = require('sequelize');
 const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
+const User = require('./Users');
 
 const UserAddress = sequelize.define('user_addresses', {
   address: {
@@ -32,9 +33,14 @@ const UserAddress = sequelize.define('user_addresses', {
   mobile: {
     type: Sequelize.TIME
   },
-  userId: {
-    type: Sequelize.BIGINT
+  user: {
+    type: Sequelize.BIGINT,
+    field: 'userId'
   },
 });
+
+UserAddress.belongsTo(User, { foreignKey: 'userId', as: 'addressesUsers'})
+
+User.hasMany(UserAddress, { foreignKey: 'userId', as: 'userAddresses' })
 
 module.exports = UserAddress;

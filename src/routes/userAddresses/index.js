@@ -4,8 +4,8 @@ const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
-const User = require('../../pg/models/UserAddresses');
-const UserAddress = require('../../pg/models/Users');
+const UserAddress = require('../../pg/models/UserAddresses');
+const User = require('../../pg/models/Users');
 
 router.all('*', cors());
 
@@ -92,17 +92,42 @@ router.get('/useraddresses/:id', verify, async(req, res, next) => {
 
 router.get('/useraddresses', verify, async(req, res, next) => {
   // get products
+  const user = req.user.id;
+  
   let address = null;
-  if (req.query.id) {
+  if (user) {
     try {
-      address = await UserAddress.findAll({ where: {id: req.query.id}, include:['user']});
+      address = await UserAddress.findAll({ where: {user: user}, include:['addressesUsers']});
       res.status(200).json(address)
     } catch(err) {
       res.status(500).json(err)
     }
   } else {
     try {
-      address = await UserAddress.findAll({include:['user']});
+      address = await UserAddress.findAll({ where: {id: req.query.id}, include:['addressesUsers']});
+      res.status(200).json(address)
+    } catch(err) {
+      res.status(500).json(err)
+    }
+  }
+});
+
+// for admin
+router.get('/usersaddresses', [verify, upload], async(req, res, next) => {
+  // get products
+  const user = req.body.user;
+  
+  let address = null;
+  if (user) {
+    try {
+      address = await UserAddress.findAll({ where: {user: user}, include:['addressesUsers']});
+      res.status(200).json(address)
+    } catch(err) {
+      res.status(500).json(err)
+    }
+  } else {
+    try {
+      address = await UserAddress.findAll({ where: {id: req.body.id}, include:['addressesUsers']});
       res.status(200).json(address)
     } catch(err) {
       res.status(500).json(err)
