@@ -7,11 +7,10 @@ const VendorRate = require('./VendorRates');
 
 const Product = require('./Products');
 
+const User = require('./Users');
+
 const Vendor = sequelize.define('vendor', {
-  first_name: {
-    type: Sequelize.TEXT
-  },
-  last_name: {
+  name: {
     type: Sequelize.TEXT
   },
   position: {
@@ -19,9 +18,6 @@ const Vendor = sequelize.define('vendor', {
     field: 'positionId'
   },
   description: {
-    type: Sequelize.TEXT
-  },
-  password: {
     type: Sequelize.TEXT
   },
   email: {
@@ -34,13 +30,15 @@ const Vendor = sequelize.define('vendor', {
     type: Sequelize.BIGINT,
     field: 'statusId'
   },
-  last_login: {
-    type: Sequelize.TIME
+  user: {
+    type: Sequelize.BIGINT,
+    field: 'userId'
   }
 });
 
 Vendor.hasMany(VendorRate);
 Vendor.hasMany(Product);
+Vendor.belongsTo(User, {foreignKey: 'userId', as: "vendorUser"})
 Product.belongsTo(Vendor, {foreignKey: 'vendor', as: 'productVendor'})
 
 module.exports = Vendor;

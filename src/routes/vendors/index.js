@@ -92,9 +92,8 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
     })
 
     dataInsert = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
-      'password': body.password,
+      'name': body.name,
+      'user': body.user,
       'description': body.description,
       'position': body.position,
       'email': body.email,
@@ -102,10 +101,9 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
     }
   } else {
     dataInsert = {
-      'last_name': body.last_name,
+      'name': body.name,
       'description': body.description,
-      'first_name': body.first_name,
-      'password': body.password,
+      'user': body.user,
       'position': body.position,
       'email': body.email,
     }
@@ -150,9 +148,8 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
     })
     
     dataEntry = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
-      'password': body.password,
+      'name': body.name,
+      'user': body.user,
       'description': body.description,
       'position': body.position,
       'email': body.email,
@@ -160,10 +157,9 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
     }
   } else {
     dataEntry = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
+      'name': body.name,
+      'user': body.user,
       'description': body.description,
-      'password': body.password,
       'position': body.position,
       'email': body.email,
     }
@@ -175,7 +171,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
 })
 
 router.get('/vendors/:id', async(req, res, next) => {
-    let vendor = await Vendor.findAll({ where: {id: req.params.id}, include: ['vendor_rates']});
+    let vendor = await Vendor.findAll({ where: {id: req.params.id}, include: ['vendor_rates', 'vendorUser']});
     res.json(vendor)
 });
 
@@ -184,14 +180,14 @@ router.get('/vendors', async(req, res, next) => {
   let vendor = null;
   if (req.query.id) {
     try {
-      vendor = await Vendor.findOne({ where: {id: req.query.id}, include: ['vendor_rates']});
+      vendor = await Vendor.findOne({ where: {id: req.query.id}, include: ['vendor_rates', 'vendorUser']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      vendor = await Vendor.findAll({include: ['vendor_rates']});
+      vendor = await Vendor.findAll({include: ['vendor_rates', 'vendorUser']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
