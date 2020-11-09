@@ -29,9 +29,9 @@ var upload = multer({ storage: storage }).array('image')
 
 router.delete('/products/:id', verify, (req, res, next) => {
   // delete products
-  Product.findAll({ where: {id: req.params.id},include:['product_images','vendors', 'brands', 'categories', 'statuses', 'rates']})
+  Product.findAll({ where: {id: req.params.id},include:['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']})
   .then((product) => {
-    const mapFiles = product[0].product_images.map(data => {
+    const mapFiles = product[0].productImages.map(data => {
       return data.img_url;
     })
     Product.destroy({
@@ -325,5 +325,44 @@ router.post('/productsvendor', [verify, upload], (req, res, next) => {
     res.status(401).json({status: false, message: "Unable to add product"});
   })
 })
+
+router.delete('/productsvendor/:id', verify, (req, res, next) => {
+  // delete products
+  Product.findAll({ where: {id: req.params.id},include:['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']})
+  .then((product) => {
+    const mapFiles = product[0].productImages.map(data => {
+      return data.img_url;
+    })
+    Product.destroy({
+      where: {
+        id: product[0].id
+      }
+    }).then((deletedRecord) => {
+      if (deletedRecord) {
+        // console.log(deletedRecord, mapFiles)
+        try {
+          mapFiles.forEach(data => {
+            console.log(data)
+            const params = {
+              Bucket: process.env.AWS_BUCKET_NAME,
+              Key: data,
+            }
+            s3.deleteObject(params, (err, data) => {
+              if (err) {
+                res.status(500).send({status: false, message: err})
+              }
+            })
+          })
+          res.status(200).json({ status: true, message: "Product successfully deleted" });
+        } catch (e) {
+          res.status(400).json({ status: false, message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
+        }
+      }
+    }, (err) => {
+        res.json(err);
+    })
+  })
+});
+
 
 module.exports = router
