@@ -7,6 +7,7 @@ const data = require('../../samples/products.json');
 const verify = require('../verifyToken');
 
 const Product = require('../../pg/models/Products');
+const ProductImages = require('../../pg/models/ProductImages');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
@@ -216,7 +217,7 @@ router.post('/products', [verify, upload], (req, res, next) => {
     let counter = 1;
     const newImages = imagesUploaded.map((data) => {
       return {
-        'product': product.id,
+        'productId': product.id,
         'img_url': data.Key,
         'position': counter++
       }
@@ -296,7 +297,6 @@ router.post('/productsvendor', [verify, upload], (req, res, next) => {
   })
 
   const body = req.body;
-  console.log("boyd", body)
   Product.create(
     {
       'name': body.name,
@@ -313,7 +313,7 @@ router.post('/productsvendor', [verify, upload], (req, res, next) => {
     let counter = 1;
     const newImages = imagesUploaded.map((data) => {
       return {
-        'product': product.id,
+        'productId': product.id,
         'img_url': data.Key,
         'position': counter++
       }
