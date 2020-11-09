@@ -255,4 +255,75 @@ router.get('/products', async(req, res, next) => {
   }
 });
 
+router.get('/productsvendor', [verify], async(req, res, next) => {
+  // get products
+  let product = null;
+  if (req.query.id) {
+    try {
+      product = await Product.findAll({ where: {vendor: req.query.id}, include: ['productStatus', 'productImages', 'productVendor']});
+
+      res.json(product)
+    } catch(err) {
+      res.send({status: false, message: err})
+    }
+  } else {
+      res.send({status: false, message: "ERROR: invalid vendor"});
+  }
+});
+
+router.post('/productsvendor', [verify, upload], (req, res, next) => {
+  // add / update products
+
+  const imagesUploaded = req.files.map((file) => {
+    let myFile = file.originalname.split('.');
+    const fileType = myFile[myFile.length - 1];
+    const fileName = `${uuid.v4()}.${fileType}`;
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: fileName,
+      Body: file.buffer,
+    }
+
+    s3.upload(params, (err, data) => {
+      if (err) {
+        res.status(500).send(err)
+      }
+    })
+
+    return {
+      Key: fileName
+    };
+  })
+
+  const body = req.body;
+  console.log("boyd", body)
+  Product.create(
+    {
+      'name': body.name,
+      'stock': body.stock,
+      'amount': body.amount,
+      'category': body.category,
+      'brand': body.brand,
+      'model': body.model,
+      'code': body.code,
+      'description': body.description,
+      'vendor': body.vendor,
+    }
+  ).then((product) => {
+    let counter = 1;
+    const newImages = imagesUploaded.map((data) => {
+      return {
+        'product': product.id,
+        'img_url': data.Key,
+        'position': counter++
+      }
+    })
+    ProductImages.bulkCreate(newImages).then((images) => {
+      res.status(200).json({status: true, message: "Product added", data: product});
+    })
+  }).catch(err => {
+    res.status(401).json({status: false, message: "Unable to add product"});
+  })
+})
+
 module.exports = router

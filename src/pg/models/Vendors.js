@@ -39,6 +39,6 @@ const Vendor = sequelize.define('vendor', {
 Vendor.hasMany(VendorRate);
 Vendor.hasMany(Product);
 Vendor.belongsTo(User, {foreignKey: 'userId', as: "vendorUser"})
-Product.belongsTo(Vendor, {foreignKey: 'vendor', as: 'productVendor'})
+Product.belongsTo(Vendor, {foreignKey: 'vendorId', as: 'productVendor'})
 
 module.exports = Vendor;

@@ -195,4 +195,19 @@ router.get('/vendors', async(req, res, next) => {
   }
 });
 
+router.get('/vendoruser', [verify], async(req, res, next) => {
+  // get products
+  let vendor = null;
+  if (req.query.id) {
+    try {
+      vendor = await Vendor.findOne({ where: {user: req.query.id}, include: ['vendor_rates', 'vendorUser']});
+      res.status(200).json(vendor)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  } else {
+    res.status(500).json({status: false, message: 'User not detected'})
+  }
+});
+
 module.exports = router
