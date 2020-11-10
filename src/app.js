@@ -9,7 +9,6 @@ app.use('/', require('./routes/vendors'));
 app.use('/', require('./routes/brands'));
 app.use('/', require('./routes/workRoles'));
 app.use('/', require('./routes/statuses'));
-app.use('/', require('./routes/stores'));
 app.use('/', require('./routes/userAddresses'));
 app.use('/', require('./routes/countries'));
 app.use('/', require('./routes/users'));

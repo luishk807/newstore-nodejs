@@ -97,6 +97,14 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'description': body.description,
       'position': body.position,
       'email': body.email,
+      'zip': body.zip,
+      'address': body.address,
+      'city': body.city,
+      'phone': body.phone,
+      'country': body.country,
+      'mobile': body.mobile,
+      'township': body.township,
+      'province': body.province,
       'img':fileName
     }
   } else {
@@ -104,6 +112,14 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
       'name': body.name,
       'description': body.description,
       'user': body.user,
+      'zip': body.zip,
+      'address': body.address,
+      'city': body.city,
+      'phone': body.phone,
+      'country': body.country,
+      'mobile': body.mobile,
+      'township': body.township,
+      'province': body.province,
       'position': body.position,
       'email': body.email,
     }
@@ -153,6 +169,14 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'description': body.description,
       'position': body.position,
       'email': body.email,
+      'zip': body.zip,
+      'address': body.address,
+      'city': body.city,
+      'phone': body.phone,
+      'country': body.country,
+      'mobile': body.mobile,
+      'township': body.township,
+      'province': body.province,
       'img':fileName
     }
   } else {
@@ -161,6 +185,14 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
       'user': body.user,
       'description': body.description,
       'position': body.position,
+      'zip': body.zip,
+      'address': body.address,
+      'city': body.city,
+      'phone': body.phone,
+      'country': body.country,
+      'mobile': body.mobile,
+      'township': body.township,
+      'province': body.province,
       'email': body.email,
     }
   }
@@ -171,7 +203,7 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
 })
 
 router.get('/vendors/:id', async(req, res, next) => {
-    let vendor = await Vendor.findAll({ where: {id: req.params.id}, include: ['vendor_rates', 'vendorUser']});
+    let vendor = await Vendor.findAll({ where: {id: req.params.id}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
     res.json(vendor)
 });
 
@@ -180,14 +212,14 @@ router.get('/vendors', async(req, res, next) => {
   let vendor = null;
   if (req.query.id) {
     try {
-      vendor = await Vendor.findOne({ where: {id: req.query.id}, include: ['vendor_rates', 'vendorUser']});
+      vendor = await Vendor.findOne({ where: {id: req.query.id}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      vendor = await Vendor.findAll({include: ['vendor_rates', 'vendorUser']});
+      vendor = await Vendor.findAll({include: ['vendor_rates', 'vendorUser','vendorCountry']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
@@ -200,7 +232,7 @@ router.get('/vendoruser', [verify], async(req, res, next) => {
   let vendor = null;
   if (req.query.id) {
     try {
-      vendor = await Vendor.findOne({ where: {user: req.query.id}, include: ['vendor_rates', 'vendorUser']});
+      vendor = await Vendor.findOne({ where: {user: req.query.id}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
