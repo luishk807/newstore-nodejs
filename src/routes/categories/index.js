@@ -83,7 +83,7 @@ router.get('/categories', async(req, res, next) => {
   let category = null;
   if (req.query.id) {
     try {
-      category = await Category.findAll({ where: {id: req.query.id}});
+      category = await Category.findOne({ where: {id: req.query.id}});
       res.status(200).json(category)
     } catch(err) {
       res.status(500).json({status: false, message: err})

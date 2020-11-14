@@ -166,7 +166,7 @@ router.get('/brands', async(req, res, next) => {
   let brand = null;
   if (req.query.id) {
     try {
-      brand = await Brand.findAll({ where: {id: req.query.id}, include:['brandStatus']});
+      brand = await Brand.findOne({ where: {id: req.query.id}, include:['brandStatus']});
       res.status(200).json(brand)
     } catch(err) {
       res.status(500).json({status: false, message: err})
