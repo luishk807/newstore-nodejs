@@ -174,7 +174,6 @@ router.put('/banners/:id', [verify, upload], (req, res, next) => {
 
 
       // delete data from db
-      console.log("ids to delete", index)
       try{
         BannerImages.destroy({ where: {id: index }})
       } catch (e) {
