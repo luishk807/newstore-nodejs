@@ -13,21 +13,21 @@ router.get('/banners', async(req, res, next) => {
   let banner = null;
   if (req.query.id) {
     try {
-      banner = await Banner.findOne({ where: {id: req.query.id}, include:['bannerImages']});
+      banner = await Banner.findOne({ where: {id: req.query.id}});
       res.json(banner)
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.type) {
     try {
-      banner = await Banner.findOne({ where: {bannerTypeId: req.query.type}, include:['bannerImages']});
+      banner = await Banner.findOne({ where: {bannerTypeId: req.query.type}});
       res.json(banner)
     } catch(err) {
       res.send(err)
     }
   } else {
     try {
-      banner = await Banner.findAll({include:['bannerImages']});
+      banner = await Banner.findAll();
       res.json(banner)
     } catch(err) {
       res.send(err)

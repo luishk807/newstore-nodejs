@@ -3,22 +3,21 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const BannerImages = require('./bannerImages');
+const BannerImage = require('./bannerImages');
 
-const Banner = sequelize.define('banner_boxes', {
+const Banner = sequelize.define('banners', {
   name: {
     type: Sequelize.TEXT
   },
-  bannerTypeId: {
-    type: Sequelize.BIGINT
+  bannerType: {
+    type: Sequelize.BIGINT,
+    field: 'bannerTypeId'
   },
   statusId: {
     type: Sequelize.BIGINT
   },
 });
 
-Banner.hasMany(BannerImages, { as: 'bannerImages'});
-
-BannerImages.belongsTo(Banner, { foreignKey: 'bannerId', as: 'banner'});
+Banner.hasMany(BannerImage, { as: 'bannerBannerImages'});
 
 module.exports = Banner;
