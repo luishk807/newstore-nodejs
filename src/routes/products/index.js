@@ -118,7 +118,7 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
       let index = []
       Object.keys(partBodySaved).forEach((key) => {
         mapFiles.push(partBodySaved[key].img_url)
-        index.push(partBodySaved[key])
+        index.push(partBodySaved[key].id)
       })
       
       // delete image selected
@@ -142,7 +142,7 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
 
       // delete data from db
       try{
-        ProductImages.destroy({ where: index })
+        ProductImages.destroy({ where: { id: index }})
       } catch (e) {
         console.log(e)
       }

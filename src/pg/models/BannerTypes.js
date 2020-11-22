@@ -3,20 +3,15 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const Banner = require('./Banners');
+const Status = require('./Statuses');
 
 const BannerType = sequelize.define('banner_types', {
   name: {
     type: Sequelize.TEXT
   },
   statusId: {
-    type: Sequelize.BIGINT
+    type: Sequelize.BIGINT,
   },
 });
-
-BannerType.belongsTo(Banner,{
-  foreignKey: "bannerId",
-  as: "bannerTypeBanner",
-});
-
+BannerType.belongsTo(Status, { foreignKey: 'statusId', as: "bannerTypeStatus"})
 module.exports = BannerType;

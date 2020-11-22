@@ -23,5 +23,6 @@ app.use('/', require('./routes/userWishlists'));
 app.use('/', require('./routes/vendorRates'));
 app.use('/', require('./routes/banners'));
 app.use('/', require('./routes/bannerTypes'));
+app.use('/', require('./routes/bannerImages'));
 
 module.exports = app
