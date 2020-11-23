@@ -17,7 +17,7 @@ router.delete('/sweet-box-products', (req, res, next) => {
 });
 
 router.get('/sweet-box-products', async(req, res, next) => {
-  SweetBoxProduct.findAll().then((pimage) => {
+  SweetBoxProduct.findAll({include: ['sweetboxProductProduct', 'sweetboxProductStatus']}).then((pimage) => {
       res.status(200).json(pimages);
     }).catch((err) => {
       res.send({status: false, message: err})

@@ -14,14 +14,14 @@ router.get('/sweetboxes', async(req, res, next) => {
   let sweetbox = null;
   if (req.query.id) {
     try {
-      sweetbox = await SweetBox.findOne({ where: {id: req.query.id}});
+      sweetbox = await SweetBox.findOne({ where: {id: req.query.id}, include: ['sweetBoxSweetboxProduct', 'sweetboxesStatus']});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      sweetbox = await SweetBox.findAll();
+      sweetbox = await SweetBox.findAll({include: ['sweetBoxSweetboxProduct', 'sweetboxesStatus']});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})

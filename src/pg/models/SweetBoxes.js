@@ -3,7 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const SweetBoxProduct = require('./SweetBoxesProducts');
+const SweetBoxProduct = require('./SweetBoxProducts');
 
 const Status = require('./Statuses');
 
@@ -19,6 +19,6 @@ const SweetBox = sequelize.define('sweet_boxes', {
 
 SweetBox.hasMany(SweetBoxProduct, { as: 'sweetBoxSweetboxProduct'});
 
-// SweetBox.belongsTo(Status, { foreignKey: 'statusId', as: 'sweetboxesStatus'});
+SweetBox.belongsTo(Status, { foreignKey: 'statusId', as: 'sweetboxesStatus'});
 
 module.exports = SweetBox;
