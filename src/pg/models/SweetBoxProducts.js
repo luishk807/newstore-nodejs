@@ -10,9 +10,6 @@ const SweetBox = require('./SweetBoxes');
 const Status = require('./Statuses');
 
 const SweetBoxProduct = sequelize.define('sweet_box_products', {
-  name: {
-    type: Sequelize.TEXT
-  },
   product: {
     type: Sequelize.BIGINT,
     field: 'productId'

@@ -9,6 +9,15 @@ const SweetBox = require('../../pg/models/SweetBoxes');
 
 router.all('*', cors());
 
+var storage = multer.memoryStorage({
+  destination: function (req, file, cb) {
+    cb(null, '')
+  },
+})
+
+var upload = multer({ storage: storage }).single('image')
+
+
 router.get('/sweetboxes', async(req, res, next) => {
   // get statuses
   let sweetbox = null;
@@ -27,6 +36,58 @@ router.get('/sweetboxes', async(req, res, next) => {
       res.send({status: false, message: err})
     }
   }
+});
+
+router.post('/sweetboxes', [upload, verify], (req, res, next) => {
+  const body = req.body;
+  SweetBox.create({
+    'name': body.name,
+  }).then((data) => {
+    res.status(200).json({status: true, data: data, message: 'Sweet box created'});
+  }).catch((err) => {
+    res.status(500).json({status: false, message: err})
+  })
+})
+
+router.put('/sweetboxes/:id', [verify, upload], (req, res, next) => {
+  let dataInsert = null;
+  const body = req.body;
+  const bid = req.params.id;
+  
+  SweetBox.update(
+    {
+      'name': body.name,
+      'status': body.status
+    },
+    {
+      where: {
+        id: bid
+      }
+    }
+  ).then((updated) => {
+    res.status(200).json({
+      data: updated,
+      message: 'Sweet Box Updated'
+    });
+  }).catch((err) => {
+    res.status(500).json({status: false, message: err})
+  })
+});
+
+router.delete('/sweetboxes/:id', verify, (req, res, next) => {
+  // delete brands
+  SweetBox.findAll({ where: {id: req.params.id}})
+  .then((brand) => {
+    SweetBox.destroy({
+      where: {
+        id: brand[0].id
+      }
+    }).then((deletedRecord) => {
+      res.status(200).json({ status: deletedRecord, message: "Sweet Box successfully deleted" });
+    }, (err) => {
+      res.status(500).json({status: false, message: err});
+    })
+  })
 });
 
 module.exports = router
