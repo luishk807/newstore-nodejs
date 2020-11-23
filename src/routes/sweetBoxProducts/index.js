@@ -2,13 +2,13 @@ const router = require('express').Router();
 const cors = require('cors');
 const config = require('../../config.js');
 
-const SweetBoxesProduct = require('../../pg/models/SweetBoxesProducts');
+const SweetBoxProduct = require('../../pg/models/SweetBoxProducts');
 
 router.all('*', cors());
 
-router.delete('/sweet-boxes-products', (req, res, next) => {
+router.delete('/sweet-box-products', (req, res, next) => {
   // delete brands
-  client.query('SELECT * FROM sweet_boxes_products where id = $1', [1], function (err, result) {
+  client.query('SELECT * FROM sweet_box_products where id = $1', [1], function (err, result) {
       if (err) {
           res.status(400).send({status: false, message: err});
       }
@@ -16,8 +16,8 @@ router.delete('/sweet-boxes-products', (req, res, next) => {
   });
 });
 
-router.get('/sweet-boxes-products', async(req, res, next) => {
-  SweetBoxesProduct.findAll({ include: ['SweetBoxesProductProduct', 'sweetboxProductStatus']}).then((pimage) => {
+router.get('/sweet-box-products', async(req, res, next) => {
+  SweetBoxProduct.findAll().then((pimage) => {
       res.status(200).json(pimages);
     }).catch((err) => {
       res.send({status: false, message: err})

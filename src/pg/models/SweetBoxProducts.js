@@ -9,7 +9,7 @@ const SweetBox = require('./SweetBoxes');
 
 const Status = require('./Statuses');
 
-const SweetBoxProduct = sequelize.define('sweet_boxes_products', {
+const SweetBoxProduct = sequelize.define('sweet_box_products', {
   name: {
     type: Sequelize.TEXT
   },
@@ -22,15 +22,15 @@ const SweetBoxProduct = sequelize.define('sweet_boxes_products', {
     field: 'statusId'
   },
   sweetBox: {
-    type: Sequelize.TEXT,
+    type: Sequelize.BIGINT,
     field: 'sweetBoxId'
   },
 });
 
-SweetBoxProduct.hasMany(Product, { foreignKey: 'productId', as: 'sweetboxProductProduct'});
+// SweetBoxProduct.hasMany(Product, { foreignKey: 'productId', as: 'sweetboxProductProduct'});
 
-SweetBoxProduct.belongsTo(Status, { foreignKey: 'statusId', as: 'sweetboxProductStatus'});
+// SweetBoxProduct.belongsTo(Status, { foreignKey: 'statusId', as: 'sweetboxProductStatus'});
 
 SweetBoxProduct.belongsTo(SweetBox, { foreignKey: 'sweetBoxId', as: 'sweetboxProductSweetBox'});
 
-module.exports = SweetBox;
+module.exports = SweetBoxProduct;
