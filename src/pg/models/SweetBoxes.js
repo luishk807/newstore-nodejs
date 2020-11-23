@@ -17,7 +17,7 @@ const SweetBox = sequelize.define('sweet_boxes', {
   },
 });
 
-SweetBox.hasMany(SweetBoxProduct, { as: 'sweetBoxSweetboxProduct'});
+// SweetBox.hasMany(SweetBoxProduct, { as: 'sweetBoxSweetboxProduct'});
 
 SweetBox.belongsTo(Status, { foreignKey: 'statusId', as: 'sweetboxesStatus'});
 

@@ -24,7 +24,7 @@ app.use('/', require('./routes/vendorRates'));
 app.use('/', require('./routes/banners'));
 app.use('/', require('./routes/bannerTypes'));
 app.use('/', require('./routes/bannerImages'));
-app.use('/', require('./routes/sweetBoxes'));
-app.use('/', require('./routes/sweetBoxProducts'));
+// app.use('/', require('./routes/sweetBoxes'));
+// app.use('/', require('./routes/sweetBoxProducts'));
 
 module.exports = app
