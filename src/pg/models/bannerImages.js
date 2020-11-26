@@ -19,5 +19,5 @@ const BannerImage = sequelize.define('banner_images', {
     type: Sequelize.BIGINT
   }
 });
-BannerImage.belongsTo(Status, { foreignKey: 'statusId', as: "bannerImageStatus"})
+// BannerImage.belongsTo(Status, { foreignKey: 'statusId', as: "bannerImageStatus"})
 module.exports = BannerImage;

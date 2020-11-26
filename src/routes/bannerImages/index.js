@@ -24,7 +24,7 @@ router.post('/banner-images', (req, res, next) => {
 });
 
 router.get('/banner-images', async(req, res, next) => {
-  BannerImage.findAll({ include: ['BannerImageBanner', 'bannerImageStatus']}).then((bimage) => {
+  BannerImage.findAll({ include: ['BannerImageBanner']}).then((bimage) => {
       res.status(200).json(bimages);
     }).catch((err) => {
       res.send({status: false, message: err})
