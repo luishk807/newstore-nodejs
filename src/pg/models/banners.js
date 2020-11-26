@@ -30,6 +30,6 @@ Banner.belongsTo(BannerType,{
   as: "bannerBannerType",
 });
 
-BannerImage.belongsTo(Banner, { foreignKey: 'bannerId', as: 'BannerImageBanner'});
+// BannerImage.belongsTo(Banner, { foreignKey: 'bannerId', as: 'BannerImageBanner'});
 
 module.exports = Banner;
