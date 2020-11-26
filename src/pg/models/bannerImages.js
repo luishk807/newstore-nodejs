@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const pgconfig = require('../config')
+const pgconfig = require('../config');
 
 const sequelize = pgconfig.getSequelize();
 
