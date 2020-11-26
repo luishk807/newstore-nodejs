@@ -2,7 +2,6 @@ const router = require('express').Router();
 const cors = require('cors');
 const config = require('../../config.js');
 
-// const BannerImage = require('../../pg/models/BannerImages');
 const BannerImg = require('../../pg/models/BannerImg');
 
 router.all('*', cors());
@@ -25,8 +24,7 @@ router.post('/banner-images', (req, res, next) => {
 });
 
 router.get('/banner-images', async(req, res, next) => {
-  // BannerImage.findAll({ include: ['BannerImageBanner']}).then((bimage) => {
-    BannerImg.findAll().then((bimage) => {
+  BannerImage.findAll({ include: ['BannerImageBanner']}).then((bimage) => {
     res.status(200).json(bimages);
   }).catch((err) => {
     res.send({status: false, message: err})
