@@ -8,12 +8,12 @@ router.all('*', cors());
 
 router.delete('/banner-images', (req, res, next) => {
   // delete brands
-  client.query('SELECT * FROM banner_images where id = $1', [1], function (err, result) {
-      if (err) {
-          res.status(400).send({status: false, message: err});
-      }
-      res.status(200).json(result.rows);
-  });
+  // client.query('SELECT * FROM banner_images where id = $1', [1], function (err, result) {
+  //     if (err) {
+  //         res.status(400).send({status: false, message: err});
+  //     }
+  //     res.status(200).json(result.rows);
+  // });
 });
 
 router.post('/banner-images', (req, res, next) => {
