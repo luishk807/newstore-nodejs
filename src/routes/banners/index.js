@@ -5,7 +5,7 @@ const fs = require('fs');
 const config = require('../../config.js');
 const verify = require('../verifyToken');
 const Banner = require('../../pg/models/banners');
-const BannerImages = require('../../pg/models/BannerImages');
+// const BannerImages = require('../../pg/models/BannerImages');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
