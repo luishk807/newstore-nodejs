@@ -21,7 +21,7 @@ const Banner = sequelize.define('banners', {
   },
 });
 
-Banner.hasMany(BannerImage, { as: 'productImages'});
+// Banner.hasMany(BannerImage, { as: 'productImages'});
 
 Banner.belongsTo(Status, { foreignKey: 'statusId', as: "bannerStatus"})
 
