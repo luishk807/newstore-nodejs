@@ -4,7 +4,7 @@ const pgconfig = require('../config')
 const sequelize = pgconfig.getSequelize();
 
 const Status = require('./Statuses');
-const BannerImage = require('./BannerImages');
+// const BannerImage = require('./BannerImages');
 const BannerType = require('./BannerTypes');
 
 const Banner = sequelize.define('banners', {
