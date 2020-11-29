@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const cors = require('cors');
+const bodyParser = require('body-parser')
 const multer = require('multer');
 const fs = require('fs');
 const config = require('../../config.js');
@@ -11,6 +12,8 @@ const ProductImages = require('../../pg/models/ProductImages');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
+
+const controller = require('./controller');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -229,6 +232,16 @@ router.post('/products', [verify, upload], (req, res, next) => {
     res.status(401).json({status: false, message: "Unable to add product"});
   })
 })
+
+router.post('/products/import', [verify, bodyParser.json()], (req, res, next) => {
+  const data = req.body;
+  controller.importProducts(data, req.user.id).then((result) => {
+    res.status(200).json({status: true, message: "Products imported"});
+  }).catch((err) => {
+    console.error(err);
+    res.status(500).json(err);
+  });
+});
 
 router.get('/products/:id', async(req, res, next) => {
     let product = await Product.findAll({ where: {id: req.params.id}});
