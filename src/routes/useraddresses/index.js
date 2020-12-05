@@ -1,23 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
 const UserAddress = require('../../pg/models/UserAddresses');
-const User = require('../../pg/models/Users');
+const upload = require('../../middlewares/uploadSingle');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
-router.delete('/useraddresses/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   UserAddress.findAll({ where: {id: req.params.id}})
   .then((address) => {
@@ -34,7 +23,7 @@ router.delete('/useraddresses/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/useraddresses/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const sid = req.params.id;
   const user = req.body && req.body.user ? req.body.user : req.user.id;
@@ -62,7 +51,7 @@ router.put('/useraddresses/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/useraddresses', [verify, upload], (req, res, next) => {
+router.post('/', [verify, upload], (req, res, next) => {
   const body = req.body;
   const user = req.body && req.body.user ? req.body.user : req.user.id;
 
@@ -84,7 +73,7 @@ router.post('/useraddresses', [verify, upload], (req, res, next) => {
   })
 })
 
-router.get('/useraddresses/:id', [verify, upload], async(req, res, next) => {
+router.get('/:id', [verify, upload], async(req, res, next) => {
   // get products
   console.log(req)
   const id = req.query.id;
@@ -101,7 +90,7 @@ router.get('/useraddresses/:id', [verify, upload], async(req, res, next) => {
   }
 });
 
-router.get('/useraddresses', [verify, upload], async(req, res, next) => {
+router.get('/', [verify, upload], async(req, res, next) => {
   // get products
   console.log(req)
   const user = req.user.id;
@@ -142,7 +131,7 @@ router.get('/useraddresses', [verify, upload], async(req, res, next) => {
 });
 
 // for admin
-router.get('/usersaddresses', [verify, upload], async(req, res, next) => {
+router.get('/', [verify, upload], async(req, res, next) => {
   // get products
   const user = req.body.user;
   

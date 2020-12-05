@@ -1,11 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
 const Banner = require('../../pg/models/banners');
-// const BannerImages = require('../../pg/models/BannerImages');
+const upload = require('../../middlewares/uploadArray');
 
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
@@ -14,19 +11,11 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET
 })
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).array('image')
-
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/slideImages`;
 
 router.all('*', cors());
 
-router.delete('/banners/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete products
   Banner.findAll({ where: {id: req.params.id},include:['productImages', 'bannerStatus']})
   .then((banner) => {
@@ -64,7 +53,7 @@ router.delete('/banners/:id', verify, (req, res, next) => {
   })
 });
 
-router.get('/banners', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let banner = null;
   console.log("query ", req.query)
@@ -92,9 +81,7 @@ router.get('/banners', async(req, res, next) => {
   }
 });
 
-router.put('/banners/:id', [verify, upload], (req, res, next) => {
-
-
+router.put('/:id', [verify, upload], (req, res, next) => {
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
@@ -208,7 +195,7 @@ router.put('/banners/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/banners', [verify, upload], (req, res, next) => {
+router.post('/', [verify, upload], (req, res, next) => {
   // add / update products
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');

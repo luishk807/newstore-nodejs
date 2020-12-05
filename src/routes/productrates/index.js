@@ -1,18 +1,16 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
-const VendorRate = require('../../pg/models/VendorRates');
+const ProductRate = require('../../pg/models/ProductRates');
+const upload = require('../../middlewares/uploadArray');
 
 router.all('*', cors());
 
-router.delete('/vendorrates/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
-  VendorRate.findOne({ where: {id: req.params.id}})
+  ProductRate.findOne({ where: {id: req.params.id}})
   .then((comment) => {
-    VendorRate.destroy({
+    ProductRate.destroy({
       where: {
         id: comment.id
       }
@@ -28,11 +26,10 @@ router.delete('/vendorrates/:id', verify, (req, res, next) => {
   })
 });
 
-
-router.put('/vendorrates/:id', [verify], (req, res, next) => {
+router.put('/:id', [upload, verify], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
-  VendorRate.update(
+  ProductRate.update(
     {
       'rate': body.rate,
       'title': body.title,
@@ -55,12 +52,13 @@ router.put('/vendorrates/:id', [verify], (req, res, next) => {
   })
 });
 
-router.post('/vendorrates', [verify], (req, res, next) => {
+router.post('/', [upload, verify], (req, res, next) => {
   const body = req.body;
-  VendorRate.create({
-    'vendor': body.vendor,
+  const id = req.user.id;
+  ProductRate.create({
+    'product': body.product,
     'title': body.title,
-    'user': body.user,
+    'user': id,
     'comment': body.comment,
     'rate': body.rate,
   }).then((data) => {
@@ -68,25 +66,51 @@ router.post('/vendorrates', [verify], (req, res, next) => {
   }).catch((err) => {
     res.status(500).json({status: false, message: err})
   })
-})
+});
 
-router.get('/vendorrates', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let data = null;
   if (req.query.id) {
     try {
-      data = await VendorRate.findOne({ where: {id: req.query.id}});
+      data = await ProductRate.findOne({ where: {id: req.query.id}});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      data = await VendorRate.findAll();
+      data = await ProductRate.findAll();
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
     }
+  }
+});
+
+router.get('/all', async(req, res, next) => {
+  // get statuses
+  const limit = req.query.limit ? req.query.limit : null;
+
+  let data = null;
+  if (req.query.id) {
+    try {
+      const query = limit ? { 
+        limit,
+        where: {productId: req.query.id}, 
+        include: ['rateUsers', 'rateProduct', 'rateStatus']
+      } : {
+        where: {productId: req.query.id}, 
+        include: ['rateUsers', 'rateProduct', 'rateStatus']
+      }
+      console.log("jquery", query);
+      data = await ProductRate.findAll(query);
+      res.json(data)
+    } catch(err) {
+      res.send({})
+    }
+  } else { 
+      res.send({})
   }
 });
 

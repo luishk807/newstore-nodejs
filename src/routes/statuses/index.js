@@ -1,19 +1,15 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
-
 const Status = require('../../pg/models/Statuses');
 
 router.all('*', cors());
 
-router.get('/statuses/:id', async(req, res, next) => {
+router.get('/:id', async(req, res, next) => {
     let product = await Status.findAll({ where: {id: req.params.id}});
     res.json(product)
 });
 
-router.get('/statuses', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let product = null;
   if (req.query.id) {

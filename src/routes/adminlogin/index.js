@@ -1,11 +1,9 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
-const config = require('../../config.js');
 const bcrypt = require('bcryptjs');
 const User = require('../../pg/models/Users');
+const upload = require('../../middlewares/uploadSingle');
 const UserAddress = require('../../pg/models/UserAddresses');
 
 const AWS = require('aws-sdk');
@@ -15,15 +13,7 @@ const { cleanData } = require('../../utils');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
-router.post('/adminlogin', upload, async(req, res, next) => {
+router.post('/', upload, async(req, res, next) => {
   const body = req.body;
   const cleandata = cleanData(body.email);
   if (cleandata) {

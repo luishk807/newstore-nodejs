@@ -1,22 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
 const ProductQuestion = require('../../pg/models/ProductQuestions');
+const upload = require('../../middlewares/uploadArray');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).array('image')
-
-router.delete('/productquestions/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   ProductQuestion.findOne({ where: {id: req.params.id}})
   .then((comment) => {
@@ -37,7 +27,7 @@ router.delete('/productquestions/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/productquestions/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
   
@@ -62,7 +52,7 @@ router.put('/productquestions/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/productquestions', [verify, upload], (req, res, next) => {
+router.post('/', [verify, upload], (req, res, next) => {
   const body = req.body;
   ProductQuestion.create({
     'product': body.product,
@@ -75,7 +65,7 @@ router.post('/productquestions', [verify, upload], (req, res, next) => {
   })
 })
 
-router.get('/productquestions', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let data = null;
 

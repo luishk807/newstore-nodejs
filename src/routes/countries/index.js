@@ -1,14 +1,10 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
-
 const Country = require('../../pg/models/Countries');
 
 router.all('*', cors());
 
-router.get('/countries', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let country = null;
   if (req.query.id) {

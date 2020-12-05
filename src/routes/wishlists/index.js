@@ -1,22 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
 const UserWishlist = require('../../pg/models/UserWishlists');
+const upload = require('../../middlewares/uploadArray');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).array('image')
-
-router.delete('/wishlists/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   UserWishlist.findOne({ where: {id: req.params.id}})
   .then((comment) => {
@@ -37,7 +27,7 @@ router.delete('/wishlists/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/wishlists/:id', [upload, verify], (req, res, next) => {
+router.put('/:id', [upload, verify], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
   const user = req.user.id;
@@ -62,7 +52,7 @@ router.put('/wishlists/:id', [upload, verify], (req, res, next) => {
   })
 });
 
-router.post('/wishlists', [upload, verify], (req, res, next) => {
+router.post('/', [upload, verify], (req, res, next) => {
   const body = req.body;
   const user = req.user.id;
   UserWishlist.create({
@@ -75,7 +65,7 @@ router.post('/wishlists', [upload, verify], (req, res, next) => {
   })
 })
 
-router.get('/wishlists', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let data = null;
   if (req.query.id) {
@@ -95,7 +85,7 @@ router.get('/wishlists', async(req, res, next) => {
   }
 });
 
-router.delete('/userwishlists/:id', verify, (req, res, next) => {
+router.delete('/user/:id', verify, (req, res, next) => {
   // delete brands
   const user = req.user.id;
 
@@ -117,7 +107,7 @@ router.delete('/userwishlists/:id', verify, (req, res, next) => {
   })
 });
 
-router.get('/userwishlists', [verify], async(req, res, next) => {
+router.get('/user', [verify], async(req, res, next) => {
   // get statuses
   const user = req.user.id;
   if (req.query.product) {

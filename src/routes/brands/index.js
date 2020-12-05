@@ -1,11 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
 const Brand = require('../../pg/models/Brands');
-
+const upload = require('../../middlewares/uploadSingle');
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
@@ -16,17 +13,9 @@ const s3 = new AWS.S3({
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/brands`;
 
-router.delete('/brands/:id', verify,  (req, res, next) => {
+router.delete('/:id', verify,  (req, res, next) => {
   // delete brands
   Brand.findAll({ where: {id: req.params.id}})
   .then((brand) => {
@@ -56,7 +45,7 @@ router.delete('/brands/:id', verify,  (req, res, next) => {
 });
 
 
-router.put('/brands/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const bid = req.params.id;
@@ -120,7 +109,7 @@ router.put('/brands/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/brands', [verify, upload], (req, res, next) => {
+router.post('/', [verify, upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
   
@@ -156,12 +145,12 @@ router.post('/brands', [verify, upload], (req, res, next) => {
   })
 })
 
-router.get('/brands/:id', async(req, res, next) => {
-    let brand = await Brand.findAll({ where: {id: req.params.id}, include:['brandStatus']});
+router.get('/:id', async(req, res, next) => {
+    const brand = await Brand.findAll({ where: {id: req.params.id}, include:['brandStatus']});
     res.json(brand)
 });
 
-router.get('/brands', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get products
   let brand = null;
   if (req.query.id) {
