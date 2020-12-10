@@ -147,12 +147,11 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
   })
 });
 
-router.post('/users', [verify, upload], (req, res, next) => {
+router.post('/users', [upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
-
+  const userRole = body.userRole ? body.userRole : 2;
   User.count({where: { email: body.email}}).then((count) => {
-    console.log(count, 'count')
     if (count) {
       res.status(200).json({status: false, message: 'email already registered'})
     } else {
@@ -182,7 +181,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'gender': body.gender,
           'mobile': body.mobile,
           'email': body.email,
-          'userRole': body.userRole,
+          'userRole': userRole,
           'img':fileName
         }
       } else {
@@ -191,7 +190,7 @@ router.post('/users', [verify, upload], (req, res, next) => {
           'first_name': body.first_name,
           'password': body.password,
           'date_of_birth': body.date_of_birth,
-          'userRole': body.userRole,
+          'userRole': userRole,
           'phone': body.phone,
           'gender': body.gender,
           'mobile': body.mobile,
@@ -209,12 +208,12 @@ router.post('/users', [verify, upload], (req, res, next) => {
   });
 })
 
-router.get('/users/:id', verify, async(req, res, next) => {
+router.get('/users/:id', [verify], async(req, res, next) => {
     let user = await User.findAll({ where: {id: req.params.id}});
     res.json(user)
 });
 
-router.get('/users', verify, async(req, res, next) => {
+router.get('/users', [verify], async(req, res, next) => {
   // get products
   let user = null;
   if (req.query.id) {
@@ -226,7 +225,6 @@ router.get('/users', verify, async(req, res, next) => {
     }
   } else {
     try {
-      // user = await User.findAll({include:['user_addresses']});
       let query = {}
       if (req.user) {
         query = {
