@@ -13,6 +13,7 @@ const routesLoader = (app, directory) => {
 const loadRoutesOnExpressApp = (app, directory) => {
     const routesRootPath = path.join(__dirname, directory);
     console.log(`Auto loading routes from ${directory}`);
+    console.log('API endpoint => route directory');
     fs.readdirSync(routesRootPath).forEach(f => {
         const routesDirs = [];
         if (fs.lstatSync(path.resolve(routesRootPath, f)).isDirectory()) {
@@ -20,9 +21,11 @@ const loadRoutesOnExpressApp = (app, directory) => {
         }
         // Go through each of the directories inside routes
         routesDirs.forEach(rd => {
+            // Converts camelCase into camel-case
+            const formattedRoute = rd.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
             const routeDir = `${directory}/${rd}`;
-            console.log(`${routeDir}`);
-            app.use('/', require(routeDir));
+            console.log(`/${formattedRoute} => ${routeDir}`);
+            app.use(`/${formattedRoute}`, require(routeDir));
         });
     });
 }

@@ -4,12 +4,12 @@ const BannerType = require('../../pg/models/BannerTypes');
 
 router.all('*', cors());
 
-router.get('/bannertypes/:id', async(req, res, next) => {
+router.get('/:id', async(req, res, next) => {
     let bannerType = await BannerType.findOne({ where: {id: req.params.id}, include: ['bannerTypeStatus']});
     res.json(bannerType)
 });
 
-router.get('/bannertypes', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let bannerType = null;
   if (req.query.id) {

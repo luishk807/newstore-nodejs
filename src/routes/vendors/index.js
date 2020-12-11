@@ -1,10 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
-
+const upload = require('../../middlewares/uploadSingle');
 const Vendor = require('../../pg/models/Vendors');
 
 const AWS = require('aws-sdk');
@@ -17,17 +14,9 @@ const s3 = new AWS.S3({
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/vendors`;
 
-router.delete('/vendors/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   Vendor.findAll({ where: {id: req.params.id}})
   .then((vendor) => {
@@ -57,7 +46,7 @@ router.delete('/vendors/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/vendors/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const vid = req.params.id;
@@ -143,7 +132,7 @@ router.put('/vendors/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/vendors', [verify, upload], (req, res, next) => {
+router.post('/', [verify, upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
   if (req.file) {
@@ -202,12 +191,27 @@ router.post('/vendors', [verify, upload], (req, res, next) => {
   })
 })
 
-router.get('/vendors/:id', async(req, res, next) => {
+router.get('/user', [verify], async(req, res, next) => {
+  // get products
+  let vendor = null;
+  if (req.query.id) {
+    try {
+      vendor = await Vendor.findOne({ where: {user: req.query.id}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
+      res.status(200).json(vendor)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  } else {
+    res.status(500).json({status: false, message: 'User not detected'})
+  }
+});
+
+router.get('/:id', async(req, res, next) => {
     let vendor = await Vendor.findAll({ where: {id: req.params.id}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
     res.json(vendor)
 });
 
-router.get('/vendors', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get products
   let vendor = null;
   if (req.query.id) {
@@ -224,21 +228,6 @@ router.get('/vendors', async(req, res, next) => {
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
-  }
-});
-
-router.get('/vendoruser', [verify], async(req, res, next) => {
-  // get products
-  let vendor = null;
-  if (req.query.id) {
-    try {
-      vendor = await Vendor.findOne({ where: {user: req.query.id}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
-      res.status(200).json(vendor)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
-  } else {
-    res.status(500).json({status: false, message: 'User not detected'})
   }
 });
 

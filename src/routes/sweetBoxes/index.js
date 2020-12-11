@@ -1,24 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
-
 const SweetBox = require('../../pg/models/SweetBoxes');
+const upload = require('../../middlewares/uploadSingle');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
-
-router.get('/sweetboxes', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let sweetbox = null;
   if (req.query.id) {
@@ -38,7 +26,7 @@ router.get('/sweetboxes', async(req, res, next) => {
   }
 });
 
-router.post('/sweetboxes', [upload, verify], (req, res, next) => {
+router.post('/', [upload, verify], (req, res, next) => {
   const body = req.body;
   SweetBox.create({
     'name': body.name,
@@ -49,8 +37,7 @@ router.post('/sweetboxes', [upload, verify], (req, res, next) => {
   })
 })
 
-router.put('/sweetboxes/:id', [verify, upload], (req, res, next) => {
-  let dataInsert = null;
+router.put('/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
   
@@ -74,7 +61,7 @@ router.put('/sweetboxes/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.delete('/sweetboxes/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   SweetBox.findAll({ where: {id: req.params.id}})
   .then((brand) => {

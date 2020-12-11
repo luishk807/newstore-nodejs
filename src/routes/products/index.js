@@ -1,15 +1,10 @@
 const router = require('express').Router();
 const cors = require('cors');
 const bodyParser = require('body-parser')
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
-const data = require('../../samples/products.json');
 const verify = require('../verifyToken');
-
 const Product = require('../../pg/models/Products');
 const ProductImages = require('../../pg/models/ProductImages');
-
+const upload = require('../../middlewares/uploadArray');
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
@@ -22,15 +17,7 @@ const s3 = new AWS.S3({
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).array('image')
-
-router.delete('/products/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete products
   Product.findAll({ where: {id: req.params.id},include:['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']})
   .then((product) => {
@@ -69,7 +56,7 @@ router.delete('/products/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/products/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, upload], (req, res, next) => {
 
 
   const imagesUploaded = req.files.map((file) => {
@@ -178,7 +165,7 @@ router.put('/products/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/products', [verify, upload], (req, res, next) => {
+router.post('/', [verify, upload], (req, res, next) => {
   // add / update products
 
   const imagesUploaded = req.files.map((file) => {
@@ -233,7 +220,7 @@ router.post('/products', [verify, upload], (req, res, next) => {
   })
 })
 
-router.post('/products/import', [verify, bodyParser.json()], (req, res, next) => {
+router.post('/import', [verify, bodyParser.json()], (req, res, next) => {
   const data = req.body;
   controller.importProducts(data, req.user.id).then((result) => {
     res.status(200).json({status: true, message: "Products imported"});
@@ -243,12 +230,12 @@ router.post('/products/import', [verify, bodyParser.json()], (req, res, next) =>
   });
 });
 
-router.get('/products/:id', async(req, res, next) => {
+router.get('/:id', async(req, res, next) => {
     let product = await Product.findAll({ where: {id: req.params.id}});
     res.json(product)
 });
 
-router.get('/products', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get products
   let product = null;
   

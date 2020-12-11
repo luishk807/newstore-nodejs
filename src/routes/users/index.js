@@ -8,8 +8,9 @@ const bcrypt = require('bcryptjs');
 const User = require('../../pg/models/Users');
 const verify = require('../verifyToken');
 const AWS = require('aws-sdk');
-const Op = require('sequelize').Op
+const { Op } = require('sequelize');
 const uuid = require('uuid');
+const upload = require('../../middlewares/uploadSingle');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ID,
@@ -18,17 +19,9 @@ const s3 = new AWS.S3({
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
 const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/users`;
 
-router.delete('/users/:id',verify, (req, res, next) => {
+router.delete('/:id',verify, (req, res, next) => {
   // delete brands
   User.findAll({ where: {id: req.params.id}, include:['user_addresses']})
   .then((user) => {
@@ -58,7 +51,7 @@ router.delete('/users/:id',verify, (req, res, next) => {
 });
 
 
-router.put('/users/:id',[verify,upload], (req, res, next) => {
+router.put('/:id',[verify,upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const id = req.params.id;
@@ -147,7 +140,7 @@ router.put('/users/:id',[verify,upload], (req, res, next) => {
   })
 });
 
-router.post('/users', [upload], (req, res, next) => {
+router.post('/', [upload], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
   const userRole = body.userRole ? body.userRole : 2;
@@ -208,12 +201,12 @@ router.post('/users', [upload], (req, res, next) => {
   });
 })
 
-router.get('/users/:id', [verify], async(req, res, next) => {
+router.get('/:id', [verify], async(req, res, next) => {
     let user = await User.findAll({ where: {id: req.params.id}});
     res.json(user)
 });
 
-router.get('/users', [verify], async(req, res, next) => {
+router.get('/', [verify], async(req, res, next) => {
   // get products
   let user = null;
   if (req.query.id) {
@@ -245,6 +238,5 @@ router.get('/users', [verify], async(req, res, next) => {
     }
   }
 });
-
 
 module.exports = router

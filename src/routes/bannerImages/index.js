@@ -1,12 +1,10 @@
 const router = require('express').Router();
 const cors = require('cors');
-const config = require('../../config.js');
-
 const BannerImg = require('../../pg/models/BannerImg');
 
 router.all('*', cors());
 
-router.delete('/banner-images', (req, res, next) => {
+router.delete('/', (req, res, next) => {
   // delete brands
   client.query('SELECT * FROM banner_images where id = $1', [1], function (err, result) {
       if (err) {
@@ -16,15 +14,15 @@ router.delete('/banner-images', (req, res, next) => {
   });
 });
 
-router.post('/banner-images', (req, res, next) => {
+router.post('/', (req, res, next) => {
   console.log("receive",req)
   // Employee.create(req.body.form).then((employee) => {
   //   res.status(200).json(employee);
   // });
 });
 
-router.get('/banner-images', async(req, res, next) => {
-  BannerImage.findAll({ include: ['BannerImageBanner']}).then((bimage) => {
+router.get('/', async(req, res, next) => {
+  BannerImg.findAll({ include: ['BannerImageBanner']}).then((bimage) => {
     res.status(200).json(bimages);
   }).catch((err) => {
     res.send({status: false, message: err})
