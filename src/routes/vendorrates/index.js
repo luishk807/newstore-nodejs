@@ -1,26 +1,15 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
-const ProductRate = require('../../pg/models/ProductRates');
+const VendorRate = require('../../pg/models/VendorRates');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).array('image')
-
-router.delete('/productrates/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
-  ProductRate.findOne({ where: {id: req.params.id}})
+  VendorRate.findOne({ where: {id: req.params.id}})
   .then((comment) => {
-    ProductRate.destroy({
+    VendorRate.destroy({
       where: {
         id: comment.id
       }
@@ -37,10 +26,10 @@ router.delete('/productrates/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/productrates/:id', [upload, verify], (req, res, next) => {
+router.put('/:id', [verify], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
-  ProductRate.update(
+  VendorRate.update(
     {
       'rate': body.rate,
       'title': body.title,
@@ -63,13 +52,12 @@ router.put('/productrates/:id', [upload, verify], (req, res, next) => {
   })
 });
 
-router.post('/productrates', [upload, verify], (req, res, next) => {
+router.post('/', [verify], (req, res, next) => {
   const body = req.body;
-  const id = req.user.id;
-  ProductRate.create({
-    'product': body.product,
+  VendorRate.create({
+    'vendor': body.vendor,
     'title': body.title,
-    'user': id,
+    'user': body.user,
     'comment': body.comment,
     'rate': body.rate,
   }).then((data) => {
@@ -79,49 +67,23 @@ router.post('/productrates', [upload, verify], (req, res, next) => {
   })
 })
 
-router.get('/productrates', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let data = null;
   if (req.query.id) {
     try {
-      data = await ProductRate.findOne({ where: {id: req.query.id}});
+      data = await VendorRate.findOne({ where: {id: req.query.id}});
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      data = await ProductRate.findAll();
+      data = await VendorRate.findAll();
       res.json(data)
     } catch(err) {
       res.send({status: false, message: err})
     }
-  }
-});
-
-router.get('/productallrates', async(req, res, next) => {
-  // get statuses
-  const limit = req.query.limit ? req.query.limit : null;
-
-  let data = null;
-  if (req.query.id) {
-    try {
-      const query = limit ? { 
-        limit,
-        where: {productId: req.query.id}, 
-        include: ['rateUsers', 'rateProduct', 'rateStatus']
-      } : {
-        where: {productId: req.query.id}, 
-        include: ['rateUsers', 'rateProduct', 'rateStatus']
-      }
-      console.log("jquery", query);
-      data = await ProductRate.findAll(query);
-      res.json(data)
-    } catch(err) {
-      res.send({})
-    }
-  } else { 
-      res.send({})
   }
 });
 

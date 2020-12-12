@@ -1,14 +1,10 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
-
 const Gender = require('../../pg/models/Genders');
 
 router.all('*', cors());
 
-router.get('/genders', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let gender = null;
   if (req.query.id) {

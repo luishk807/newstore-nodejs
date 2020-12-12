@@ -1,14 +1,10 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
-
 const UserRole = require('../../pg/models/UserRoles');
 
 router.all('*', cors());
 
-router.get('/userroles', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get statuses
   let userRole = null;
   if (req.query.id) {

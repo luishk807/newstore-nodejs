@@ -1,23 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
-
+const upload = require('../../middlewares/uploadSingle');
 const Category = require('../../pg/models/Categories');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
-router.delete('/categories/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   Category.findAll({ where: {id: req.params.id}})
   .then((brand) => {
@@ -33,8 +22,7 @@ router.delete('/categories/:id', verify, (req, res, next) => {
   })
 });
 
-router.put('/categories/:id', [verify, upload], (req, res, next) => {
-  let dataInsert = null;
+router.put('/:id', [verify, upload], (req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
   
@@ -59,8 +47,7 @@ router.put('/categories/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/categories', verify, upload, (req, res, next) => {
-  let dataEntry = null;
+router.post('/', verify, upload, (req, res, next) => {
   const body = req.body;
 
   Category.create({
@@ -73,12 +60,12 @@ router.post('/categories', verify, upload, (req, res, next) => {
   })
 })
 
-router.get('/categories/:id', async(req, res, next) => {
-    let category = await Category.findAll({ where: {id: req.params.id}});
+router.get('/:id', async(req, res, next) => {
+    const category = await Category.findAll({ where: {id: req.params.id}});
     res.json(category)
 });
 
-router.get('/categories', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get products
   let category = null;
   if (req.query.id) {

@@ -1,27 +1,14 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
-const config = require('../../config.js');
 const bcrypt = require('bcryptjs');
 const User = require('../../pg/models/Users');
-const { cleanData } = require('../../utils')
-
-const AWS = require('aws-sdk');
-const uuid = require('uuid');
+const { cleanData } = require('../../utils');
+const upload = require('../../middlewares/uploadSingle');
 
 router.all('*', cors());
 
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
-
-router.post('/login', upload, async(req, res, next) => {
+router.post('/', upload, async(req, res, next) => {
   const body = req.body;
 
   if (body.email) {
