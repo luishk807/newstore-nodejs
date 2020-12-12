@@ -5,15 +5,15 @@ const routesLoader = (app, directory) => {
     if (app && directory) {
         loadRoutesOnExpressApp(app, directory);
     } else {
-        console.error('No express app provided or routes directory');
+        logger.error('No express app provided or routes directory');
     }
 }
 
 // Get the routes from the given routes directory, only one level
 const loadRoutesOnExpressApp = (app, directory) => {
     const routesRootPath = path.join(__dirname, directory);
-    console.log(`Auto loading routes from ${directory}`);
-    console.log('API endpoint => route directory');
+    logger.info(`Auto loading routes from ${directory}`);
+    logger.info('API endpoint => route directory');
     fs.readdirSync(routesRootPath).forEach(f => {
         const routesDirs = [];
         if (fs.lstatSync(path.resolve(routesRootPath, f)).isDirectory()) {
@@ -24,7 +24,7 @@ const loadRoutesOnExpressApp = (app, directory) => {
             // Converts camelCase into camel-case
             const formattedRoute = rd.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
             const routeDir = `${directory}/${rd}`;
-            console.log(`/${formattedRoute} => ${routeDir}`);
+            logger.info(`/${formattedRoute} => ${routeDir}`);
             app.use(`/${formattedRoute}`, require(routeDir));
         });
     });
