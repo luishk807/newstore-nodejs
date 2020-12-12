@@ -16,7 +16,7 @@ router.delete('/', (req, res, next) => {
   });
 });
 
-router.get('/sweet-box-products', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   if (req.query.sweetbox) {
     try {
       product = await SweetBoxProduct.findAll({ where: {sweetBoxId: req.query.sweetbox}, include: ['sweetboxProductProduct', 'sweetboxProductStatus']});
@@ -34,7 +34,7 @@ router.get('/sweet-box-products', async(req, res, next) => {
   }
 });
 
-router.post('/sweet-box-products', [upload, verify], (req, res, next) => {
+router.post('/', [upload, verify], (req, res, next) => {
   const body = req.body;
 
   if (body.items) {
