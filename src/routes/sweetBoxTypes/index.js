@@ -1,21 +1,11 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
 const verify = require('../verifyToken');
+const upload = require('../../middlewares/uploadArray');
 
 const SweetBoxType = require('../../pg/models/SweetBoxTypes');
 
 router.all('*', cors());
-
-var storage = multer.memoryStorage({
-  destination: function (req, file, cb) {
-    cb(null, '')
-  },
-})
-
-var upload = multer({ storage: storage }).single('image')
 
 router.delete('/sweetboxtypes/:id', verify, (req, res, next) => {
   // delete brands
