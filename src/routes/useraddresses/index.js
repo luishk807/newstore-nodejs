@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const UserAddress = require('../../pg/models/UserAddresses');
-const upload = require('../../middlewares/uploadSingle');
+const parser = require('../../middlewares/multerParser');
 
 router.all('*', cors());
 
@@ -23,7 +23,7 @@ router.delete('/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const sid = req.params.id;
   const user = req.body && req.body.user ? req.body.user : req.user.id;
@@ -51,7 +51,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/', [verify, upload], (req, res, next) => {
+router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const user = req.body && req.body.user ? req.body.user : req.user.id;
 
@@ -73,8 +73,7 @@ router.post('/', [verify, upload], (req, res, next) => {
   })
 })
 
-router.get('/:id', [verify, upload], async(req, res, next) => {
-  // get products
+router.get('/:id', [verify, parser.none()], async(req, res, next) => {
   console.log(req)
   const id = req.query.id;
   let address = null;
@@ -90,9 +89,7 @@ router.get('/:id', [verify, upload], async(req, res, next) => {
   }
 });
 
-router.get('/', [verify, upload], async(req, res, next) => {
-  // get products
-  console.log(req)
+router.get('/', [verify, parser.none()], async(req, res, next) => {
   const user = req.user.id;
   const byUser = req.query.user;
   const byId = req.query.id;
@@ -131,7 +128,7 @@ router.get('/', [verify, upload], async(req, res, next) => {
 });
 
 // for admin
-router.get('/', [verify, upload], async(req, res, next) => {
+router.get('/', [verify, parser.none()], async(req, res, next) => {
   // get products
   const user = req.body.user;
   

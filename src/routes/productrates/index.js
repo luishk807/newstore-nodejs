@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const ProductRate = require('../../pg/models/ProductRates');
-const upload = require('../../middlewares/uploadArray');
+const parser = require('../../middlewares/multerParser');
 
 router.all('*', cors());
 
@@ -26,7 +26,7 @@ router.delete('/:id', verify, (req, res, next) => {
   })
 });
 
-router.put('/:id', [upload, verify], (req, res, next) => {
+router.put('/:id', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const id = req.params.id;
   ProductRate.update(
@@ -52,7 +52,7 @@ router.put('/:id', [upload, verify], (req, res, next) => {
   })
 });
 
-router.post('/', [upload, verify], (req, res, next) => {
+router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const id = req.user.id;
   ProductRate.create({

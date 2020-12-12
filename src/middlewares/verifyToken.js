@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const config = require('../config');
 
 module.exports = function(req, res, next) {
   const authToken = req.headers['authorization'];
@@ -9,7 +10,7 @@ module.exports = function(req, res, next) {
   }
 
   try {
-    const verified = jwt.verify(token, process.env.TOKEN_SECRET);
+    const verified = jwt.verify(token, config.authentication.authToken);
     req.user = verified;
     next()
   } catch(err) {

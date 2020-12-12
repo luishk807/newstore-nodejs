@@ -1,17 +1,13 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const Banner = require('../../pg/models/banners');
-const upload = require('../../middlewares/uploadArray');
-
-const AWS = require('aws-sdk');
+const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ID,
-  secretAccessKey: process.env.AWS_SECRET
-})
-
-const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/slideImages`;
+const config = require('../../config');
+const s3 = require('../../services/storage.service');
+const aw3Bucket = `${config.s3.bucketName}/slideImages`;
+const AWS_BUCKET_NAME = config.s3.bucketName;
 
 router.all('*', cors());
 
@@ -33,7 +29,7 @@ router.delete('/:id', verify, (req, res, next) => {
           mapFiles.forEach(data => {
             console.log(data)
             const params = {
-              Bucket: process.env.AWS_BUCKET_NAME,
+              Bucket: AWS_BUCKET_NAME,
               Key: data,
             }
             s3.deleteObject(params, (err, data) => {
@@ -81,7 +77,7 @@ router.get('/', async(req, res, next) => {
   }
 });
 
-router.put('/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
@@ -195,7 +191,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/', [verify, upload], (req, res, next) => {
+router.post('/', [verify, parser.array('image')], (req, res, next) => {
   // add / update products
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');

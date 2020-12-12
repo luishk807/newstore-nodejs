@@ -1,5 +1,8 @@
 const cleanData = (data) => {
-  return data.toLowerCase().replace(/\s/g, "")
+  if (data) {
+    return data.toLowerCase().replace(/\s/g, "")
+  }
+  return data;
 }
 
 
