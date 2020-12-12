@@ -1,57 +1,36 @@
 const router = require('express').Router();
 const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
-const config = require('../../config.js');
-const jwt = require('jsonwebtoken');
+const config = require('../../config');
 const bcrypt = require('bcryptjs');
 const User = require('../../pg/models/Users');
-const verify = require('../verifyToken');
-const AWS = require('aws-sdk');
+const verify = require('../../middlewares/verifyToken');
 const { Op } = require('sequelize');
 const uuid = require('uuid');
-const upload = require('../../middlewares/uploadSingle');
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ID,
-  secretAccessKey: process.env.AWS_SECRET
-})
+const parser = require('../../middlewares/multerParser');
+const s3 = require('../../services/storage.service');
+const controller = require('../../controllers/users');
 
 router.all('*', cors());
 
-const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/users`;
+const aw3Bucket = `${config.s3.bucketName}/users`;
 
 router.delete('/:id',verify, (req, res, next) => {
-  // delete brands
-  User.findAll({ where: {id: req.params.id}, include:['user_addresses']})
-  .then((user) => {
-    const userImage = user[0].img
-    User.destroy({
-      where: {
-        id: user[0].id
-      }
-    }).then((deletedRecord) => {
-      if (deletedRecord) {
-        // console.log(deletedRecord, mapFiles)
-        try {
-          const params = {
-            Bucket: aw3Bucket,
-            Key: userImage,
-          }
-          s3.deleteObject(params, (err, data) => {})
-          res.status(200).json({ status: true, message: "User successfully deleted" });
-        } catch (e) {
-          res.status(400).json({ status: true, message: "User delete, but error on deleting image!", error: e.toString(), req: req.body });
+  controller.deleteUser(req.params.id)
+    .then(result => {
+      if (result.status) {
+        res.status(200).json(result);
+      } else {
+        if (result.notFound) {
+          res.status(404).json(result);
+        } else {
+          res.status(500).json(result);
         }
       }
-    }, (err) => {
-        res.status(500).json({status: false, message: err});
-    })
-  })
+    });
 });
 
 
-router.put('/:id',[verify,upload], (req, res, next) => {
+router.put('/:id',[verify, parser.single('image')], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const id = req.params.id;
@@ -140,74 +119,24 @@ router.put('/:id',[verify,upload], (req, res, next) => {
   })
 });
 
-router.post('/', [upload], (req, res, next) => {
-  let dataEntry = null;
+router.post('/', [parser.single('image')], (req, res, next) => {
   const body = req.body;
-  const userRole = body.userRole ? body.userRole : 2;
-  User.count({where: { email: body.email}}).then((count) => {
-    if (count) {
-      res.status(200).json({status: false, message: 'email already registered'})
-    } else {
-      if (req.file) {
-        let myFile = req.file.originalname.split('.');
-        const fileType = myFile[myFile.length - 1];
-        const fileName = `${uuid.v4()}.${fileType}`;
-      
-        const params = {
-          Bucket: aw3Bucket,
-          Key: fileName,
-          Body: req.file.buffer,
-        }
-      
-        s3.upload(params, (err, data) => {
-          if (err) {
-            res.status(500).send({status: false, message: err})
-          }
-        })
-        
-        dataEntry = {
-          'last_name': body.last_name,
-          'first_name': body.first_name,
-          'password': body.password,
-          'date_of_birth': body.date_of_birth,
-          'phone': body.phone,
-          'gender': body.gender,
-          'mobile': body.mobile,
-          'email': body.email,
-          'userRole': userRole,
-          'img':fileName
-        }
+  controller.create(body, req.file)
+    .then(result => {
+      if (result.status) {
+        res.status(200).json(result);
       } else {
-        dataEntry = {
-          'last_name': body.last_name,
-          'first_name': body.first_name,
-          'password': body.password,
-          'date_of_birth': body.date_of_birth,
-          'userRole': userRole,
-          'phone': body.phone,
-          'gender': body.gender,
-          'mobile': body.mobile,
-          'email': body.email,
-        }
+        res.status(500).json(result);
       }
-      
-      User.create(dataEntry).then((user) => {
-        bcrypt.hash(body.password, 10, function(err, hash){
-          User.update({password: hash },{where: {id: user.id }})
-        })
-        res.status(200).json({status: true, message: "User succesfully created"});
-      })
-    }
-  });
-})
+    });
+});
 
 router.get('/:id', [verify], async(req, res, next) => {
-    let user = await User.findAll({ where: {id: req.params.id}});
-    res.json(user)
+  const user = await controller.findById(req.params.id);
+  res.json(user);
 });
 
 router.get('/', [verify], async(req, res, next) => {
-  // get products
   let user = null;
   if (req.query.id) {
     try {

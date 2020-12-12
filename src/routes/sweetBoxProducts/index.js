@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const SweetBoxProduct = require('../../pg/models/SweetBoxProducts');
-const upload = require('../../middlewares/uploadSingle');
+const parser = require('../../middlewares/multerParser');
 
 router.all('*', cors());
 
@@ -19,14 +19,14 @@ router.delete('/', (req, res, next) => {
 router.get('/', async(req, res, next) => {
   if (req.query.sweetbox) {
     try {
-      product = await SweetBoxProduct.findAll({ where: {sweetBoxId: req.query.sweetbox}, include: ['sweetboxProductProduct', 'sweetboxProductStatus']});
+      product = await SweetBoxProduct.findAll({ where: {sweetBoxId: req.query.sweetbox}, include: ['sweetboxProductStatus']});
 
       res.json(product)
     } catch(err) {
       res.send(err)
     }
   } else {
-    SweetBoxProduct.findAll({include: ['sweetboxProductProduct', 'sweetboxProductStatus']}).then((pimage) => {
+    SweetBoxProduct.findAll({include: ['sweetboxProductStatus']}).then((pimage) => {
       res.status(200).json(pimages);
     }).catch((err) => {
       res.send({status: false, message: err})
@@ -34,14 +34,14 @@ router.get('/', async(req, res, next) => {
   }
 });
 
-router.post('/', [upload, verify], (req, res, next) => {
+router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
 
   if (body.items) {
     const items = body.items.split(',');
     const productAdd = items.map((item) => {
       return {
-        productId: item,
+        product: item,
         sweetBoxId: body.id
       }
     })
@@ -50,7 +50,7 @@ router.post('/', [upload, verify], (req, res, next) => {
           sweetBoxId: body.id
         }
     }).then((updated) => {
-      SweetBoxProduct.bulkCreate(productAdd).then((images) => {
+      SweetBoxProduct.bulkCreate(productAdd).then(() => {
         res.status(200).json({
           status: updated,
           message: message

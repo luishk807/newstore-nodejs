@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const VendorRate = require('../../pg/models/VendorRates');
 
 router.all('*', cors());

@@ -1,20 +1,15 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
-const upload = require('../../middlewares/uploadSingle');
+const verify = require('../../middlewares/verifyToken');
+const parser = require('../../middlewares/multerParser');
 const Vendor = require('../../pg/models/Vendors');
-
-const AWS = require('aws-sdk');
 const uuid = require('uuid');
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ID,
-  secretAccessKey: process.env.AWS_SECRET
-})
+const config = require('../../config');
+const s3 = require('../../services/storage.service');
 
 router.all('*', cors());
 
-const aw3Bucket = `${process.env.AWS_BUCKET_NAME}/vendors`;
+const aw3Bucket = `${config.s3.bucketName}/vendors`;
 
 router.delete('/:id', verify, (req, res, next) => {
   // delete brands
@@ -46,7 +41,7 @@ router.delete('/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, parser.single('image')], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const vid = req.params.id;
@@ -132,7 +127,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/', [verify, upload], (req, res, next) => {
+router.post('/', [verify, parser.single('image')], (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
   if (req.file) {

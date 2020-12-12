@@ -1,8 +1,9 @@
-const Sequelize = require('sequelize');
-const Product = require('../../../pg/models/Products');
-const Brand = require('../../../pg/models/Brands');
-const Category = require('../../../pg/models/Categories');
-const Vendor = require('../../../pg/models/Vendors');
+const Product = require('../pg/models/Products');
+const Brand = require('../pg/models/Brands');
+const Category = require('../pg/models/Categories');
+const Vendor = require('../pg/models/Vendors');
+const s3 = require('./storage.service');
+const { safeString } = require('../utils/string.utils');
 const validationField = '__validation__';
 const requiredfields = [
     'name',
@@ -56,10 +57,6 @@ const verifyImportDataFormat = (data, vendor) => {
         return products;
     }
     return null;
-}
-
-const safeString = (value) => {
-    return (value) ? value : '';
 }
 
 /** Assigns the reference id from the given searchItems data array to the given data */
@@ -168,6 +165,31 @@ const importProducts = async (datas, userId) => {
     return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData });
 }
 
+const deleteProduct = async (id) => {
+    const product = await Product.findOne({
+        where: { id: id },
+        include: ['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']
+    });
+    if (product) {
+        const mapFiles = product.productImages.map(data => data.img_url);
+        try {
+            mapFiles.forEach(data => {
+                s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
+                    if (err) {
+                        // res.status(500).send({status: false, message: err})
+                    }
+                })
+            })
+            await Product.destroy({ where: { id: product.id } });
+            return { status: true, message: "Product successfully deleted" };
+        } catch (e) {
+            return { status: false, message: "Product delete, but error on deleting image!", error: e.toString() };
+        }
+    }
+    return { status: false, message: 'Product not found for deletion', notFound: true };
+}
+
 module.exports = {
-    importProducts
+    importProducts,
+    deleteProduct
 }

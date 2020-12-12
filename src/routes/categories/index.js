@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
-const upload = require('../../middlewares/uploadSingle');
+const verify = require('../../middlewares/verifyToken');
+const parser = require('../../middlewares/multerParser');
 const Category = require('../../pg/models/Categories');
 
 router.all('*', cors());
@@ -22,7 +22,7 @@ router.delete('/:id', verify, (req, res, next) => {
   })
 });
 
-router.put('/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
   
@@ -47,7 +47,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/', verify, upload, (req, res, next) => {
+router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
 
   Category.create({
