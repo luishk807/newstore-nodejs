@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const Store = require('../../pg/models/Stores');
-const upload = require('../../middlewares/uploadSingle');
+const parser = require('../../middlewares/multerParser');
 
 router.all('*', cors());
 
@@ -23,7 +23,7 @@ router.delete('/:id', verify, (req, res, next) => {
 });
 
 
-router.put('/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const sid = req.params.id;
   Store.update(
@@ -55,7 +55,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/',[verify, upload], (req, res, next) => {
+router.post('/',[verify, parser.none()], (req, res, next) => {
   const body = req.body;
 
   Store.create({

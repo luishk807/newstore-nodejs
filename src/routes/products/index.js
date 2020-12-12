@@ -1,62 +1,32 @@
 const router = require('express').Router();
 const cors = require('cors');
-const bodyParser = require('body-parser')
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const Product = require('../../pg/models/Products');
 const ProductImages = require('../../pg/models/ProductImages');
-const upload = require('../../middlewares/uploadArray');
-const AWS = require('aws-sdk');
+const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
-
-const controller = require('./controller');
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ID,
-  secretAccessKey: process.env.AWS_SECRET
-})
+const config = require('../../config');
+const controller = require('../../controllers/products');
+const s3 = require('../../services/storage.service');
 
 router.all('*', cors());
 
-router.delete('/:id', verify, (req, res, next) => {
-  // delete products
-  Product.findAll({ where: {id: req.params.id},include:['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']})
-  .then((product) => {
-    const mapFiles = product[0].productImages.map(data => {
-      return data.img_url;
-    })
-    Product.destroy({
-      where: {
-        id: product[0].id
+router.delete('/:id', verify, async (req, res, next) => {
+  if (req.params.id) {
+    const result = await controller.deleteProduct(req.params.id);
+    if (result.status) {
+      res.status(200).send(result);
+    } else {
+      if (result.notFound) {
+        res.status(404).send(result);
       }
-    }).then((deletedRecord) => {
-      if (deletedRecord) {
-        // console.log(deletedRecord, mapFiles)
-        try {
-          mapFiles.forEach(data => {
-            console.log(data)
-            const params = {
-              Bucket: process.env.AWS_BUCKET_NAME,
-              Key: data,
-            }
-            s3.deleteObject(params, (err, data) => {
-              if (err) {
-                res.status(500).send({status: false, message: err})
-              }
-            })
-          })
-          res.status(200).json({ status: true, message: "Product successfully deleted" });
-        } catch (e) {
-          res.status(400).json({ status: false, message: "Product delete, but error on deleting image!", error: e.toString(), req: req.body });
-        }
-      }
-    }, (err) => {
-        res.json(err);
-    })
-  })
+      res.status(500).send(result);
+    }
+  }
 });
 
 
-router.put('/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
 
 
   const imagesUploaded = req.files.map((file) => {
@@ -64,7 +34,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
     const fileType = myFile[myFile.length - 1];
     const fileName = `${uuid.v4()}.${fileType}`;
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
+      Bucket: config.s3.bucketName,
       Key: fileName,
       Body: file.buffer,
     }
@@ -115,7 +85,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
       try {
         mapFiles.forEach(data => {
           const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: config.s3.bucketName,
             Key: data,
           }
           s3.deleteObject(params, (err, data) => {
@@ -165,7 +135,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/', [verify, upload], (req, res, next) => {
+router.post('/', [verify, parser.array('image')], (req, res, next) => {
   // add / update products
 
   const imagesUploaded = req.files.map((file) => {
@@ -173,7 +143,7 @@ router.post('/', [verify, upload], (req, res, next) => {
     const fileType = myFile[myFile.length - 1];
     const fileName = `${uuid.v4()}.${fileType}`;
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
+      Bucket: config.s3.bucketName,
       Key: fileName,
       Body: file.buffer,
     }
@@ -220,7 +190,7 @@ router.post('/', [verify, upload], (req, res, next) => {
   })
 })
 
-router.post('/import', [verify, bodyParser.json()], (req, res, next) => {
+router.post('/import', [verify], (req, res, next) => {
   const data = req.body;
   controller.importProducts(data, req.user.id).then((result) => {
     res.status(200).json({status: true, message: "Products imported"});
@@ -265,4 +235,4 @@ router.get('/', async(req, res, next) => {
   }
 });
 
-module.exports = router
+module.exports = router;

@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
+const verify = require('../../middlewares/verifyToken');
 const SweetBoxProduct = require('../../pg/models/SweetBoxProducts');
-const upload = require('../../middlewares/uploadSingle');
+const parser = require('../../middlewares/multerParser');
 
 router.all('*', cors());
 
@@ -34,7 +34,7 @@ router.get('/', async(req, res, next) => {
   }
 });
 
-router.post('/', [upload, verify], (req, res, next) => {
+router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
 
   if (body.items) {
@@ -50,7 +50,7 @@ router.post('/', [upload, verify], (req, res, next) => {
           sweetBoxId: body.id
         }
     }).then((updated) => {
-      SweetBoxProduct.bulkCreate(productAdd).then((images) => {
+      SweetBoxProduct.bulkCreate(productAdd).then(() => {
         res.status(200).json({
           status: updated,
           message: message

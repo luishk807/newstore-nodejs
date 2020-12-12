@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../verifyToken');
-const upload = require('../../middlewares/uploadArray');
+const verify = require('../../middlewares/verifyToken');
+const parser = require('../../middlewares/multerParser');
 
 const SweetBoxType = require('../../pg/models/SweetBoxTypes');
 
@@ -23,8 +23,7 @@ router.delete('/:id', verify, (req, res, next) => {
   })
 });
 
-router.put('/:id', [verify, upload], (req, res, next) => {
-  let dataInsert = null;
+router.put('/:id', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
   
@@ -49,8 +48,7 @@ router.put('/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/', verify, upload, (req, res, next) => {
-  let dataEntry = null;
+router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
 
   SweetBoxType.create({

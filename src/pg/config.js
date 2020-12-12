@@ -1,15 +1,15 @@
-const { Client } = require('pg');
+// const { Client } = require('pg');
 const Sequelize = require('sequelize');
+const config = require('../config');
 
-const PGUSER = process.env.PGUSER;
-const PGPASSWORD = process.env.PGPASSWORD;
-const PGPORT = process.env.PGPORT;
-const PGHOST = process.env.PGHOST;
-const PGDATABASE = process.env.PGDATABASE;
+const PGUSER = config.db.user;;
+const PGPASSWORD = config.db.password;
+const PGPORT = config.db.port;
+const PGHOST = config.db.host;
+const PGDATABASE = config.db.database;
 
-const client = new Client();
-
-client.connect();
+// const client = new Client();
+// client.connect();
 
 const sequelize = new Sequelize(PGDATABASE, PGUSER, PGPASSWORD, {
   host: PGHOST,
