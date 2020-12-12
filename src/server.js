@@ -1,3 +1,7 @@
+// Setup global logger first
+const logger = require('./utils/logger');
+global.logger = logger;
+
 const config = require('./config');
 const app = require('./app.js');
 

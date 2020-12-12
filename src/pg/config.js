@@ -14,7 +14,8 @@ client.connect();
 const sequelize = new Sequelize(PGDATABASE, PGUSER, PGPASSWORD, {
   host: PGHOST,
   port: PGPORT,
-  dialect: 'postgres'
+  dialect: 'postgres',
+  logging: msg => logger.debug(msg)
 });
 
 //var connectionString = `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGHOST}/${PGDATABASE}`;
