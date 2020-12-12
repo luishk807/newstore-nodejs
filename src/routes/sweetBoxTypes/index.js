@@ -7,7 +7,7 @@ const SweetBoxType = require('../../pg/models/SweetBoxTypes');
 
 router.all('*', cors());
 
-router.delete('/sweetboxtypes/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, (req, res, next) => {
   // delete brands
   SweetBoxType.findAll({ where: {id: req.params.id}})
   .then((brand) => {
@@ -23,7 +23,7 @@ router.delete('/sweetboxtypes/:id', verify, (req, res, next) => {
   })
 });
 
-router.put('/sweetboxtypes/:id', [verify, upload], (req, res, next) => {
+router.put('/:id', [verify, upload], (req, res, next) => {
   let dataInsert = null;
   const body = req.body;
   const bid = req.params.id;
@@ -49,7 +49,7 @@ router.put('/sweetboxtypes/:id', [verify, upload], (req, res, next) => {
   })
 });
 
-router.post('/sweetboxtypes', verify, upload, (req, res, next) => {
+router.post('/', verify, upload, (req, res, next) => {
   let dataEntry = null;
   const body = req.body;
 
@@ -63,12 +63,12 @@ router.post('/sweetboxtypes', verify, upload, (req, res, next) => {
   })
 })
 
-router.get('/sweetboxtypes/:id', async(req, res, next) => {
+router.get('/:id', async(req, res, next) => {
     let sweetboxtype = await SweetBoxType.findAll({ where: {id: req.params.id}});
     res.json(sweetboxtype)
 });
 
-router.get('/sweetboxtypes', async(req, res, next) => {
+router.get('/', async(req, res, next) => {
   // get products
   let sweetboxtype = null;
   if (req.query.id) {
