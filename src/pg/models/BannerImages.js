@@ -3,7 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const BannerImg = sequelize.define('banner_images', {
+const BannerImage = sequelize.define('banner_images', {
   banner: {
     type: Sequelize.BIGINT,
     field: 'bannerId'
@@ -14,10 +14,13 @@ const BannerImg = sequelize.define('banner_images', {
   position: {
     type: Sequelize.BIGINT
   },
+  url: {
+    type: Sequelize.TEXT
+  },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'
   },
 });
 
-module.exports = BannerImg;
+module.exports = BannerImage;
