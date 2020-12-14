@@ -8,6 +8,7 @@ const uuid = require('uuid');
 const config = require('../../config');
 const controller = require('../../controllers/products');
 const s3 = require('../../services/storage.service');
+const { Op } = require('sequelize');
 
 router.all('*', cors());
 
@@ -217,10 +218,30 @@ router.get('/', async(req, res, next) => {
     } catch(err) {
       res.send(err)
     }
+  } else if (req.query.search) {
+    try {
+      product = await Product.findAll({ where: {
+        name: {
+          [Op.like]: `%${req.query.search}%`
+        }
+        
+      }, include: ['productStatus', 'productImages']});
+
+      res.json(product)
+    } catch(err) {
+      res.send(err)
+    }
   } else if (req.query.vendor) {
     try {
       product = await Product.findAll({ where: {vendorId: req.query.vendor}, include: ['productStatus', 'productImages']});
 
+      res.json(product)
+    } catch(err) {
+      res.send(err)
+    }
+  } else if (req.query.category) {
+    try {
+      product = await Product.findAll({ where: {categoryId: req.query.category}, include: ['productStatus', 'productImages']});
       res.json(product)
     } catch(err) {
       res.send(err)
