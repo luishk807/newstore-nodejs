@@ -8,6 +8,7 @@ const uuid = require('uuid');
 const config = require('../../config');
 const controller = require('../../controllers/products');
 const s3 = require('../../services/storage.service');
+const { Op } = require('sequelize');
 
 router.all('*', cors());
 
@@ -195,7 +196,6 @@ router.post('/import', [verify], (req, res, next) => {
   controller.importProducts(data, req.user.id).then((result) => {
     res.status(200).json({status: true, message: "Products imported"});
   }).catch((err) => {
-    console.error(err);
     res.status(500).json(err);
   });
 });
@@ -205,10 +205,20 @@ router.get('/:id', async(req, res, next) => {
     res.json(product)
 });
 
+const paginate = ({ page, pageSize }) => {
+  const offset = page * pageSize;
+  const limit = pageSize;
+
+  return {
+    offset,
+    limit,
+  };
+};
+
 router.get('/', async(req, res, next) => {
   // get products
+  const limit = 10;
   let product = null;
-  
   if (req.query.id) {
     try {
       product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus', 'productImages']});
@@ -222,6 +232,87 @@ router.get('/', async(req, res, next) => {
       product = await Product.findAll({ where: {vendorId: req.query.vendor}, include: ['productStatus', 'productImages']});
 
       res.json(product)
+    } catch(err) {
+      res.send(err)
+    }
+  } else if (req.query.search) {
+    try {
+      if (req.query.page) {
+        const page = req.query.page > 0 ? req.query.page - 1 : 0;
+        const offset = page ? page * limit : 0;
+        Product.findAndCountAll({ 
+          where: {
+            name: {
+              [Op.like]: `%${req.query.search}%`
+            }
+          }
+        }).then((countResult) => {
+          Product.findAll({
+            where: {
+              name: {
+                [Op.like]: `%${req.query.search}%`
+              }
+            },
+            include: ['productStatus', 'productImages'],
+            offset: offset,
+            limit: limit
+          }).then((result) => {
+            const pages = Math.ceil(countResult.count / limit)
+            const results = {
+              count: countResult.count,
+              items: result,
+              pages: pages
+            }
+            res.json(results);
+          }).catch((err) => {
+            res.send(err)
+          })
+        }).catch((err) => {
+          res.send(err)
+        })
+      } else {
+        product = await Product.findAll({ where: {
+          name: {
+            [Op.like]: `%${req.query.search}%`
+          }
+        }, include: ['productStatus', 'productImages']});
+  
+        res.json(product);
+      }
+    } catch(err) {
+      res.send(err)
+    }
+  } else if (req.query.category) {
+    try {
+      if (req.query.page) {
+        const page = req.query.page > 0 ? req.query.page - 1 : 0;
+        const offset = page ? page * limit : 0;
+        Product.findAndCountAll({ 
+          where: {categoryId: req.query.category}
+        }).then(countResult => {
+          Product.findAll({ 
+            where: {categoryId: req.query.category}, 
+            include: ['productStatus', 'productImages'],
+            limit: limit,
+            offset: offset,
+          }).then(result => {
+            const pages = Math.ceil(countResult.count / limit)
+            const results = {
+              count: countResult.count,
+              items: result,
+              pages: pages
+            }
+            res.json(results);
+          }).catch((err) => {
+            res.send(err)
+          });
+        }).catch((err) => {
+          res.send(err)
+        })
+      } else {
+        product = await Product.findAll({ where: {categoryId: req.query.category}, include: ['productStatus', 'productImages']});
+        res.json(product)
+      }
     } catch(err) {
       res.send(err)
     }
