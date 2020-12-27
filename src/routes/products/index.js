@@ -318,7 +318,18 @@ router.get('/', async(req, res, next) => {
     }
   } else {
     try {
-      product = await Product.findAll({include:['productImages','productVendor', 'productBrand','categories','productStatus', 'rates']});
+      let query = {
+        include:['productImages','productVendor', 'productBrand','categories','productStatus', 'rates']
+      }
+      if (req.query.page) {
+        const page = req.query.page > 0 ? req.query.page - 1 : 0;
+        query = {
+          ...query,
+          limit: limit,
+          offset: page ? page * limit : 0,
+        }
+      }
+      product = await Product.findAll(query);
       res.json(product)
     } catch(err) {
       res.send(err)
