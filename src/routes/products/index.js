@@ -243,14 +243,14 @@ router.get('/', async(req, res, next) => {
         Product.findAndCountAll({ 
           where: {
             name: {
-              [Op.like]: `%${req.query.search}%`
+              [Op.iLike]: `%${req.query.search}%`
             }
           }
         }).then((countResult) => {
           Product.findAll({
             where: {
               name: {
-                [Op.like]: `%${req.query.search}%`
+                [Op.iLike]: `%${req.query.search}%`
               }
             },
             include: ['productStatus', 'productImages'],
@@ -273,10 +273,9 @@ router.get('/', async(req, res, next) => {
       } else {
         product = await Product.findAll({ where: {
           name: {
-            [Op.like]: `%${req.query.search}%`
+            [Op.iLike]: `%${req.query.search}%`
           }
         }, include: ['productStatus', 'productImages']});
-  
         res.json(product);
       }
     } catch(err) {
