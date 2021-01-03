@@ -6,7 +6,7 @@ const sequelize = pgconfig.getSequelize();
 const Status = require('./Statuses');
 // const BannerImage = require('./BannerImages');
 const BannerType = require('./BannerTypes');
-const BannerImg = require('./BannerImg');
+const BannerImage = require('./BannerImages');
 
 const Banner = sequelize.define('banners', {
   name: {
@@ -22,7 +22,7 @@ const Banner = sequelize.define('banners', {
   },
 });
 
-Banner.hasMany(BannerImg, { as: 'productImages'});
+Banner.hasMany(BannerImage, { as: 'productImages'});
 
 Banner.belongsTo(Status, { foreignKey: 'statusId', as: "bannerStatus"})
 
@@ -31,6 +31,6 @@ Banner.belongsTo(BannerType,{
   as: "bannerBannerType",
 });
 
-BannerImg.belongsTo(Banner, { foreignKey: 'bannerId', as: 'BannerImageBanner'});
+BannerImage.belongsTo(Banner, { foreignKey: 'bannerId', as: 'BannerImageBanner'});
 
 module.exports = Banner;
