@@ -1,27 +1,27 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
-const Banner = require('../../pg/models/Banners');
-const BannerImages = require('../../pg/models/BannerImages');
+const ImageBox = require('../../pg/models/ImageBoxes');
+const ImageBoxImages = require('../../pg/models/ImageBoxImages');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
 const config = require('../../config');
 const s3 = require('../../services/storage.service');
 const aw3Bucket = `${config.s3.bucketName}/slideImages`;
 const AWS_BUCKET_NAME = config.s3.bucketName;
-const includes = ['productImages', 'bannerStatus', 'bannerBannerType']
+const includes = ['productImages', 'imageBoxStatus', 'imageBoxImageBoxType']
 router.all('*', cors());
 
 router.delete('/:id', verify, (req, res, next) => {
   // delete products
-  Banner.findAll({ where: {id: req.params.id},include: includes})
-  .then((banner) => {
-    const mapFiles = banner[0].productImages.map(data => {
+  ImageBox.findAll({ where: {id: req.params.id},include: includes})
+  .then((imageBox) => {
+    const mapFiles = imageBox[0].productImages.map(data => {
       return data.img_url;
     })
-    Banner.destroy({
+    ImageBox.destroy({
       where: {
-        id: banner[0].id
+        id: imageBox[0].id
       }
     }).then((deletedRecord) => {
       if (deletedRecord) {
@@ -38,9 +38,9 @@ router.delete('/:id', verify, (req, res, next) => {
               }
             })
           })
-          res.status(200).json({ status: true, message: "Banner successfully deleted" });
+          res.status(200).json({ status: true, message: "Image box successfully deleted" });
         } catch (e) {
-          res.status(400).json({ status: false, message: "Banner delete, but error on deleting image!", error: e.toString(), req: req.body });
+          res.status(400).json({ status: false, message: "Image box delete, but error on deleting image!", error: e.toString(), req: req.body });
         }
       }
     }, (err) => {
@@ -51,32 +51,32 @@ router.delete('/:id', verify, (req, res, next) => {
 
 router.get('/', async(req, res, next) => {
   // get statuses
-  let banner = null;
+  let imageBox = null;
   if (req.query.name) {
     try {
-      banner = await Banner.findOne({ where: {name: req.query.name}, include: includes});
-      res.json(banner)
+      imageBox = await  ImageBox.findOne({ where: {name: req.query.name}, include: includes});
+      res.json(imageBox)
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.type) {
     try {
-      banner = await Banner.findOne({ where: {bannerTypeId: req.query.type, status: 1}, include: includes});
-      res.json(banner)
+      imageBox = await  ImageBox.findOne({ where: {imageBoxTypeId: req.query.type, status: 1}, include: includes});
+      res.json(imageBox)
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.id) {
     try {
-      banner = await Banner.findOne({ where: {id: req.query.id}, include: includes});
-      res.json(banner)
+      imageBox = await  ImageBox.findOne({ where: {id: req.query.id}, include: includes});
+      res.json(imageBox)
     } catch(err) {
       res.send(err)
     }
   } else {
     try {
-      banner = await Banner.findAll({include: includes});
-      res.json(banner)
+      imageBox = await  ImageBox.findAll({include: includes});
+      res.json(imageBox)
     } catch(err) {
       res.send(err)
     }
@@ -109,19 +109,19 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
   const pid = req.params.id;
   // if user set main slider active , set the rest to not active
   if (body.status === '1' ) {
-    Banner.update(
+    ImageBox.update(
       {
         'statusId': 2
       }, {
         where: {
-          bannerTypeId: body.bannerType
+          imageBoxTypeId: body.imageBoxType
         }
       }
     ).then(updated => {
-      Banner.update(
+      ImageBox.update(
         {
           'name': body.name,
-          'bannerTypeId': body.bannerType,
+          'imageBoxTypeId': body.imageBoxType,
           'statusId': body.status
         },{
           where: {
@@ -129,7 +129,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
           }
         }
       ).then((updated) => {
-        let message = "Banner Updated";
+        let message = "Image Box Updated";
         // delete all images first in servers
         const partBodySaved = JSON.parse(req.body.saved);
         if (partBodySaved && Object.keys(partBodySaved).length) {
@@ -161,7 +161,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
     
           // delete data from db
           try{
-            BannerImages.destroy({ where: {id: index }})
+            ImageBoxImages.destroy({ where: {id: index }})
           } catch (e) {
             console.log(e)
           }
@@ -178,7 +178,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
               imageObj = JSON.parse(req.body.imageData[index]);
             }
             return {
-              'bannerId': pid,
+              'imageBoxId': pid,
               'img_url': data.Key,
               'url': imageObj.url,
               'position': counter++
@@ -186,7 +186,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
           })
     
           // save entired bulk to product images
-          BannerImages.bulkCreate(newImages).then((images) => {
+          ImageBoxImages.bulkCreate(newImages).then((images) => {
             res.status(200).json({
               status: updated,
               message: message
@@ -201,10 +201,10 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
       })
     })
   } else {
-    Banner.update(
+    ImageBox.update(
       {
         'name': body.name,
-        'bannerTypeId': body.bannerType,
+        'imageBoxTypeId': body.imageBoxType,
         'statusId': body.status
       },{
         where: {
@@ -212,7 +212,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
         }
       }
     ).then((updated) => {
-      let message = "Banner Updated";
+      let message = "Image Box Updated";
       // delete all images first in servers
       const partBodySaved = JSON.parse(req.body.saved);
       if (partBodySaved && Object.keys(partBodySaved).length) {
@@ -244,7 +244,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
   
         // delete data from db
         try{
-          BannerImages.destroy({ where: {id: index }})
+          ImageBoxImages.destroy({ where: {id: index }})
         } catch (e) {
           console.log(e)
         }
@@ -261,7 +261,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
             imageObj = JSON.parse(req.body.imageData[index]);
           }
           return {
-            'bannerId': pid,
+            'imageBoxId': pid,
             'img_url': data.Key,
             'url': imageObj.url,
             'position': counter++
@@ -269,7 +269,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
         })
   
         // save entired bulk to product images
-        BannerImages.bulkCreate(newImages).then((images) => {
+        ImageBoxImages.bulkCreate(newImages).then((images) => {
           res.status(200).json({
             status: updated,
             message: message
@@ -308,12 +308,12 @@ router.post('/', [verify, parser.array('image')], (req, res, next) => {
   })
 
   const body = req.body;
-  Banner.create(
+  ImageBox.create(
     {
       'name': body.name,
-      'bannerTypeId': body.bannerType,
+      'imageBoxTypeId': body.imageBoxType,
     }
-  ).then((banner) => {
+  ).then((imageBox) => {
     let counter = 1;
     const newImages = imagesUploaded.map((data, index) => {
       let imageObj = null;
@@ -323,17 +323,17 @@ router.post('/', [verify, parser.array('image')], (req, res, next) => {
         imageObj = JSON.parse(req.body.imageData[index]);
       }
       return {
-        'bannerId': banner.id,
+        'imageBoxId': imageBox.id,
         'img_url': data.Key,
         'url': imageObj.url,
         'position': counter++
       }
     })
-    BannerImages.bulkCreate(newImages).then((images) => {
-      res.status(200).json({status: true, message: "Banner added", data: banner});
+    ImageBoxImages.bulkCreate(newImages).then((images) => {
+      res.status(200).json({status: true, message: "Image box added", data: imageBox});
     })
   }).catch(err => {
-    res.status(401).json({status: false, message: "Unable to add banner"});
+    res.status(401).json({status: false, message: "Unable to add image box"});
   })
 })
 
