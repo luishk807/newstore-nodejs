@@ -26,7 +26,11 @@ const Product = sequelize.define('product', {
   description: { type: Sequelize.TEXT },
   model: { type: Sequelize.TEXT },
   code: { type: Sequelize.TEXT },
-});
+},
+{
+  schema: 'public',
+}
+);
 
 Product.hasMany(ProductRate, { as: "rates" });
 
