@@ -19,6 +19,13 @@ const config = {
     accessKeyId: process.env.AWS_ID,
     secretAccessKey: process.env.AWS_SECRET,
     bucketName: process.env.AWS_BUCKET_NAME
+  },
+  sendGrid: {
+    key: process.env.SENDGRID_API_KEY
+  },
+  email: {
+    contact: 'info@avenidaz.com',
+    noReply: 'no-reply@avenidaz.com',
   }
 };
 
