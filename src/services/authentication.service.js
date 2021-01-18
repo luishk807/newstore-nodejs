@@ -24,7 +24,7 @@ const authenticate = async (email, password, onlyAdmin = false) => {
                 return { code: 401, status: false, message: "Only Admins allowed"};
             }
 
-            const token = jwt.sign({id: user.id}, config.authentication.authToken);
+            const token = jwt.sign({id: user.id, type: user.userRole}, config.authentication.authToken);
             
             return { status: true, message: "Login successful", user: user, authorization: token };
 

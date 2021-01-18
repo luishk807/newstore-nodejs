@@ -3,9 +3,10 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 const User = require('./Users');
-
 const Country = require('./Countries');
-
+const Province = require('./Provinces');
+const District = require('./Districts');
+const Corregimiento = require('./Corregimientos');
 const UserAddress = sequelize.define('user_addresses', {
   name: {
     type: Sequelize.TEXT
@@ -14,12 +15,21 @@ const UserAddress = sequelize.define('user_addresses', {
     type: Sequelize.TEXT
   },
   province: {
+    type: Sequelize.BIGINT,
+    field: 'provinceId'
+  },
+  district: {
+    type: Sequelize.BIGINT,
+    field: 'districtId'
+  },
+  corregimiento: {
+    type: Sequelize.BIGINT,
+    field: 'corregimientoId'
+  },
+  township: {
     type: Sequelize.TEXT
   },
   city: {
-    type: Sequelize.TEXT
-  },
-  township: {
     type: Sequelize.TEXT
   },
   country: {
@@ -30,13 +40,19 @@ const UserAddress = sequelize.define('user_addresses', {
     type: Sequelize.BIGINT
   },
   zip: {
-    type: Sequelize.TIME
+    type: Sequelize.TEXT
   },
   phone: {
-    type: Sequelize.TIME
+    type: Sequelize.TEXT
   },
   mobile: {
-    type: Sequelize.TIME
+    type: Sequelize.TEXT
+  },
+  email: {
+    type: Sequelize.TEXT
+  },
+  selected: {
+    type: Sequelize.BOOLEAN
   },
   user: {
     type: Sequelize.BIGINT,
@@ -47,6 +63,12 @@ const UserAddress = sequelize.define('user_addresses', {
 UserAddress.belongsTo(User, { foreignKey: 'userId', as: 'addressesUsers'})
 
 UserAddress.belongsTo(Country, { foreignKey: 'countryId', as: 'addressCountry'});
+
+UserAddress.belongsTo(District, { foreignKey: 'districtId', as: 'addressDistrict'});
+
+UserAddress.belongsTo(Province, { foreignKey: 'provinceId', as: 'addressProvince'});
+
+UserAddress.belongsTo(Corregimiento, { foreignKey: 'corregimientoId', as: 'addressCorregimiento'});
 
 User.hasMany(UserAddress, { foreignKey: 'userId', as: 'userAddresses' })
 
