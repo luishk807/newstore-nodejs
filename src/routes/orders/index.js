@@ -5,7 +5,7 @@ const parser = require('../../middlewares/multerParser');
 const Order = require('../../pg/models/Orders');
 const OrderProduct = require('../../pg/models/OrderProducts');
 const sendgrid = require('../../controllers/sendGrid');
-
+const { Op } = require('sequelize');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct'];
 
 router.all('*', cors());
@@ -157,7 +157,7 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
     }
   } else {
     try {
-      order = await Order.findAll({ include: includes });
+      order = await Order.findAll({ where: {userId: req.user.id}, include: includes });
       res.status(200).json(order)
     } catch(err) {
       res.status(500).json({status: false, message: err})
