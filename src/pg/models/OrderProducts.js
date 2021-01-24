@@ -3,11 +3,9 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const Status = require('./Statuses');
+const OrderStatus = require('./OrderStatuses');
 
 const Product = require('./Products');
-
-const Order = require('./Orders');
 
 const OrderProduct = sequelize.define('order_products', {
   product: {
@@ -18,22 +16,47 @@ const OrderProduct = sequelize.define('order_products', {
     type: Sequelize.NUMBER
   },
   total: {
-    type: Sequelize.decimal
+    type: Sequelize.DECIMAL
   },
   order: {
     type: Sequelize.BIGINT,
     field: 'orderId'
   },
-  status: {
+  orderStatus: {
     type: Sequelize.BIGINT,
-    field: 'statusId'
+    field: 'orderStatusId'
+  },
+  name: {
+    type: Sequelize.TEXT,
+  },
+  unit_total: {
+    type: Sequelize.DECIMAL
+  },
+  description: {
+    type: Sequelize.TEXT,
+  },
+  model: {
+    type: Sequelize.TEXT,
+  },
+  code: {
+    type: Sequelize.TEXT,
+  },
+  category: {
+    type: Sequelize.TEXT,
+  },
+  brand: {
+    type: Sequelize.TEXT,
+  },
+  color: {
+    type: Sequelize.TEXT,
+  },
+  size: {
+    type: Sequelize.TEXT,
   },
 });
 
-Order.belongsTo(Status, { foreignKey: 'status', as: "orderStatus"})
+OrderProduct.belongsTo(OrderStatus, { foreignKey: 'orderStatusId', as: "orderStatusProduct"})
 
-OrderProduct.belongsTo(Order, { foreignKey: 'orderId', as: "orderProductOrder"})
-
-Order.belongsTo(Product, { foreignKey: 'productId', as: 'orderProduct' })
+OrderProduct.belongsTo(Product, { foreignKey: 'productId', as: 'orderProduct' })
 
 module.exports = OrderProduct;
