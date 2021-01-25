@@ -7,7 +7,7 @@ const OrderProduct = require('../../pg/models/OrderProducts');
 const sendgrid = require('../../controllers/sendGrid');
 const { Op } = require('sequelize');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct'];
-
+const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 router.all('*', cors());
 
 router.delete('/:id', verify, (req, res, next) => {
@@ -37,6 +37,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
       'subtotal': body.subtotal,
       'grandtotal': body.grandtotal,
       'tax': body.tax,
+      'delivery': body.delivery,
       'orderCancelReason': body.orderCancelReason,
       'shipping_name': body.shipping_name,
       'shipping_address': body.shipping_address,
@@ -74,6 +75,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
     'subtotal': body.subtotal,
     'grandtotal': body.grandTotal,
     'tax': body.tax,
+    'delivery': body.delivery,
     'shipping_name': body.shipping_name,
     'shipping_address': body.shipping_address,
     'shipping_email': body.shipping_email,
@@ -150,14 +152,14 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
   let order = null;
   if (req.query.id) {
     try {
-      order = await Order.findOne({ where: {id: req.query.id}, include: includes});
+      order = await Order.findOne({ where: {id: req.query.id}, include: includes, order: orderBy});
       res.status(200).json(order)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      order = await Order.findAll({ where: {userId: req.user.id}, include: includes });
+      order = await Order.findAll({ where: {userId: req.user.id}, include: includes, order: orderBy });
       res.status(200).json(order)
     } catch(err) {
       res.status(500).json({status: false, message: err})

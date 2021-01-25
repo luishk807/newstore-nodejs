@@ -65,6 +65,9 @@ const Order = sequelize.define('orders', {
   },
   shipping_district: {
     type: Sequelize.TEXT
+  },
+  delivery: {
+    type: Sequelize.DECIMAL
   }
 });
 
