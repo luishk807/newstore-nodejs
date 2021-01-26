@@ -69,7 +69,7 @@ router.get('/variant/:id/stock', async (req,res) => {
 
 router.post('/options', async(req, res) => {
     const result = await controller.saveOptions(req.body);
-    return res.status(200).json(req.body);
+    return res.status(200).json(result.data);
 })
 
 router.delete('/options', async(req, res) => {
