@@ -6,7 +6,7 @@ const Order = require('../../pg/models/Orders');
 const OrderProduct = require('../../pg/models/OrderProducts');
 const sendgrid = require('../../controllers/sendGrid');
 const { Op } = require('sequelize');
-const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct'];
+const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 router.all('*', cors());
 
@@ -38,6 +38,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
       'grandtotal': body.grandtotal,
       'tax': body.tax,
       'delivery': body.delivery,
+      'deliveryId': body.deliveryId,
       'orderCancelReason': body.orderCancelReason,
       'shipping_name': body.shipping_name,
       'shipping_address': body.shipping_address,
@@ -88,9 +89,13 @@ router.post('/', [parser.none()], async(req, res, next) => {
     'shipping_district': body.shipping_district,
   }
   
+  if (!!!isNaN(deliveryId)) {
+    entry['deliveryId'] = body.deliveryId;
+  }
   if (!!!isNaN(entryUser)) {
     entry['userId'] = body.userid;
   }
+
   Order.create(entry).then(async(order) => {
     let cartArry = [];
     const time = Date.now().toString() // '1492341545873'
