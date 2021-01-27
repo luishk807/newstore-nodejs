@@ -4,6 +4,7 @@
   "description": "back end of avenida z",
   "main": "src/app.js",
   "scripts": {
+    "postinstall": "npx prisma generate && npm run build",
     "start": "node src/server.js",
     "test": "mocha tests/**/*.js --exit"
   },
