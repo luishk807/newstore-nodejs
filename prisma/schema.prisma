@@ -124,11 +124,12 @@ model product_image {
 model product_variant {
   id              Int             @id @default(autoincrement())
   product_id      Int
-  option_id       Int
-  option_value_id Int
+  option_id       Int?
+  option_value_id Int?
   sku             String
-  option          option          @relation(fields: [option_id], references: [id])
-  option_value    option_value    @relation(fields: [option_value_id], references: [id])
+  model           String?
+  option          option?         @relation(fields: [option_id], references: [id])
+  option_value    option_value?   @relation(fields: [option_value_id], references: [id])
   product         product         @relation(fields: [product_id], references: [id])
   product_deal    product_deal[]
   product_image   product_image[]
@@ -137,12 +138,12 @@ model product_variant {
 }
 
 model stock {
-  id                 Int             @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   product_id         Int
-  quantity           Int             @default(0)
-  product_variant_id Int
-  product            product         @relation(fields: [product_id], references: [id])
-  product_variant    product_variant @relation(fields: [product_variant_id], references: [id])
+  quantity           Int              @default(0)
+  product_variant_id Int?
+  product            product          @relation(fields: [product_id], references: [id])
+  product_variant    product_variant? @relation(fields: [product_variant_id], references: [id])
   stock_entry        stock_entry[]
 }
 
@@ -220,4 +221,18 @@ model user_account {
   id       String @id
   username String
   password String
+}
+
+model view_product {
+  id            Int     @id
+  product_id    Int
+  name          String
+  description   String
+  sku           String
+  model         String?
+  brand         String?
+  category      String?
+  department    String?
+  option        String?
+  option_value  String?
 }
