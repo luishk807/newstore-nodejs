@@ -1,0 +1,52 @@
+// This model needs to be manually entered in schema.prisma everytime prisma introspect is ran
+// which updates schema.prisma. This is because Prisma does not support introspect for views.
+// So views need to be manually added to schema.prisma so it can be used by the Prisma Client.
+// So, we add this at the end of schema.prisma file and then run "npx prisma generate" command.
+
+model view_product {
+  id            Int @id
+  product_id    Int
+  name          String
+  description   String
+  sku           String
+  model         String?
+  brand         String?
+  category      String?
+  department    String?
+  option        String?
+  option_value  String?
+}
+
+// Below is the original query used as definition for the view in PostgreSQL
+
+SELECT
+	pv.id
+	,p.id as product_id
+	,p.name, p.description
+	,pv.sku, pv.model
+	,b.name as brand
+	,c.name as category
+	,d.name as department
+	,o.name as "option"
+	,ov.value as option_value
+FROM product as p
+LEFT JOIN product_variant as pv -- Should be JOIN and not LEFT (since the one's without variant are should be invalid)
+	ON pv.product_id = p.id
+
+LEFT JOIN brand_product as b_p
+	ON b_p.product_id = p.id
+LEFT JOIN brand as b
+	ON b.id = b_p.brand_id
+LEFT JOIN category_product as c_p
+	ON c_p.product_id = p.id
+LEFT JOIN category as c
+	ON c.id = c_p.category_id
+LEFT JOIN department_product as d_p
+	ON d_p.product_id = p.id
+LEFT JOIN department as d
+	ON d_p.department_id = d.id
+
+LEFT JOIN "option" as o
+	ON pv.option_id = o.id
+LEFT JOIN option_value as ov
+	ON pv.option_value_id = ov.id
