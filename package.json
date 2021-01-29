@@ -11,8 +11,8 @@
   "author": "Luis Ho Ku",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^2.15.0",
     "@sendgrid/mail": "^7.4.1",
-    "@prisma/client": "^2.14.0",
     "aws-sdk": "^2.768.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -29,7 +29,7 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "@prisma/cli": "^2.14.0",
+    "@prisma/cli": "^2.15.0",
     "mocha": "^8.2.1"
   }
 }
