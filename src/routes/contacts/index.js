@@ -2,7 +2,7 @@ const router = require('express').Router();
 const cors = require('cors');
 const config = require('../../config');
 const parser = require('../../middlewares/multerParser');
-const sendgrid = require('../../controllers/sendGrid');
+const sendgrid = require('../../controllers/sendgrid');
 router.all('*', cors());
 
 router.post('/', [parser.none()], async(req, res, next) => {

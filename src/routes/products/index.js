@@ -9,6 +9,7 @@ const config = require('../../config');
 const controller = require('../../controllers/products');
 const s3 = require('../../services/storage.service');
 const { Op } = require('sequelize');
+const includes = ['productStatus', 'productImages'];
 
 router.all('*', cors());
 
@@ -221,7 +222,7 @@ router.get('/', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id}, include: ['productStatus', 'productImages']});
+      product = await Product.findOne({ where: {id: req.query.id}, include: includes});
 
       res.json(product)
     } catch(err) {
@@ -229,11 +230,18 @@ router.get('/', async(req, res, next) => {
     }
   } else if (req.query.vendor) {
     try {
-      product = await Product.findAll({ where: {vendorId: req.query.vendor}, include: ['productStatus', 'productImages']});
+      product = await Product.findAll({ where: {vendorId: req.query.vendor}, include: includes});
 
       res.json(product)
     } catch(err) {
       res.send(err)
+    }
+  } else if (req.query.ids) {
+    try {
+      product = await Product.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      res.status(200).json(product)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
     }
   } else if (req.query.search) {
     try {
@@ -253,7 +261,7 @@ router.get('/', async(req, res, next) => {
                 [Op.iLike]: `%${req.query.search}%`
               }
             },
-            include: ['productStatus', 'productImages'],
+            include: includes,
             offset: offset,
             limit: limit
           }).then((result) => {
@@ -275,7 +283,7 @@ router.get('/', async(req, res, next) => {
           name: {
             [Op.iLike]: `%${req.query.search}%`
           }
-        }, include: ['productStatus', 'productImages']});
+        }, include: includes});
         res.json(product);
       }
     } catch(err) {
@@ -291,7 +299,7 @@ router.get('/', async(req, res, next) => {
         }).then(countResult => {
           Product.findAll({ 
             where: {categoryId: req.query.category}, 
-            include: ['productStatus', 'productImages'],
+            include: includes,
             limit: limit,
             offset: offset,
           }).then(result => {
@@ -309,7 +317,7 @@ router.get('/', async(req, res, next) => {
           res.send(err)
         })
       } else {
-        product = await Product.findAll({ where: {categoryId: req.query.category}, include: ['productStatus', 'productImages']});
+        product = await Product.findAll({ where: {categoryId: req.query.category}, include: includes});
         res.json(product)
       }
     } catch(err) {

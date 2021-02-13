@@ -11,6 +11,8 @@ const OrderProduct = require('./OrderProducts');
 
 const OrderCancelReason = require('./OrderCancelReasons');
 
+const DeliveryOption = require('./DeliveryOptions');
+
 const Order = sequelize.define('orders', {
   user: {
     type: Sequelize.BIGINT,
@@ -63,14 +65,25 @@ const Order = sequelize.define('orders', {
   shipping_email: {
     type: Sequelize.TEXT
   },
+  shipping_phone: {
+    type: Sequelize.TEXT
+  },
   shipping_district: {
     type: Sequelize.TEXT
+  },
+  delivery: {
+    type: Sequelize.DECIMAL
+  },
+  deliveryId: {
+    type: Sequelize.BIGINT
   }
 });
 
 Order.belongsTo(OrderCancelReason, { foreignKey: 'orderCancelReasonId', as: "orderCancelReasons"})
 
 Order.belongsTo(OrderStatus, { foreignKey: 'orderStatusId', as: "orderStatuses"})
+
+Order.belongsTo(DeliveryOption, { foreignKey: 'deliveryId', as: "deliveryOrder"})
 
 Order.belongsTo(User, { foreignKey: 'userId', as: 'orderUser' })
 
