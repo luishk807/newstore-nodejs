@@ -11,6 +11,8 @@ const Country = require('../../pg/models/Countries');
 const ImageBoxType = require('../../pg/models/ImageBoxTypes');
 const SweetBoxType = require('../../pg/models/SweetBoxTypes');
 const UserRole = require('../../pg/models/UserRoles');
+const ProductColor = require('../../pg/models/ProductColors');
+const ProductSize = require('../../pg/models/ProductSizes');
 const User = require('../../pg/models/Users');
 const Province = require('../../pg/models/Provinces');
 const DeliveryOption = require('../../pg/models/DeliveryOptions');
@@ -31,6 +33,14 @@ router.get('/user', async(req, res, next) => {
     const country = await Country.findAll({
       attributes: ['id', ['nicename', 'name']] //id, first AS firstName
     });
+    const productColor = [];
+    if (req.body.product) {
+      productColor = ProductColor.findAll({where:{productId: req.body.product}})
+    }
+    const productSize = [];
+    if (req.body.product) {
+      productSize = ProductSize.findAll({where:{productId: req.body.product}})
+    }
     const imageBoxType = await ImageBoxType.findAll();
     const sweetboxtype = await SweetBoxType.findAll();
     const userRole = await UserRole.findAll();
@@ -51,6 +61,8 @@ router.get('/user', async(req, res, next) => {
     data['category'] = category;
     data['userRole'] = userRole;
     data['district'] = district;
+    data['productColor'] = productColor;
+    data['productSize'] = productSize;
     data['deliveryOption'] = deliveryOption;
     data['province'] = province;
     data['corregimiento'] = corregimiento;
@@ -76,6 +88,14 @@ router.get('/admin', [verify], async(req, res, next) => {
       const country = await Country.findAll({
         attributes: ['id', ['nicename', 'name']] //id, first AS firstName
       });
+      if (req.query.productId) {
+        const productColor = await ProductColor.findAll({where:{ productId: req.query.productId }})
+        data['productColor'] = productColor;
+      }
+      if (req.query.productId) {
+        const productSize = await ProductSize.findAll({where:{ productId: req.query.productId }})  
+        data['productSize'] = productSize;      
+      }
       const imageBoxType = await ImageBoxType.findAll();
       const sweetboxtype = await SweetBoxType.findAll();
       const userRole = await UserRole.findAll();
