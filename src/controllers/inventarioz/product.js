@@ -14,13 +14,13 @@ const saveProduct = async (value) => {
             product_variant_id = result.product_variant[0].id;
         }
         // Creates initial stock registry
-        const stockResult = await stockService.createStock({
-            product_id: product_id,
-            product_variant_id: product_variant_id
-        });
-        if (stockResult.error) {
-            console.error('Error creating stock for product_id: ' + product_id, stockResult);
-        }
+        // const stockResult = await stockService.createStock({
+        //     product_id: product_id,
+        //     product_variant_id: product_variant_id
+        // });
+        // if (stockResult.error) {
+        //     console.error('Error creating stock for product_id: ' + product_id, stockResult);
+        // }
     }
     return result;
 }
