@@ -81,10 +81,12 @@ model product {
   id                    Int                     @id @default(autoincrement())
   name                  String?
   description           String?
+  taxable               Boolean                 @default(true)
   brand_product         brand_product[]
   category_product      category_product[]
   department_product    department_product[]
   order_item            order_item[]
+  product_attribute     product_attribute[]
   product_deal          product_deal[]
   product_discount_rule product_discount_rule[]
   product_image         product_image[]
@@ -146,14 +148,15 @@ model stock {
   product_id         Int
   quantity           Int              @default(0)
   product_variant_id Int?
+  price              Float            @default(1.0)
   product            product          @relation(fields: [product_id], references: [id])
   product_variant    product_variant? @relation(fields: [product_variant_id], references: [id])
-  stock_entry        stock_entry[]
+
+  @@unique([product_id, product_variant_id, price], name: "stock_product_id_product_variant_id_price_key")
 }
 
 model stock_entry {
   id                   Int             @id @default(autoincrement())
-  stock_id             Int
   warehouse_id         Int
   product_id           Int
   warehouse_rack_id    Int?
@@ -171,7 +174,6 @@ model stock_entry {
   supplier_sku         String?
   product              product         @relation(fields: [product_id], references: [id])
   product_variant      product_variant @relation(fields: [product_variant_id], references: [id])
-  stock                stock           @relation(fields: [stock_id], references: [id])
   supplier             supplier        @relation(fields: [supplier_id], references: [id])
   warehouse            warehouse       @relation(fields: [warehouse_id], references: [id])
   warehouse_rack       warehouse_rack? @relation(fields: [warehouse_rack_id], references: [id])
@@ -280,16 +282,27 @@ model order_item {
   product_variant    product_variant @relation(fields: [product_variant_id], references: [id])
 }
 
+model product_attribute {
+  id         Int     @id @default(autoincrement())
+  product_id Int
+  name       String
+  value      String
+  product    product @relation(fields: [product_id], references: [id])
+}
+
 model view_product {
-  id            Int @id
-  product_id    Int
-  name          String
-  description   String
-  sku           String
-  model         String?
-  brand         String?
-  category      String?
-  department    String?
-  option        String?
-  option_value  String?
+  id            		  Int @id
+  product_variant_id	Int?
+  product_id    		  Int
+  stock_id				    Int
+  name          		  String
+  description   		  String
+  sku           		  String
+  model         		  String?
+  brand         		  String?
+  category      		  String?
+  department    		  String?
+  option        		  String?
+  option_value  		  String?
+  quantity				    Int
 }

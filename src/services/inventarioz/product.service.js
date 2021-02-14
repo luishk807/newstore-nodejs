@@ -184,9 +184,21 @@ const getProduct = (id) => {
             id: id
         },
         include: {
-            brand_product: true,
-            category_product: true,
-            department_product: true,
+            brand_product: {
+                include: {
+                    brand: true
+                }
+            },
+            category_product: {
+                include: {
+                    category: true
+                }
+            },
+            department_product: {
+                include: {
+                    department: true    
+                }
+            },
             product_variant: {
                 include: {
                     option: true,

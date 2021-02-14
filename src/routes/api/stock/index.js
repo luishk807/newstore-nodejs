@@ -8,6 +8,7 @@ router.post('/entry', async(req, res) => {
         const result = await controller.addStockEntry(req.body);
         return res.status(200).json(result);
     } catch (err) {
+        logger.error('Error adding stock entry', err);
         return res.status(500).json(err);
     }
 });
