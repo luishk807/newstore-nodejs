@@ -74,7 +74,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
   ).then((updated) => {
     let message = "Product Updated";
     // delete all images first in servers
-    const partBodySaved = JSON.parse(req.body.saved);
+    const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
     if (partBodySaved && Object.keys(partBodySaved).length) {
       let mapFiles = []
       let index = []
