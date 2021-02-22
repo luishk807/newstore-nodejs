@@ -36,12 +36,11 @@ router.get('/', async(req, res, next) => {
 
 router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
-
   if (body.items) {
     const items = body.items.split(',');
     const productAdd = items.map((item) => {
       return {
-        product: item,
+        product: item.replace(/['"]+/g, ''),
         sweetBoxId: body.id
       }
     })
