@@ -256,6 +256,13 @@ router.get('/', async(req, res, next) => {
     } catch(err) {
       res.send(err)
     }
+  } else if (req.query.ids) {
+    try {
+      product = await Product.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      res.status(200).json(product)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
   } else if (req.query.search) {
     try {
       if (req.query.page) {
