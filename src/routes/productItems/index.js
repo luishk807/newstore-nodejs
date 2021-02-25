@@ -1,21 +1,21 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
-const Product = require('../../pg/models/Products');
-const ProductImages = require('../../pg/models/ProductImages');
+const ProductItems = require('../../pg/models/ProductItems');
+const ProductItemImages = require('../../pg/models/ProductItemImages');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
 const config = require('../../config');
-const controller = require('../../controllers/products');
+const controller = require('../../controllers/productItems');
 const s3 = require('../../services/storage.service');
 const { Op } = require('sequelize');
-const includes = ['productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems'];
+const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 router.all('*', cors());
 
 router.delete('/:id', verify, async (req, res, next) => {
   if (req.params.id) {
-    const result = await controller.deleteProduct(req.params.id);
+    const result = await controller.deleteProductItem(req.params.id);
     if (result.status) {
       res.status(200).send(result);
     } else {
@@ -29,8 +29,6 @@ router.delete('/:id', verify, async (req, res, next) => {
 
 
 router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
-
-
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
@@ -55,24 +53,30 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
   const body = req.body;
   const pid = req.params.id;
 
-  Product.update(
+  ProductItems.update(
     {
-      'name': body.name,
+      'productColor': Number(body.productColor),
+      'productSize': Number(body.productSize),
       'stock': body.stock,
-      'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
       'model': body.model,
-      'sku': body.sku,
-      'description': body.description,
-      'vendor': body.vendor,
+      'billingCost': body.billingCost,
+      'unitCost': body.unitCost,
+      'profitPercentage': body.profitPercentage,
+      'flete': body.flete,
+      'fleteTotal': body.fleteTotal,
+      'finalUnitPrice': body.finalUnitPrice,
+      'unitPrice': body.unitPrice,
+      'code': body.code,
+      'exp_date': body.exp_date,
+      'retailPrice': body.retailPrice,
+      'vendorId': Number(body.vendor),
     },{
       where: {
         id: pid
       }
     }
   ).then((updated) => {
-    let message = "Product Updated";
+    let message = "Product Item Updated";
     // delete all images first in servers
     const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
     if (partBodySaved && Object.keys(partBodySaved).length) {
@@ -115,14 +119,14 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
     if (imagesUploaded && imagesUploaded.length) {
       let newImages = imagesUploaded.map((data) => {
         return {
-          'productId': pid,
+          'productItemId': pid,
           'img_url': data.Key,
           'position': counter++
         }
       })
 
       // save entired bulk to product images
-      ProductImages.bulkCreate(newImages).then((images) => {
+      ProductItemImages.bulkCreate(newImages).then((images) => {
         res.status(200).json({
           status: updated,
           message: message
@@ -139,7 +143,6 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
 
 router.post('/', [verify, parser.array('image')], (req, res, next) => {
   // add / update products
-
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];
@@ -163,32 +166,39 @@ router.post('/', [verify, parser.array('image')], (req, res, next) => {
 
   const body = req.body;
 
-  Product.create(
+  ProductItems.create(
     {
-      'name': body.name,
+      'productId': Number(body.productId),
+      'productColor': Number(body.productColor),
+      'productSize': Number(body.productSize),
       'stock': body.stock,
-      'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
       'model': body.model,
-      'sku': body.sku,
-      'description': body.description,
-      'vendor': body.vendor,
+      'billingCost': body.billingCost,
+      'unitCost': body.unitCost,
+      'profitPercentage': body.profitPercentage,
+      'flete': body.flete,
+      'fleteTotal': body.fleteTotal,
+      'finalUnitPrice': body.finalUnitPrice,
+      'unitPrice': body.unitPrice,
+      'code': body.code,
+      'exp_date': body.exp_date,
+      'retailPrice': body.retailPrice,
+      'vendorId': Number(body.vendor),
     }
-  ).then((product) => {
+  ).then((ProductItems) => {
     let counter = 1;
     const newImages = imagesUploaded.map((data) => {
       return {
-        'productId': product.id,
+        'productItemId': ProductItems.id,
         'img_url': data.Key,
         'position': counter++
       }
     })
-    ProductImages.bulkCreate(newImages).then((images) => {
-      res.status(200).json({status: true, message: "Product added", data: product});
+    ProductItemImages.bulkCreate(newImages).then((images) => {
+      res.status(200).json({status: true, message: "Product Items added", data: ProductItems});
     })
   }).catch(err => {
-    res.status(401).json({status: false, message: "Unable to add product"});
+    res.status(401).json({status: false, message: "Unable to add product items"});
   })
 })
 
@@ -202,39 +212,14 @@ router.post('/import', [verify], (req, res, next) => {
 });
 
 router.get('/:id', async(req, res, next) => {
-    let product = await Product.findAll({ where: {id: req.params.id}});
+    let product = await ProductItems.findOne({ where: {id: req.params.id}, include: includes });
     res.json(product)
 });
 
-router.get('/admin/home', async(req, res, next) => {
-  try {
-    let query = {
-      include:['productBrand','categories','productStatus', 'productSizes', 'productColors', 'productProductItems']
-    }
-    if (req.query.page) {
-      const page = req.query.page > 0 ? req.query.page - 1 : 0;
-      query = {
-        ...query,
-        limit: limit,
-        offset: page ? page * limit : 0,
-      }
-    }
-    product = await Product.findAll(query);
-    res.json(product)
-  } catch(err) {
-    res.send(err)
-  }
+router.get('/product/:id', async(req, res, next) => {
+  let product = await ProductItems.findAll({ where: {productId: req.params.id}, include: includes});
+  res.json(product)
 });
-
-const paginate = ({ page, pageSize }) => {
-  const offset = page * pageSize;
-  const limit = pageSize;
-
-  return {
-    offset,
-    limit,
-  };
-};
 
 router.get('/', async(req, res, next) => {
   // get products
@@ -242,7 +227,7 @@ router.get('/', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id}, include: includes});
+      product = await ProductItems.findOne({ where: {id: req.query.id}, include: includes});
 
       res.json(product)
     } catch(err) {
@@ -250,103 +235,16 @@ router.get('/', async(req, res, next) => {
     }
   } else if (req.query.vendor) {
     try {
-      product = await Product.findAll({ where: {vendorId: req.query.vendor}, include: includes});
+      product = await ProductItems.findAll({ where: {vendorId: req.query.vendor}, include: includes});
 
       res.json(product)
-    } catch(err) {
-      res.send(err)
-    }
-  } else if (req.query.ids) {
-    try {
-      product = await Product.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
-      res.status(200).json(product)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
-  } else if (req.query.search) {
-    try {
-      if (req.query.page) {
-        const page = req.query.page > 0 ? req.query.page - 1 : 0;
-        const offset = page ? page * limit : 0;
-        Product.findAndCountAll({ 
-          where: {
-            name: {
-              [Op.iLike]: `%${req.query.search}%`
-            }
-          }
-        }).then((countResult) => {
-          Product.findAll({
-            where: {
-              name: {
-                [Op.iLike]: `%${req.query.search}%`
-              }
-            },
-            include: includes,
-            offset: offset,
-            limit: limit
-          }).then((result) => {
-            const pages = Math.ceil(countResult.count / limit)
-            const results = {
-              count: countResult.count,
-              items: result,
-              pages: pages
-            }
-            res.json(results);
-          }).catch((err) => {
-            res.send(err)
-          })
-        }).catch((err) => {
-          res.send(err)
-        })
-      } else {
-        product = await Product.findAll({ where: {
-          name: {
-            [Op.iLike]: `%${req.query.search}%`
-          }
-        }, include: includes});
-        res.json(product);
-      }
-    } catch(err) {
-      res.send(err)
-    }
-  } else if (req.query.category) {
-    try {
-      if (req.query.page) {
-        const page = req.query.page > 0 ? req.query.page - 1 : 0;
-        const offset = page ? page * limit : 0;
-        Product.findAndCountAll({ 
-          where: {categoryId: req.query.category}
-        }).then(countResult => {
-          Product.findAll({ 
-            where: {categoryId: req.query.category}, 
-            include: includes,
-            limit: limit,
-            offset: offset,
-          }).then(result => {
-            const pages = Math.ceil(countResult.count / limit)
-            const results = {
-              count: countResult.count,
-              items: result,
-              pages: pages
-            }
-            res.json(results);
-          }).catch((err) => {
-            res.send(err)
-          });
-        }).catch((err) => {
-          res.send(err)
-        })
-      } else {
-        product = await Product.findAll({ where: {categoryId: req.query.category}, include: includes});
-        res.json(product)
-      }
     } catch(err) {
       res.send(err)
     }
   } else {
     try {
       let query = {
-        include:['productImages','productVendor', 'productBrand','categories','productStatus', 'rates', 'productSizes', 'productColors']
+        include: includes
       }
       if (req.query.page) {
         const page = req.query.page > 0 ? req.query.page - 1 : 0;
@@ -356,7 +254,7 @@ router.get('/', async(req, res, next) => {
           offset: page ? page * limit : 0,
         }
       }
-      product = await Product.findAll(query);
+      product = await ProductItems.findAll(query);
       res.json(product)
     } catch(err) {
       res.send(err)

@@ -20,9 +20,9 @@ const Brand = sequelize.define('brand', {
   }
 });
 
-Brand.hasMany(Product);
+//Brand.hasMany(Product, { foreignKey: 'brandId', as: 'brandProduct'});
 
-Product.belongsTo(Brand, { foreignKey: 'brand', as: 'productBrand'});
+// Product.belongsTo(Brand, { foreignKey: 'brand', as: 'productBrand'});
 
 Brand.belongsTo(Statuses, {foreignKey: 'statusId', as: 'brandStatus'});
 
