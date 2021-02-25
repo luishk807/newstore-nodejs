@@ -24,7 +24,6 @@
     "multer": "^1.4.2",
     "pg": "^8.3.2",
     "pgtools": "^0.3.0",
-    "react-input-colorpicker": "^1.0.13",
     "sequelize": "^6.3.4",
     "uuid": "^8.3.1",
     "winston": "^3.3.3"
