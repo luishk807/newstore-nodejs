@@ -1,5 +1,6 @@
 const Product = require('../pg/models/Products');
 const Brand = require('../pg/models/Brands');
+const config = require('../config');
 const Category = require('../pg/models/Categories');
 const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
