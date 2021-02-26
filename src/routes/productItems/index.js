@@ -233,6 +233,13 @@ router.get('/', async(req, res, next) => {
     } catch(err) {
       res.send(err)
     }
+  } else if (req.query.ids) {
+    try {
+      product = await ProductItems.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      res.status(200).json(product)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
   } else if (req.query.vendor) {
     try {
       product = await ProductItems.findAll({ where: {vendorId: req.query.vendor}, include: includes});
