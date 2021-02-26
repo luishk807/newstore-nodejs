@@ -4,7 +4,6 @@ const config = require('../config');
 const Category = require('../pg/models/Categories');
 const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
-const config = require('../config');
 const { safeString } = require('../utils/string.utils');
 const validationField = '__validation__';
 const requiredfields = [
