@@ -75,7 +75,8 @@ const Order = sequelize.define('orders', {
     type: Sequelize.DECIMAL
   },
   deliveryId: {
-    type: Sequelize.BIGINT
+    type: Sequelize.BIGINT,
+    field: 'deliveryOptionId'
   }
 });
 
@@ -83,7 +84,7 @@ Order.belongsTo(OrderCancelReason, { foreignKey: 'orderCancelReasonId', as: "ord
 
 Order.belongsTo(OrderStatus, { foreignKey: 'orderStatusId', as: "orderStatuses"})
 
-Order.belongsTo(DeliveryOption, { foreignKey: 'deliveryId', as: "deliveryOrder"})
+Order.belongsTo(DeliveryOption, { foreignKey: 'deliveryOptionId', as: "deliveryOrder"})
 
 Order.belongsTo(User, { foreignKey: 'userId', as: 'orderUser' })
 
