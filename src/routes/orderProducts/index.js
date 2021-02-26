@@ -5,7 +5,7 @@ const parser = require('../../middlewares/multerParser');
 const OrderProduct = require('../../pg/models/OrderProducts');
 const Order = require('../../pg/models/Orders');
 
-const includes = ['orderStatusProduct', 'orderProduct'];
+const includes = ['orderStatusProduct', 'orderProductItem'];
 
 router.all('*', cors());
 

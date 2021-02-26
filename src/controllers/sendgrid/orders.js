@@ -1,12 +1,12 @@
 const config = require('../../config');
-const Product = require('../../pg/models/Products');
+const ProductItem = require('../../pg/models/ProductItems');
 const Delivery = require('../../pg/models/DeliveryOptions');
 const sendGrid = require('@sendgrid/mail');
 const aws_url = process.env.IMAGE_URL;
 const logo = `${aws_url}/avenidaz.png`;
 sendGrid.setApiKey(config.sendGrid.key);
 
-const productIncludes = ['productStatus', 'productImages'];
+const productIncludes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 const sendOrderUpdate = async(obj, req) => {
   const message = `Your order has been updated.`;
@@ -82,9 +82,9 @@ const sendOrderEmail = async(obj, req) => {
   obj.cart.forEach(async(item) => {
     const temp = Object.assign({}, item);
 
-    const product = await Product.findOne({
+    const product = await ProductItem.findOne({
       where: {
-        id: item.productId
+        id: item.productItemId
       },
       include: productIncludes
     })
@@ -101,7 +101,11 @@ const sendOrderEmail = async(obj, req) => {
         </td>
         <td style='width: 50%'>
           <p><strong>${item.name}</strong></p>
+          <p>Model: ${item.model}</p>
+          <p>Color: ${item.color}</p>
+          <p>Size: ${item.size}</p>
           <p>Qt: ${item.quantity}</p>
+          <p>Unit: $${item.unit_total}</p>
         </td>
         <td style='width: 30%'>
           $${item.total}
