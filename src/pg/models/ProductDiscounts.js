@@ -13,14 +13,14 @@ const ProductDiscount = sequelize.define('product_discounts', {
   name: {
     type: Sequelize.TEXT
   },
+  minQuantity: {
+    type: Sequelize.INTEGER
+  },
   startDate: {
     type: Sequelize.DATE
   },
   endDate: {
     type: Sequelize.DATE
-  },
-  percentage: {
-    type: Sequelize.FLOAT
   },
   percentage: {
     type: Sequelize.FLOAT

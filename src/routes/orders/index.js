@@ -65,7 +65,6 @@ router.put('/:id/:cancel', [verify, parser.none()],  async(req, res, next) => {
   }).then(async(order) => {
     if (allow) {
       // save status
-      console.log(allowedCancelStatus, ' and ' ,order.orderStatus)
       if (!allowedCancelStatus.includes(Number(order.orderStatus))) {
         res.status(500).json({status: false, message: "invalid cancel status"})
       } else {
@@ -142,7 +141,6 @@ router.post('/', [parser.none()], async(req, res, next) => {
       order_num: order_num,
       cart: []
     }
-    
     if (Object.keys(carts).length) {
       for(const cart in carts) {
         cartArry.push({
@@ -156,6 +154,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
           sku: carts[cart].sku,
           size: carts[cart].productItemSize.name,
           code: carts[cart].sku,
+          productDiscountId: carts[cart].discount ? carts[cart].discount.id : null,
           category: carts[cart].productItemProduct.category,
           quantity: carts[cart].quantity,
           total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),

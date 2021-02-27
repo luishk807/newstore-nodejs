@@ -5,7 +5,7 @@ const parser = require('../../middlewares/multerParser');
 const OrderProduct = require('../../pg/models/OrderProducts');
 const Order = require('../../pg/models/Orders');
 
-const includes = ['orderStatusProduct', 'orderProductItem'];
+const includes = ['orderStatusProduct', 'orderProductItem', 'orderProductProductDiscount'];
 
 router.all('*', cors());
 
@@ -45,6 +45,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
       'brand': body.brand,
       'color': body.color,
       'size': body.size,
+      'productDiscountId': body.productDiscount
     },
     {
       where: {
@@ -78,6 +79,7 @@ router.post('/', [verify, parser.none()], async(req, res, next) => {
     'brand': body.brand,
     'color': body.color,
     'size': body.size,
+    'productDiscountId': body.productDiscount
   }
   OrderProduct.create(entry).then(async(order) => {
     res.status(200).json({
@@ -112,6 +114,13 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
     try {
       order = await OrderProduct.findOne({ where: {id: req.query.id}, include: includes});
       res.status(200).json(order)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  } else if (req.query.ids) {
+    try {
+      product = await OrderProduct.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      res.status(200).json(product)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }

@@ -1,6 +1,7 @@
 const config = require('../../config');
 const ProductItem = require('../../pg/models/ProductItems');
 const Delivery = require('../../pg/models/DeliveryOptions');
+const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const sendGrid = require('@sendgrid/mail');
 const aws_url = process.env.IMAGE_URL;
 const logo = `${aws_url}/avenidaz.png`;
@@ -80,7 +81,7 @@ const sendOrderEmail = async(obj, req) => {
   const subject = `ORDER #${obj.order_num}: Order Received`;
   let cartHtml = '';
 
-  obj.cart.forEach(async(item) => {
+  for(const item of obj.cart) {
     const temp = Object.assign({}, item);
 
     const product = await ProductItem.findOne({
@@ -89,6 +90,18 @@ const sendOrderEmail = async(obj, req) => {
       },
       include: productIncludes
     })
+
+    let ProductDiscount = '';
+    if (item.productDiscountId) {
+      const getProductDisc = await ProductItem.findOne({
+        where: {
+          id: item.productDiscountId
+        }
+      })
+      if (getProductDisc) {
+        ProductDiscount = `Discount: ${ProductDiscount.name}`;
+      }
+    }
 
     const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
 
@@ -107,6 +120,7 @@ const sendOrderEmail = async(obj, req) => {
           <p>Size: ${item.size}</p>
           <p>Qt: ${item.quantity}</p>
           <p>Unit: $${item.unit_total}</p>
+          <p>${ProductDiscount}</p>
         </td>
         <td style='width: 30%'>
           $${item.total}
@@ -114,7 +128,7 @@ const sendOrderEmail = async(obj, req) => {
       </tr>
     </table>`
 
-  })
+  }
 
   const totalHtml = `
     <hr/>
