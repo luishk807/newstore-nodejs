@@ -35,9 +35,10 @@ const sendOrderUpdate = async(obj, req) => {
 
 const sendOrderCancelRequest = async(obj, req) => {
   const message = `Your request for order cancellation has been sent.`;
-  const subject = `ORDER #${obj.order_num}: order cancellation request`;
+  const subject = `ORDER #${obj.order_number}: order cancellation request`;
   const client_email = obj.shipping_email;
-  const mainUrl = `${req.headers.referer}orders/account/${obj.id}`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.id}`;
+  const mainUrlAdmin = `${req.headers.referer}admin/orders/${obj.id}`;
   let result = false;
 
   // send admin
@@ -49,7 +50,7 @@ const sendOrderCancelRequest = async(obj, req) => {
       <p>
         <img src="${logo}" width="300" />
       </p>
-      <p>Name: ${client_email}</p><p>Message: order cancellation requestions for this order.</p><p>${mainUrl}</p>
+      <p>Name: ${client_email}</p><p>Message: order cancellation requestions for this order.</p><p>${mainUrlAdmin}</p>
     `,
   }).then(() => {
     result = true;
@@ -74,7 +75,7 @@ const sendOrderCancelRequest = async(obj, req) => {
 }
 
 const sendOrderEmail = async(obj, req) => {
-  const mainUrl = `${req.headers.referer}orders/account/${obj.orderId}`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
   const newCart = [];
   const subject = `ORDER #${obj.order_num}: Order Received`;
   let cartHtml = '';

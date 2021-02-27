@@ -1,4 +1,5 @@
 const Order = require('../pg/models/Orders');
+const OrderActivity = require('../pg/models/OrderActivities');
 
 const checkOrderUserId = async(req, bid) => {
   let allow = false;
@@ -17,5 +18,23 @@ const checkOrderUserId = async(req, bid) => {
   return allow;
 }
 
+const saveStatusOrder = async(req, bid, status) => {
+  const order = await Order.findOne({where: {id: bid}});
+  if (order) {
+    if (order.orderStatusId !== status) {
+      const resp = await OrderActivity.create({
+        orderStatusId: status,
+        userId: req.user ? req.user.id : null,
+        orderId: bid
+      });
+      return resp
+    } else {
+      return false;
+    }
+  } else {
+    return false
+  }
+}
 
 module.exports.checkOrderUserId = checkOrderUserId
+module.exports.saveStatusOrder = saveStatusOrder
