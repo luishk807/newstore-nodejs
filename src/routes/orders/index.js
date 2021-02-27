@@ -31,17 +31,16 @@ router.delete('/:id', verify, (req, res, next) => {
 router.put('/:id', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
-
   const allow = await utils.checkOrderUserId(req, bid);
-
   if (allow) {
+    await utils.saveStatusOrder(req, bid, req.body.orderStatus);
     Order.update(body,
       {
         where: {
           id: bid
         }
       }
-    ).then((updated) => {
+    ).then(async(updated) => {
       res.status(200).json({
         status: updated[0] ? true : false,
         message: 'Order Updated'
@@ -58,32 +57,38 @@ router.put('/:id/:cancel', [verify, parser.none()],  async(req, res, next) => {
   const cancel = req.params.cancel;
   const allow = await utils.checkOrderUserId(req, bid);
   const url = req.headers.referer;
-
+  const allowedCancelStatus = [1,2];
   Order.findOne({
     where: {
       id: bid
     }
-  }).then((order) => {
+  }).then(async(order) => {
     if (allow) {
-      Order.update({
-          orderCancelReasonId: cancel,
-          orderStatusId: 7
-        },{
-        where: {
-          id: bid
-        }
-      }).then(async(order) => {
-
-        await sendgrid.sendOrderCancelRequest(order, req);
-
-        res.status(200).json({
-          data: order,
-          status: true,
-          message: 'Order cancellation requested',
-        });
-      }).catch((err) => {
-        res.status(500).json({status: false, message: err})
-      })
+      // save status
+      console.log(allowedCancelStatus, ' and ' ,order.orderStatus)
+      if (!allowedCancelStatus.includes(Number(order.orderStatus))) {
+        res.status(500).json({status: false, message: "invalid cancel status"})
+      } else {
+        await utils.saveStatusOrder(req, bid, 7);
+        Order.update({
+            orderCancelReasonId: cancel,
+            orderStatusId: 7
+          },{
+          where: {
+            id: bid
+          }
+        }).then(async(orderStatus) => {
+          await sendgrid.sendOrderCancelRequest(order, req);
+  
+          res.status(200).json({
+            data: order,
+            status: true,
+            message: 'Order cancellation requested',
+          });
+        }).catch((err) => {
+          res.status(500).json({status: false, message: err})
+        })
+      }
     } else {
       res.status(401).json({status: false, message: 'not authorized'})
     }
@@ -124,6 +129,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
 
   Order.create(entry).then(async(order) => {
     let cartArry = [];
+    await utils.saveStatusOrder(req, order.id, 1);
     const time = Date.now().toString() // '1492341545873'
     const order_num = `${time}${order.id}`;
     const updateCon = await Order.update(
@@ -136,6 +142,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
       order_num: order_num,
       cart: []
     }
+    
     if (Object.keys(carts).length) {
       for(const cart in carts) {
         cartArry.push({
