@@ -59,6 +59,8 @@ Product.hasMany(ProductSize, { as: "productSizes"});
 
 Product.hasMany(ProductDiscount, { as: "productProductDiscount"});
 
+ProductDiscount.belongsTo(Product, { foreignKey: 'productId', as: 'productDiscountProduct'});
+
 Product.hasMany(ProductColor, { as: "productColors"});
 
 Product.hasMany(ProductItem, { as: "productProductItems"})
