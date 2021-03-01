@@ -5,6 +5,7 @@ const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const parser = require('../../middlewares/multerParser');
 const utils = require('../../controllers/orders');
+const { Op } = require('sequelize');
 
 const includes = ['productDiscountProduct'];
 
@@ -88,18 +89,25 @@ router.get('/product/:id', [verifyAdmin, parser.none()], async(req, res, next) =
 
 
 router.get('/', [verifyAdmin, parser.none()], async(req, res, next) => {
-  let data = null;
+  let discount = null;
   if (req.query.id) {
     try {
-      color = await ProductDiscount.findOne({ where: {id: req.query.id}, include: includes});
-      res.status(200).json(color)
+      discount = await ProductDiscount.findOne({ where: {id: req.query.id}, include: includes});
+      res.status(200).json(discount)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  }  else if (req.query.ids) {
+    try {
+      discount = await ProductDiscount.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      res.status(200).json(discount)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      color = await ProductDiscount.findAll({include: includes});
-      res.status(200).json(color)
+      discount = await ProductDiscount.findAll({include: includes});
+      res.status(200).json(discount)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
