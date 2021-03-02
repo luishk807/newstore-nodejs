@@ -4,6 +4,8 @@ const verify = require('../../middlewares/verifyToken');
 const parser = require('../../middlewares/multerParser');
 const OrderProduct = require('../../pg/models/OrderProducts');
 const Order = require('../../pg/models/Orders');
+const { Op } = require('sequelize');
+const utils = require('../../controllers/orders');
 
 const includes = ['orderStatusProduct', 'orderProductItem', 'orderProductProductDiscount'];
 
@@ -92,6 +94,17 @@ router.post('/', [verify, parser.none()], async(req, res, next) => {
   })
 })
 
+router.get('/:id', [verify, parser.none()], async(req, res, next) => {
+  let order = null;
+  const allow = await utils.checkOrderUserId(req, req.params.id);
+  if (allow) {
+    order = await OrderProduct.findOne({ where: {id: req.params.id}, include: includes });
+    res.status(200).json(order)
+  } else {
+    res.status(401).json({status: false, message: 'not authorized'})
+  }
+});
+
 router.get('/', [verify, parser.none()], async(req, res, next) => {
   // get orders
   let order = null;
@@ -99,9 +112,9 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
   if ((req.query.id || req.query.order) && req.user.type !== '1') {
     let get = null
     if (req.query.id) {
-      get = await Order.findOne({where: {id: req.query.id, userId: req.user.id}, include: includes})
+      get = await OrderProduct.findOne({where: {id: req.query.id, userId: req.user.id}, include: includes})
     } else if (req.query.order) {
-      get = await Order.findOne({where: {orderId: req.query.order, userId: req.user.id}, include: includes})
+      get = await OrderProduct.findOne({where: {orderId: req.query.order, userId: req.user.id}, include: includes})
     }
     if (!get) {
       res.status(401).json({status: false, message: 'not authorized'})
@@ -118,6 +131,7 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
       res.status(500).json({status: false, message: err})
     }
   } else if (req.query.ids) {
+    console.log("hey hey ", req.query.ids)
     try {
       product = await OrderProduct.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
       res.status(200).json(product)

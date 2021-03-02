@@ -152,6 +152,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
           model: carts[cart].model,
           color: carts[cart].productItemColor.name,
           sku: carts[cart].sku,
+          product: carts[cart].product,
           size: carts[cart].productItemSize.name,
           code: carts[cart].sku,
           productDiscountId: carts[cart].discount ? carts[cart].discount.id : null,
