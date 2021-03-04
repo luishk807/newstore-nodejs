@@ -28,6 +28,7 @@ const Product = sequelize.define('product', {
   name: { type: Sequelize.TEXT },
   amount: { type: Sequelize.DECIMAL },
   category: { type: Sequelize.BIGINT, field: 'categoryId' },
+  subCategory: { type: Sequelize.BIGINT, field: 'subCategoryId' },
   brand: { type: Sequelize.BIGINT, field: 'brandId' },
   vendor: { type: Sequelize.BIGINT, field: 'vendorId' },
   status: { type: Sequelize.BIGINT, field: 'statusId' },

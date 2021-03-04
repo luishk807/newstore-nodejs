@@ -9,7 +9,7 @@ const config = require('../../config');
 const controller = require('../../controllers/products');
 const s3 = require('../../services/storage.service');
 const { Op } = require('sequelize');
-const includes = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems'];
+const includes = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems', 'categories', 'subCategoryProduct'];
 
 router.all('*', cors());
 
@@ -208,7 +208,7 @@ router.get('/:id', async(req, res, next) => {
 router.get('/admin/home', async(req, res, next) => {
   try {
     let query = {
-      include:['productProductDiscount','productBrand','categories','productStatus', 'productSizes', 'productColors', 'productProductItems']
+      include:['productProductDiscount','productBrand','categories','productStatus', 'productSizes', 'productColors', 'productProductItems', 'subCategoryProduct']
     }
     if (req.query.page) {
       const page = req.query.page > 0 ? req.query.page - 1 : 0;
@@ -345,7 +345,7 @@ router.get('/', async(req, res, next) => {
   } else {
     try {
       let query = {
-        include:['productProductDiscount','productImages','productVendor', 'productBrand','categories','productStatus', 'rates', 'productSizes', 'productColors']
+        include:['productProductDiscount','productImages','productVendor', 'productBrand','categories','productStatus', 'rates', 'productSizes', 'productColors', 'subCategoryProduct']
       }
       if (req.query.page) {
         const page = req.query.page > 0 ? req.query.page - 1 : 0;
