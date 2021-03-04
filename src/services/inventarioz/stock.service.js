@@ -98,7 +98,45 @@ const getStock = ({ product_id, product_variant_id }) => {
     return { data: [], error: 'No valid ids given' }
 }
 
-const addStockEntry = ({
+const getStockView = ({ product_id, product_variant_id }) => {
+    let where = null;
+    if (product_id) {
+        where = {
+            product_id: product_id, // Have to make these conditionals
+            product_variant_id: product_variant_id
+        }
+    } else if (product_variant_id) {
+        where = {
+            product_variant_id: product_variant_id
+        }
+    }
+    if (where) {
+        return prisma.view_stock_summary.findMany({
+            where: where,
+            include: {
+                product_variant: {
+                    include: {
+                        option: true,
+                        option_value: true
+                    }
+                },
+                // stock_entry: true
+            }
+        });
+    }
+    return { data: [], error: 'No valid ids given' }
+}
+
+/** Get from view_stock_summary and limit of 50 */
+const getStockViewAll = ({ skip=0, take=20 }) => {
+        return prisma.view_stock_summary.findMany({
+        skip: skip,
+        take: take
+    });
+}
+
+
+const addStockEntry = async ({
     product_id,
     product_variant_id,
     unit_cost,
@@ -133,13 +171,20 @@ const addStockEntry = ({
                 ...warehouseConnect // Could it be that all these connects needs to go at the end?
             }
         }
-        return prisma.stock_entry.create(create);
+        try {
+            const stockEntryResult = await prisma.stock_entry.create(create)
+            return stockEntryResult;
+        } catch (err) {
+            logger.error('Error trying to create a stock entry', err);
+        }
+        
     }
     throw 'Missing required parameters for adding stock entry';
 }
 
 module.exports = {
     // createStock,
-    getStock,
+    getStock: getStockView,
+    getStocks: getStockViewAll,
     addStockEntry
 }

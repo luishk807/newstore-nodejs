@@ -37,6 +37,30 @@ model category_product {
   @@id([category_id, product_id])
 }
 
+model client {
+  id             Int              @id @default(autoincrement())
+  first_name     String
+  last_name      String?
+  phones         String?
+  email          String?
+  created_at     DateTime         @default(now())
+  identification String?
+  client_address client_address[]
+  order          order[]
+}
+
+model client_address {
+  id         Int     @id @default(autoincrement())
+  client_id  Int
+  address    String
+  is_default Boolean @default(false)
+  type       String?
+  latitude   String?
+  longitude  String?
+  client     client  @relation(fields: [client_id], references: [id])
+  order      order[]
+}
+
 model department {
   id                 Int                  @id @default(autoincrement())
   name               String
@@ -61,20 +85,68 @@ model discount_rule {
   product_discount_rule product_discount_rule[]
 }
 
+model oauth_clients {
+  client_id     String
+  client_secret String
+  redirect_uri  String
+
+  @@id([client_id, client_secret])
+}
+
+model oauth_tokens {
+  id                       String   @id
+  access_token             String
+  access_token_expires_on  DateTime
+  client_id                String
+  refresh_token            String
+  refresh_token_expires_on DateTime
+  user_account_id          String
+}
+
 model option {
-  id              Int               @id @default(autoincrement())
-  name            String
-  description     String?
-  option_value    option_value[]
-  product_variant product_variant[]
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  description            String?
+  option_value           option_value[]
+  product_variant_option product_variant_option[]
 }
 
 model option_value {
-  id              Int               @id @default(autoincrement())
-  value           String
-  option_id       Int
-  option          option            @relation(fields: [option_id], references: [id])
-  product_variant product_variant[]
+  id                     Int                      @id @default(autoincrement())
+  value                  String
+  option_id              Int
+  option                 option                   @relation(fields: [option_id], references: [id])
+  product_variant_option product_variant_option[]
+}
+
+model order {
+  id                Int             @id @default(autoincrement())
+  order_number      String?
+  uuid              String
+  client_id         Int
+  client_address_id Int?
+  subtotal          Float           @default(0)
+  tax               Float           @default(0)
+  total             Float           @default(0)
+  payment_type      String?
+  client_address    client_address? @relation(fields: [client_address_id], references: [id])
+  client            client          @relation(fields: [client_id], references: [id])
+  order_item        order_item[]
+}
+
+model order_item {
+  id                 Int             @id @default(autoincrement())
+  order_id           Int
+  product_id         Int
+  product_variant_id Int
+  quantity           Int
+  price              Float
+  product_deal_id    Int?
+  tax                Float           @default(0)
+  order              order           @relation(fields: [order_id], references: [id])
+  product_deal       product_deal?   @relation(fields: [product_deal_id], references: [id])
+  product            product         @relation(fields: [product_id], references: [id])
+  product_variant    product_variant @relation(fields: [product_variant_id], references: [id])
 }
 
 model product {
@@ -95,6 +167,14 @@ model product {
   stock_entry           stock_entry[]
 }
 
+model product_attribute {
+  id         Int     @id @default(autoincrement())
+  product_id Int
+  name       String
+  value      String
+  product    product @relation(fields: [product_id], references: [id])
+}
+
 model product_deal {
   id                  Int              @id @default(autoincrement())
   product_id          Int
@@ -103,7 +183,7 @@ model product_deal {
   discount_percentage Float?
   start_date          DateTime
   end_date            DateTime
-  max_quantity        Int              @default(0)
+  limit_quantity      Int              @default(0)
   product             product          @relation(fields: [product_id], references: [id])
   product_variant     product_variant? @relation(fields: [product_variant_id], references: [id])
   order_item          order_item[]
@@ -127,20 +207,18 @@ model product_image {
 }
 
 model product_variant {
-  id              Int             @id @default(autoincrement())
-  product_id      Int
-  option_id       Int?
-  option_value_id Int?
-  sku             String
-  model           String?
-  option          option?         @relation(fields: [option_id], references: [id])
-  option_value    option_value?   @relation(fields: [option_value_id], references: [id])
-  product         product         @relation(fields: [product_id], references: [id])
-  order_item      order_item[]
-  product_deal    product_deal[]
-  product_image   product_image[]
-  stock           stock[]
-  stock_entry     stock_entry[]
+  id                     Int                      @id @default(autoincrement())
+  product_id             Int
+  sku                    String
+  model                  String?
+  description            String?
+  product                product                  @relation(fields: [product_id], references: [id])
+  order_item             order_item[]
+  product_deal           product_deal[]
+  product_image          product_image[]
+  product_variant_option product_variant_option[]
+  stock                  stock[]
+  stock_entry            stock_entry[]
 }
 
 model stock {
@@ -187,6 +265,12 @@ model supplier {
   stock_entry stock_entry[]
 }
 
+model user_account {
+  id       String @id
+  username String
+  password String
+}
+
 model warehouse {
   id             Int              @id @default(autoincrement())
   name           String?
@@ -205,104 +289,14 @@ model warehouse_rack {
   stock_entry  stock_entry[]
 }
 
-model oauth_clients {
-  client_id     String
-  client_secret String
-  redirect_uri  String
-
-  @@id([client_id, client_secret])
-}
-
-model oauth_tokens {
-  id                       String   @id
-  access_token             String
-  access_token_expires_on  DateTime
-  client_id                String
-  refresh_token            String
-  refresh_token_expires_on DateTime
-  user_account_id          String
-}
-
-model user_account {
-  id       String @id
-  username String
-  password String
-}
-
-model client {
-  id             Int              @id @default(autoincrement())
-  first_name     String
-  last_name      String?
-  phones         String?
-  email          String?
-  created_at     DateTime         @default(now())
-  client_address client_address[]
-  order          order[]
-}
-
-model client_address {
-  id         Int     @id @default(autoincrement())
-  client_id  Int
-  address    String
-  is_default Boolean @default(false)
-  type       String?
-  latitude   String?
-  longitude  String?
-  client     client  @relation(fields: [client_id], references: [id])
-  order      order[]
-}
-
-model order {
-  id                Int             @id @default(autoincrement())
-  order_number      String?
-  uuid              String
-  client_id         Int
-  client_address_id Int?
-  subtotal          Float           @default(0)
-  tax               Float           @default(0)
-  total             Float           @default(0)
-  payment_type      String?
-  client_address    client_address? @relation(fields: [client_address_id], references: [id])
-  client            client          @relation(fields: [client_id], references: [id])
-  order_item        order_item[]
-}
-
-model order_item {
-  id                 Int             @id @default(autoincrement())
-  order_id           Int
-  product_id         Int
+model product_variant_option {
   product_variant_id Int
-  quantity           Int
-  price              Float
-  product_deal_id    Int?
-  tax                Float           @default(0)
-  order              order           @relation(fields: [order_id], references: [id])
-  product_deal       product_deal?   @relation(fields: [product_deal_id], references: [id])
-  product            product         @relation(fields: [product_id], references: [id])
+  option_id          Int
+  option_value_id    Int
+  description        String?
+  option             option          @relation(fields: [option_id], references: [id])
+  option_value       option_value    @relation(fields: [option_value_id], references: [id])
   product_variant    product_variant @relation(fields: [product_variant_id], references: [id])
-}
 
-model product_attribute {
-  id         Int     @id @default(autoincrement())
-  product_id Int
-  name       String
-  value      String
-  product    product @relation(fields: [product_id], references: [id])
-}
-
-model view_product {
-  id            		  Int @id
-  product_variant_id	Int?
-  product_id    		  Int
-  stock_id				    Int
-  name          		  String
-  description   		  String
-  sku           		  String
-  model         		  String?
-  brand         		  String?
-  category      		  String?
-  department    		  String?
-  option        		  String?
-  option_value  		  String?
-  quantity				    Int
+  @@unique([product_variant_id, option_id, option_value_id], name: "product_variant_option_product_variant_id_option_id_option__key")
 }

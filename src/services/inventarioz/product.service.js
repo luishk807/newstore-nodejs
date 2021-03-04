@@ -111,19 +111,24 @@ const saveProduct = (value) => {
                 },
                 product_variant: { // Create a null variant with the SKU
                     create: [{
-                        option: {
-                            connect: { id: value.optionId }
-                        },
-                        option_value: {
-                            connect: { id: value.optionValueId }
-                        },
                         sku: value.sku,
-                        model: value.model
+                        model: value.model,
+                        product_variant_option: {
+                            create: [{
+                                option: {
+                                    connect: { id: value.optionId }
+                                },
+                                option_value: {
+                                    connect: { id: value.optionValueId }
+                                }
+                            }]
+                        }
                     }]
                 }
             },
             include: {
-                product_variant: true
+                product_variant: true,
+                product_variant_option: true
             }
         })
     }
