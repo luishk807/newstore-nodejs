@@ -5,7 +5,7 @@ const sequelize = pgconfig.getSequelize();
 
 const Statuses = require('./Statuses');
 
-const Product = require('./Products');
+// const Product = require('./Products');
 
 const Brand = sequelize.define('brand', {
   name: {

@@ -37,6 +37,7 @@ const Product = sequelize.define('product', {
   description: { type: Sequelize.TEXT },
   model: { type: Sequelize.TEXT },
   sku: { type: Sequelize.TEXT },
+  source: { type: Sequelize.TEXT }
 },
 {
   schema: 'public',
