@@ -1,22 +1,25 @@
 const Product = require('../pg/models/Products');
-const Brand = require('../pg/models/Brands');
+const { saveBrands, getAllBrands } = require('../services/brand.service');
+const { saveCategories, getAllCategories } = require('../services/category.service');
 const config = require('../config');
-const Category = require('../pg/models/Categories');
 const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
 const { safeString } = require('../utils/string.utils');
+const { getDistinctValues } = require('../utils')
 const validationField = '__validation__';
 const requiredfields = [
     'name',
     'stock',
     'amount',
-    'category',
-    'brand',
+    // 'category', // Commenting out because there are inputs without category
+    // 'brand', // Commenting out because there are inputs without brand
     'model',
     'code',
     'description'
 ];
-const savedFields = requiredfields.concat(['status', 'vendor']);
+const IMPORT = 'IMPORT';
+/** Only these fields will be used to save on the database */
+const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
 
 /** Returns a boolean indicating if all provided fields exists */
 const existFields = (obj, fields) => {
@@ -44,7 +47,8 @@ const createProductObject = (data, vendor) => {
         'code': data.code,
         'description': data.description,
         ...vendor  && { vendor: +vendor.id },
-        ...data['status'] && { statusId: data.status }
+        ...data['status'] && { statusId: data.status },
+        'source': IMPORT // This is to indicate that the source of input was from an IMPORT
     }
 }
 
@@ -110,27 +114,101 @@ const filterForRequiredFields = (dataArray) => {
     dataArray.forEach(d => {
         if (existFields(d, requiredfields)) {
             retval.push(d);
+        } else {
+            logger.warn('Invalid', d);
         }
     });
     return retval;
 }
 
+/** Returns a lower case string value, if it's null it will be blank */
+const getLowerCaseSafeString = (value) => {
+    return safeString(value).trim().toLowerCase();
+}
+
+/**
+ * Gets the missing values for the field for the given dataArray from the searchItems
+ * @param {*} dataArray 
+ * @param {*} field 
+ * @param {*} searchItems 
+ */
+const getMissingObjects = (dataArray, field, searchItems) => {
+    if (!!dataArray.length) {
+        // Get the distinct value from the given field for the data array
+        const distinctValues = getDistinctValues(dataArray, field);
+        // Loop through the distinct values to see if it exists on the searchItems array
+        const missingValues = [];
+        distinctValues.forEach(dv => {
+            const item = searchItems.find(si => getLowerCaseSafeString(si.name) === getLowerCaseSafeString(dv));
+            if (!item) {
+                missingValues.push(dv);
+            }
+        })
+        return missingValues;
+    }
+    return []
+}
+
+const createBrands = async (brands) => {
+    try {
+        const result = await saveBrands(brands);
+        return result;
+    } catch (err) {
+        return []
+    }
+}
+
+const createCategories = async (categories) => {
+    try {
+        const result = await saveCategories(categories);
+        return result;
+    } catch (err) {
+        return []
+    }
+}
+
 const importProducts = async (datas, userId) => {
     // Get reference data from database
-    const [vendor, brands, categories] = await Promise.all([
+    logger.info('Getting brands, categories and vendor information from database...');
+    let [vendor, brands, categories] = await Promise.all([
         Vendor.findOne({ where: { userId: userId }}),
-        Brand.findAll({}),
-        Category.findAll({})
+        getAllBrands(),
+        getAllCategories()
     ]);
     
     const data = filterForRequiredFields(datas);
+
+    logger.info('Checking for missing brands and categories...');
+    // Should check for non existing brands and create them
+    const missingBrands = getMissingObjects(data, 'brand', brands);
+    // Should check for non existing categories and create them
+    const missingCategories = getMissingObjects(data, 'category', categories);
+    logger.info('Missing brands', missingBrands);
+    logger.info('Missing categoreis', missingCategories);
+
+    // Should create the missing brands and categories
+    if (missingBrands.length > 0) {
+        logger.info('Creating missing brands...');
+        await createBrands(missingBrands);
+    }
+    if (missingCategories.length > 0) {
+        logger.info('Creating missing categories...');
+        await createCategories(missingCategories);
+    }
     
+    // Refresh the data
+    logger.info('Refreshing brands and categories...');
+    brands = await getAllBrands();
+    categories = await getAllCategories();
+    
+    logger.info('Assigning reference ids to brands and categories...');
     // Get reference ids for brands
     data.forEach(d => assignReferenceId(d, 'brand', brands));
     // Get reference ids for categories
     data.forEach(d => assignReferenceId(d, 'category', categories));
     
     const validatedData = checkValidationsFromData(data);// validatedData.invalid will contain data that did not get the 
+
     // If entire data set is valid
     if (validatedData.invalid.length === 0) {
         // Just gets the valid data
