@@ -2,6 +2,33 @@ const ProductItem = require('../pg/models/ProductItems');
 const s3 = require('./storage.service');
 const config = require('../config');
 
+const createProductItems = async (items) => {
+    const savedFields = [
+        'productId',
+        'productColorId',
+        'productSizeId',
+        'stock',
+        'model',
+        'code',
+        'sku',
+        'vendorId',
+        'unitCost',
+        'unitPrice',
+        'amount6',
+        'amount12',
+        'retailPrice',
+        'statusId',
+        'source'
+    ]
+    if (Array.isArray(items)) {
+        return ProductItem.bulkCreate(items, {
+            fields: savedFields, // IMPORTANT
+            returning: true
+        });
+    }
+    return []
+}
+
 const deleteProductItem = async (id) => {
     const productItem = await ProductItem.findOne({
         where: { id: id },
@@ -27,5 +54,6 @@ const deleteProductItem = async (id) => {
 }
 
 module.exports = {
+    createProductItems,
     deleteProductItem
 }
