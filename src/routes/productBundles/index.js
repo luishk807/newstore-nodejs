@@ -61,7 +61,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
 });
 
 router.post('/', [verify, parser.none()], (req, res, next) => {
-  service.createProductColor(req.body)
+  service.createProductBundle(req.body)
     .then(result => {
       res.status(200).json(result);
     })
@@ -70,13 +70,13 @@ router.post('/', [verify, parser.none()], (req, res, next) => {
     });
 })
 
-router.get('/product/:product', async(req, res, next) => {
-  const bundle = await ProductBundle.findAll({ where: {productId: req.params.product}, include: includes});
-  res.json(bundle)
+router.get('/product-item/:id', async(req, res, next) => {
+  let product = await ProductBundle.findAll({ where: {productItemId: req.params.id}, include: includes});
+  res.json(product)
 });
 
 router.get('/:id', async(req, res, next) => {
-  service.getProductColorById(req.params.id)
+  service.getProductBundleById(req.params.id)
     .then(bundle => {
       res.status(200).json(bundle);
     })
