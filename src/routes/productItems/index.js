@@ -9,7 +9,7 @@ const config = require('../../config');
 const controller = require('../../controllers/productItems');
 const s3 = require('../../services/storage.service');
 const { Op } = require('sequelize');
-const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
+const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize', 'productItemProductBundles'];
 
 router.all('*', cors());
 

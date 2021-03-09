@@ -9,6 +9,8 @@ const ProductItemImages = require('./ProductItemImages');
 
 const ProductColor = require('./ProductColors');
 
+const ProductBundle = require('./ProductBundles');
+
 const ProductSize = require('./ProductSizes');
 
 const ProductItem = sequelize.define('product_items', {
@@ -51,6 +53,10 @@ const ProductItem = sequelize.define('product_items', {
 ProductItem.belongsTo(Statuses, { foreignKey: 'statusId', as: 'productItemsStatus'});
 
 ProductItem.belongsTo(ProductColor, { foreignKey: 'productColorId', as: 'productItemColor'});
+
+ProductItem.hasMany(ProductBundle, { as: "productItemProductBundles"});
+
+ProductBundle.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productBundleProductItem'});
 
 ProductItem.belongsTo(ProductSize, { foreignKey: 'productSizeId', as: 'productItemSize'});
 
