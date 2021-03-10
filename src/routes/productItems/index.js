@@ -9,7 +9,7 @@ const config = require('../../config');
 const controller = require('../../controllers/productItems');
 const s3 = require('../../services/storage.service');
 const { Op } = require('sequelize');
-const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize', 'productItemProductBundles'];
+const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 router.all('*', cors());
 
@@ -66,6 +66,8 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
       'finalUnitPrice': body.finalUnitPrice,
       'unitPrice': body.unitPrice,
       'code': body.code,
+      'quantity': body.quantity,
+      'quantityLabel': body.quantityLabel,
       'sku': body.sku,
       'exp_date': body.exp_date,
       'retailPrice': body.retailPrice,
@@ -180,6 +182,8 @@ router.post('/', [verify, parser.array('image')], (req, res, next) => {
       'finalUnitPrice': body.finalUnitPrice,
       'unitPrice': body.unitPrice,
       'code': body.code,
+      'quantity': body.quantity,
+      'quantityLabel': body.quantityLabel,
       'exp_date': body.exp_date,
       'retailPrice': body.retailPrice,
       'vendorId': Number(body.vendor),
