@@ -31,17 +31,16 @@ router.delete('/:id', verify, (req, res, next) => {
 router.put('/:id', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
-
   const allow = await utils.checkOrderUserId(req, bid);
-
   if (allow) {
+    await utils.saveStatusOrder(req, bid, req.body.orderStatus);
     Order.update(body,
       {
         where: {
           id: bid
         }
       }
-    ).then((updated) => {
+    ).then(async(updated) => {
       res.status(200).json({
         status: updated[0] ? true : false,
         message: 'Order Updated'
@@ -58,32 +57,37 @@ router.put('/:id/:cancel', [verify, parser.none()],  async(req, res, next) => {
   const cancel = req.params.cancel;
   const allow = await utils.checkOrderUserId(req, bid);
   const url = req.headers.referer;
-
+  const allowedCancelStatus = [1,2];
   Order.findOne({
     where: {
       id: bid
     }
-  }).then((order) => {
+  }).then(async(order) => {
     if (allow) {
-      Order.update({
-          orderCancelReasonId: cancel,
-          orderStatusId: 7
-        },{
-        where: {
-          id: bid
-        }
-      }).then(async(order) => {
-
-        await sendgrid.sendOrderCancelRequest(order, req);
-
-        res.status(200).json({
-          data: order,
-          status: true,
-          message: 'Order cancellation requested',
-        });
-      }).catch((err) => {
-        res.status(500).json({status: false, message: err})
-      })
+      // save status
+      if (!allowedCancelStatus.includes(Number(order.orderStatus))) {
+        res.status(500).json({status: false, message: "invalid cancel status"})
+      } else {
+        await utils.saveStatusOrder(req, bid, 7);
+        Order.update({
+            orderCancelReasonId: cancel,
+            orderStatusId: 7
+          },{
+          where: {
+            id: bid
+          }
+        }).then(async(orderStatus) => {
+          await sendgrid.sendOrderCancelRequest(order, req);
+  
+          res.status(200).json({
+            data: order,
+            status: true,
+            message: 'Order cancellation requested',
+          });
+        }).catch((err) => {
+          res.status(500).json({status: false, message: err})
+        })
+      }
     } else {
       res.status(401).json({status: false, message: 'not authorized'})
     }
@@ -122,89 +126,64 @@ router.post('/', [parser.none()], async(req, res, next) => {
     entry['userId'] = body.userid;
   }
 
-///******************test *********** */
-
-const cartArry = [];
-const orderObj = {
-  entry: entry,
-  orderId: 1,
-  order_num: '3333333',
-  cart: []
-}
-if (Object.keys(carts).length) {
-  for(const cart in carts) {
-    cartArry.push({
-      orderId: 1,
-      productId: carts[cart].id,
-      unit_total: carts[cart].amount,
-      name: carts[cart].name,
-      description: carts[cart].description,
-      model: carts[cart].model,
-      code: carts[cart].code,
-      category: carts[cart].category,
-      quantity: carts[cart].quantity,
-      total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].amount),
-      brand: carts[cart].brand,
-    });
-  }
-}
-orderObj.cart = cartArry
-
-await sendgrid.sendOrderEmail(orderObj, req);
-
-/********END TEST */
-
-// Order.create(entry).then(async(order) => {
-  //   let cartArry = [];
-  //   const time = Date.now().toString() // '1492341545873'
-  //   const order_num = `${time}${order.id}`;
-  //   const updateCon = await Order.update(
-  //     {'order_number': order_num}, { where: {id: order.id}}
-  //   );
+  Order.create(entry).then(async(order) => {
+    let cartArry = [];
+    await utils.saveStatusOrder(req, order.id, 1);
+    const time = Date.now().toString() // '1492341545873'
+    const order_num = `${time}${order.id}`;
+    const updateCon = await Order.update(
+      {'order_number': order_num}, { where: {id: order.id}}
+    );
     
-  //   orderObj = {
-  //     entry: entry,
-  //     orderId: order.id
-  //     order_num: order_num,
-  //     cart: []
-  //   }
-  //   if (Object.keys(carts).length) {
-  //     for(const cart in carts) {
-  //       cartArry.push({
-  //         orderId: order.id,
-  //         productId: carts[cart].id,
-  //         unit_total: carts[cart].amount,
-  //         name: carts[cart].name,
-  //         description: carts[cart].description,
-  //         model: carts[cart].model,
-  //         code: carts[cart].code,
-  //         category: carts[cart].category,
-  //         quantity: carts[cart].quantity,
-  //         total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].amount),
-  //         brand: carts[cart].brand,
-  //       })
-  //     }
-  //     orderObj.cart = cartArry
-  //     OrderProduct.bulkCreate(cartArry).then(async(orderProducts) => {
-  //       await sendgrid.sendOrderEmail(body.shipping_email, orderObj, 'order received', 'order process');
-  //       res.status(200).json({
-  //         status: true,
-  //         data: order,
-  //         message: 'Order Created'
-  //       });
-  //     })
-  //   } else {
-  //     await sendgrid.sendOrderEmail(body.shipping_email, orderObj, 'order received', 'order process');
-  //     res.status(200).json({
-  //       status: false,
-  //       data: order,
-  //       message: 'Order Created'
-  //     });
-  //   }
-  // }).catch((err) => {
-  //   console.log(err)
-  //   res.status(500).json({status: false, message: err})
-  // })
+    orderObj = {
+      entry: entry,
+      orderId: order.id,
+      order_num: order_num,
+      cart: []
+    }
+    if (Object.keys(carts).length) {
+      for(const cart in carts) {
+        cartArry.push({
+          orderId: order.id,
+          productItemId: carts[cart].id,
+          unit_total: carts[cart].retailPrice,
+          name: carts[cart].productItemProduct.name,
+          description: carts[cart].productItemProduct.description,
+          model: carts[cart].model,
+          color: carts[cart].productItemColor.name,
+          sku: carts[cart].sku,
+          product: carts[cart].product,
+          size: carts[cart].productItemSize.name,
+          code: carts[cart].sku,
+          productDiscountId: carts[cart].discount ? carts[cart].discount.id : null,
+          category: carts[cart].productItemProduct.category,
+          quantity: carts[cart].quantity,
+          total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),
+          brand: carts[cart].productItemProduct.brand,
+        });
+      }
+      orderObj.cart = cartArry
+      OrderProduct.bulkCreate(cartArry).then(async(orderProducts) => {
+        // await sendgrid.sendOrderEmail(body.shipping_email, orderObj, 'order received', 'order process');
+        await sendgrid.sendOrderEmail(orderObj, req);
+        res.status(200).json({
+          status: true,
+          data: order,
+          message: 'Order Created'
+        });
+      })
+    } else {
+      // await sendgrid.sendOrderEmail(orderObj, req);
+      res.status(200).json({
+        status: false,
+        data: order,
+        message: 'Order Created but unable to send email'
+      });
+    }
+  }).catch((err) => {
+    console.log(err)
+    res.status(500).json({status: false, message: err})
+  })
 })
 
 router.get('/:order_number/:email', [parser.none()], async(req, res, next) => {

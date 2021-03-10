@@ -1,12 +1,13 @@
 const config = require('../../config');
-const Product = require('../../pg/models/Products');
+const ProductItem = require('../../pg/models/ProductItems');
 const Delivery = require('../../pg/models/DeliveryOptions');
+const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const sendGrid = require('@sendgrid/mail');
 const aws_url = process.env.IMAGE_URL;
 const logo = `${aws_url}/avenidaz.png`;
 sendGrid.setApiKey(config.sendGrid.key);
 
-const productIncludes = ['productStatus', 'productImages'];
+const productIncludes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 const sendOrderUpdate = async(obj, req) => {
   const message = `Your order has been updated.`;
@@ -35,9 +36,10 @@ const sendOrderUpdate = async(obj, req) => {
 
 const sendOrderCancelRequest = async(obj, req) => {
   const message = `Your request for order cancellation has been sent.`;
-  const subject = `ORDER #${obj.order_num}: order cancellation request`;
+  const subject = `ORDER #${obj.order_number}: order cancellation request`;
   const client_email = obj.shipping_email;
-  const mainUrl = `${req.headers.referer}orders/account/${obj.id}`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.id}`;
+  const mainUrlAdmin = `${req.headers.referer}admin/orders/${obj.id}`;
   let result = false;
 
   // send admin
@@ -49,7 +51,7 @@ const sendOrderCancelRequest = async(obj, req) => {
       <p>
         <img src="${logo}" width="300" />
       </p>
-      <p>Name: ${client_email}</p><p>Message: order cancellation requestions for this order.</p><p>${mainUrl}</p>
+      <p>Name: ${client_email}</p><p>Message: order cancellation requestions for this order.</p><p>${mainUrlAdmin}</p>
     `,
   }).then(() => {
     result = true;
@@ -74,20 +76,32 @@ const sendOrderCancelRequest = async(obj, req) => {
 }
 
 const sendOrderEmail = async(obj, req) => {
-  const mainUrl = `${req.headers.referer}orders/account/${obj.orderId}`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
   const newCart = [];
   const subject = `ORDER #${obj.order_num}: Order Received`;
   let cartHtml = '';
 
-  obj.cart.forEach(async(item) => {
+  for(const item of obj.cart) {
     const temp = Object.assign({}, item);
 
-    const product = await Product.findOne({
+    const product = await ProductItem.findOne({
       where: {
-        id: item.productId
+        id: item.productItemId
       },
       include: productIncludes
     })
+
+    let ProductDiscount = '';
+    if (item.productDiscountId) {
+      const getProductDisc = await ProductItem.findOne({
+        where: {
+          id: item.productDiscountId
+        }
+      })
+      if (getProductDisc) {
+        ProductDiscount = `Discount: ${ProductDiscount.name}`;
+      }
+    }
 
     const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
 
@@ -101,7 +115,12 @@ const sendOrderEmail = async(obj, req) => {
         </td>
         <td style='width: 50%'>
           <p><strong>${item.name}</strong></p>
+          <p>Model: ${item.model}</p>
+          <p>Color: ${item.color}</p>
+          <p>Size: ${item.size}</p>
           <p>Qt: ${item.quantity}</p>
+          <p>Unit: $${item.unit_total}</p>
+          <p>${ProductDiscount}</p>
         </td>
         <td style='width: 30%'>
           $${item.total}
@@ -109,7 +128,7 @@ const sendOrderEmail = async(obj, req) => {
       </tr>
     </table>`
 
-  })
+  }
 
   const totalHtml = `
     <hr/>

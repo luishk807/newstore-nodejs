@@ -79,6 +79,7 @@ ALTER TABLE ONLY avenidaz.brand_product DROP CONSTRAINT brand_product_pkey;
 ALTER TABLE ONLY avenidaz.brand DROP CONSTRAINT brand_pkey;
 DROP TABLE avenidaz.warehouse_rack;
 DROP TABLE avenidaz.warehouse;
+DROP VIEW avenidaz.view_stock_summary;
 DROP VIEW avenidaz.view_product;
 DROP TABLE avenidaz.user_account;
 DROP TABLE avenidaz.supplier;
@@ -283,8 +284,16 @@ CREATE TABLE avenidaz.client (
     last_name character varying(50),
     phones character varying(50),
     email character varying(254),
-    created_at date DEFAULT now() NOT NULL
+    created_at date DEFAULT now() NOT NULL,
+    identification character varying(30)
 );
+
+
+--
+-- Name: COLUMN client.identification; Type: COMMENT; Schema: avenidaz; Owner: -
+--
+
+COMMENT ON COLUMN avenidaz.client.identification IS 'Any unique identification for the client. Passport, id card, etc.';
 
 
 --
@@ -620,7 +629,7 @@ CREATE TABLE avenidaz.product_deal (
     discount_percentage numeric(3,2),
     start_date date NOT NULL,
     end_date date NOT NULL,
-    max_quantity integer DEFAULT 0 NOT NULL
+    limit_quantity integer DEFAULT 0 NOT NULL
 );
 
 
@@ -632,10 +641,10 @@ COMMENT ON TABLE avenidaz.product_deal IS 'Stores deals for specific product and
 
 
 --
--- Name: COLUMN product_deal.max_quantity; Type: COMMENT; Schema: avenidaz; Owner: -
+-- Name: COLUMN product_deal.limit_quantity; Type: COMMENT; Schema: avenidaz; Owner: -
 --
 
-COMMENT ON COLUMN avenidaz.product_deal.max_quantity IS 'Maximum quantity allowed for discount';
+COMMENT ON COLUMN avenidaz.product_deal.limit_quantity IS 'Maximum quantity allowed for discount';
 
 
 --
@@ -725,7 +734,8 @@ CREATE TABLE avenidaz.product_variant (
     option_id bigint,
     option_value_id bigint,
     sku character varying(50) NOT NULL,
-    model character varying(50)
+    model character varying(50),
+    description character varying(1000)
 );
 
 
@@ -917,6 +927,31 @@ CREATE VIEW avenidaz.view_product AS
 --
 
 COMMENT ON VIEW avenidaz.view_product IS 'Unified data for products';
+
+
+--
+-- Name: view_stock_summary; Type: VIEW; Schema: avenidaz; Owner: -
+--
+
+CREATE VIEW avenidaz.view_stock_summary AS
+ SELECT se.product_id,
+    se.product_variant_id,
+    p.name AS product_name,
+    op.name AS option,
+    ov.value AS option_value,
+    pv.sku,
+    pv.model,
+    se.unit_price,
+    sum(se.quantity) AS quantity,
+    count(se.product_id) AS entries,
+    row_number() OVER (ORDER BY se.product_id) AS row_number
+   FROM ((((avenidaz.stock_entry se
+     LEFT JOIN avenidaz.product_variant pv ON ((pv.id = se.product_variant_id)))
+     JOIN avenidaz.product p ON ((p.id = se.product_id)))
+     LEFT JOIN avenidaz.option op ON ((op.id = pv.option_id)))
+     LEFT JOIN avenidaz.option_value ov ON ((ov.id = pv.option_value_id)))
+  WHERE (se.deleted = false)
+  GROUP BY se.product_id, se.product_variant_id, p.name, op.name, ov.value, pv.sku, pv.model, se.unit_price;
 
 
 --

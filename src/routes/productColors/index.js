@@ -3,6 +3,7 @@ const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const ProductColor = require('../../pg/models/ProductColors');
 const parser = require('../../middlewares/multerParser');
+const service = require('../../services/productColor.service');
 const uuid = require('uuid');
 const config = require('../../config');
 const includes = ['colorStatus'];
@@ -58,18 +59,13 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
 });
 
 router.post('/', [verify, parser.none()], (req, res, next) => {
-  let dataEntry = null;
-  const body = req.body;
-
-  dataEntry = {
-    'color': body.color,
-    'name': body.name,
-    'productId': body.productId
-  }
-
-  ProductColor.create(dataEntry).then((product) => {
-    res.status(200).json(product);
-  })
+  service.createProductColor(req.body)
+    .then(result => {
+      res.status(200).json(result);
+    })
+    .catch(err => {
+      res.status(500).json({ message: 'Error creating product color', error: err});
+    });
 })
 
 router.get('/product/:product', async(req, res, next) => {
@@ -78,14 +74,19 @@ router.get('/product/:product', async(req, res, next) => {
 });
 
 router.get('/:id', async(req, res, next) => {
-  const color = await ProductColor.findOne({ where: {id: req.params.id}, include: includes});
-  res.json(color)
+  service.getProductColorById(req.params.id)
+    .then(color => {
+      res.status(200).json(color);
+    })
+    .catch(err => {
+      res.status(500).json({ message: 'Error getting product color', error: err })
+    })
 });
 
 router.get('/', async(req, res, next) => {
   // get colors
   let color = null;
-  if (req.query.id) {
+  if (req.query.id) { // Do we need this (/?id=1) also?  We already have the top one /:id. This is duplicated functionality
     try {
       color = await ProductColor.findOne({ where: {id: req.query.id}, include: includes});
       res.status(200).json(color)

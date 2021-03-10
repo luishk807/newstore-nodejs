@@ -8,9 +8,6 @@ const OrderStatus = require('./OrderStatuses');
 const User = require('./Users');
 
 const OrderActivity = sequelize.define('order_activities', {
-  name: {
-    type: Sequelize.TEXT
-  },
   user: {
     type: Sequelize.BIGINT,
     field: 'userId'
@@ -18,6 +15,9 @@ const OrderActivity = sequelize.define('order_activities', {
   order: {
     type: Sequelize.BIGINT,
     field: 'orderId'
+  },
+  description: {
+    type: Sequelize.TEXT,
   },
   orderStatus: {
     type: Sequelize.BIGINT,

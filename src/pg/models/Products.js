@@ -28,6 +28,7 @@ const Product = sequelize.define('product', {
   name: { type: Sequelize.TEXT },
   amount: { type: Sequelize.DECIMAL },
   category: { type: Sequelize.BIGINT, field: 'categoryId' },
+  subCategory: { type: Sequelize.BIGINT, field: 'subCategoryId' },
   brand: { type: Sequelize.BIGINT, field: 'brandId' },
   vendor: { type: Sequelize.BIGINT, field: 'vendorId' },
   status: { type: Sequelize.BIGINT, field: 'statusId' },
@@ -36,6 +37,7 @@ const Product = sequelize.define('product', {
   description: { type: Sequelize.TEXT },
   model: { type: Sequelize.TEXT },
   sku: { type: Sequelize.TEXT },
+  source: { type: Sequelize.TEXT }
 },
 {
   schema: 'public',
@@ -58,6 +60,8 @@ Product.hasMany(ProductImages, { as: "productImages"});
 Product.hasMany(ProductSize, { as: "productSizes"});
 
 Product.hasMany(ProductDiscount, { as: "productProductDiscount"});
+
+ProductDiscount.belongsTo(Product, { foreignKey: 'productId', as: 'productDiscountProduct'});
 
 Product.hasMany(ProductColor, { as: "productColors"});
 

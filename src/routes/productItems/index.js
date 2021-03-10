@@ -52,7 +52,6 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
 
   const body = req.body;
   const pid = req.params.id;
-
   ProductItems.update(
     {
       'productColor': Number(body.productColor),
@@ -67,6 +66,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
       'finalUnitPrice': body.finalUnitPrice,
       'unitPrice': body.unitPrice,
       'code': body.code,
+      'sku': body.sku,
       'exp_date': body.exp_date,
       'retailPrice': body.retailPrice,
       'vendorId': Number(body.vendor),
@@ -108,7 +108,7 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
 
       // delete data from db
       try{
-        ProductImages.destroy({ where: { id: index }})
+        ProductItemImages.destroy({ where: { id: index }})
       } catch (e) {
         console.log(e)
       }
@@ -124,7 +124,6 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
           'position': counter++
         }
       })
-
       // save entired bulk to product images
       ProductItemImages.bulkCreate(newImages).then((images) => {
         res.status(200).json({
@@ -232,6 +231,13 @@ router.get('/', async(req, res, next) => {
       res.json(product)
     } catch(err) {
       res.send(err)
+    }
+  } else if (req.query.ids) {
+    try {
+      product = await ProductItems.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      res.status(200).json(product)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
     }
   } else if (req.query.vendor) {
     try {

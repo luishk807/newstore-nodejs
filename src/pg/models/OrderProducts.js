@@ -5,12 +5,18 @@ const sequelize = pgconfig.getSequelize();
 
 const OrderStatus = require('./OrderStatuses');
 
-const Product = require('./Products');
+const ProductItem = require('./ProductItems');
+
+const ProductDiscount = require('./ProductDiscounts');
 
 const OrderProduct = sequelize.define('order_products', {
   product: {
     type: Sequelize.BIGINT,
     field: 'productId'
+  },
+  productItem: {
+    type: Sequelize.BIGINT,
+    field: 'productItemId'
   },
   quantity: {
     type: Sequelize.NUMBER
@@ -41,6 +47,9 @@ const OrderProduct = sequelize.define('order_products', {
   code: {
     type: Sequelize.TEXT,
   },
+  sku: {
+    type: Sequelize.TEXT,
+  },
   category: {
     type: Sequelize.TEXT,
   },
@@ -53,10 +62,16 @@ const OrderProduct = sequelize.define('order_products', {
   size: {
     type: Sequelize.TEXT,
   },
+  productDiscount: {
+    type: Sequelize.BIGINT,
+    field: 'productDiscountId'
+  },
 });
 
 OrderProduct.belongsTo(OrderStatus, { foreignKey: 'orderStatusId', as: "orderStatusProduct"})
 
-OrderProduct.belongsTo(Product, { foreignKey: 'productId', as: 'orderProduct' })
+OrderProduct.belongsTo(ProductDiscount, { foreignKey: 'productDiscountId', as: 'orderProductProductDiscount' } )
+
+OrderProduct.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'orderProductItem' })
 
 module.exports = OrderProduct;

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const ProductSize = require('../../pg/models/ProductSizes');
+const service = require('../../services/productSize.service');
 const Product = require('../../pg/models/Products');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
@@ -58,17 +59,13 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
 });
 
 router.post('/', [verify, parser.none()], (req, res, next) => {
-  let dataEntry = null;
-  const body = req.body;
-
-  dataEntry = {
-    'name': body.name,
-    'productId': body.productId
-  }
-
-  ProductSize.create(dataEntry).then((product) => {
-    res.status(200).json(product);
-  })
+  service.createProductSize(req.body)
+    .then(result => {
+      res.status(200).json(result);
+    })
+    .catch(err => {
+      res.status(500).json({ message: 'Error creating product size', error: err });
+    })
 })
 
 router.get('/product/:product', async(req, res, next) => {

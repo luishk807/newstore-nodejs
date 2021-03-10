@@ -13,6 +13,8 @@ const OrderCancelReason = require('./OrderCancelReasons');
 
 const DeliveryOption = require('./DeliveryOptions');
 
+const OrderActivity = require('./OrderActivities');
+
 const Order = sequelize.define('orders', {
   user: {
     type: Sequelize.BIGINT,
@@ -89,5 +91,7 @@ Order.belongsTo(DeliveryOption, { foreignKey: 'deliveryOptionId', as: "deliveryO
 Order.belongsTo(User, { foreignKey: 'userId', as: 'orderUser' })
 
 Order.hasMany(OrderProduct, { as: 'orderOrderProduct'})
+
+Order.hasMany(OrderActivity, { as: 'orderOrderActivity'})
 
 module.exports = Order;

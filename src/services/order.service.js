@@ -1,28 +1,19 @@
-const Product = require('../pg/models/Products');
-const { saveBrands, getAllBrands } = require('../services/brand.service');
-const { saveCategories, getAllCategories } = require('../services/category.service');
-const { createProductColor } = require('../services/productColor.service');
-const { createProductSize } = require('../services/productSize.service');
-const { createProductItems } = require('../services/productItem.service');
+const Order = require('../pg/models/Orders');
 const config = require('../config');
-const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
-const { safeString, getLowerCaseSafeString } = require('../utils/string.utils');
-const { getDistinctValues } = require('../utils')
+const { safeString } = require('../utils/string.utils');
 const validationField = '__validation__';
 const requiredfields = [
     'name',
     'stock',
     'amount',
-    // 'category', // Commenting out because there are inputs without category
-    // 'brand', // Commenting out because there are inputs without brand
-    'sku',
+    'category',
+    'brand',
+    'model',
     'code',
     'description'
 ];
-const IMPORT = 'IMPORT';
-/** Only these fields will be used to save on the database */
-const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
+const savedFields = requiredfields.concat(['status', 'vendor']);
 
 /** Returns a boolean indicating if all provided fields exists */
 const existFields = (obj, fields) => {
@@ -46,25 +37,12 @@ const createProductObject = (data, vendor) => {
         'amount': +data.amount,
         'category': data.category,
         'brand': data.brand,
-        'sku': data.sku,
+        'model': data.model,
         'code': data.code,
         'description': data.description,
         ...vendor  && { vendor: +vendor.id },
-        ...data['status'] && { statusId: data.status },
-        'source': IMPORT // This is to indicate that the source of input was from an IMPORT
+        ...data['status'] && { statusId: data.status }
     }
-}
-
-// This is because variants have size or color (for now)
-const isVariant = (value) => {
-    return (value) ? value.color || value.size : false
-}
-
-const filterOnlyProductVariants = (data) => {
-    if (Array.isArray(data)) {
-        return data.filter(d => isVariant(d))
-    }
-    return []
 }
 
 /** Returns a new array of newly created product object models */
@@ -124,103 +102,32 @@ const checkValidationsFromData = (data) => {
 }
 
 /** Filter out the datas that does not contain the required fields */
-const filterForRequiredFields = (dataArray, requiredfields) => {
+const filterForRequiredFields = (dataArray) => {
     const retval = [];
     dataArray.forEach(d => {
         if (existFields(d, requiredfields)) {
             retval.push(d);
-        } else {
-            logger.warn('Invalid', d);
         }
     });
     return retval;
 }
 
-/**
- * Gets the missing values for the field for the given dataArray from the searchItems
- * @param {*} dataArray 
- * @param {*} field 
- * @param {*} searchItems 
- */
-const getMissingObjects = (dataArray, field, searchItems) => {
-    if (!!dataArray.length) {
-        // Get the distinct value from the given field for the data array
-        const distinctValues = getDistinctValues(dataArray, field);
-        // Loop through the distinct values to see if it exists on the searchItems array
-        const missingValues = [];
-        distinctValues.forEach(dv => {
-            const item = searchItems.find(si => getLowerCaseSafeString(si.name) === getLowerCaseSafeString(dv));
-            if (!item) {
-                missingValues.push(dv);
-            }
-        })
-        return missingValues;
-    }
-    return []
-}
-
-const createBrands = async (brands) => {
-    try {
-        const result = await saveBrands(brands);
-        return result;
-    } catch (err) {
-        return []
-    }
-}
-
-const createCategories = async (categories) => {
-    try {
-        const result = await saveCategories(categories);
-        return result;
-    } catch (err) {
-        return []
-    }
-}
-
 const importProducts = async (datas, userId) => {
     // Get reference data from database
-    logger.info('Getting brands, categories and vendor information from database...');
-    let [vendor, brands, categories] = await Promise.all([
+    const [vendor, brands, categories] = await Promise.all([
         Vendor.findOne({ where: { userId: userId }}),
-        getAllBrands(),
-        getAllCategories()
+        Brand.findAll({}),
+        Category.findAll({})
     ]);
     
-    const data = filterForRequiredFields(datas, requiredfields);
-    const dataVariants = filterOnlyProductVariants(datas);
-
-    logger.info('Checking for missing brands and categories...');
-    // Should check for non existing brands and create them
-    const missingBrands = getMissingObjects(data, 'brand', brands);
-    // Should check for non existing categories and create them
-    const missingCategories = getMissingObjects(data, 'category', categories);
-    logger.info('Missing brands on system', missingBrands);
-    logger.info('Missing categories on system', missingCategories);
-
-    // Should create the missing brands and categories
-    if (missingBrands.length > 0) {
-        logger.info('Creating missing brands...');
-        await createBrands(missingBrands);
-    }
-    if (missingCategories.length > 0) {
-        logger.info('Creating missing categories...');
-        await createCategories(missingCategories);
-    }
+    const data = filterForRequiredFields(datas);
     
-    // Refresh the data
-    logger.info('Refreshing brands and categories...');
-    [brands, categories] = await Promise.all([
-        getAllBrands(), getAllCategories()
-    ])
-    
-    logger.info('Assigning reference ids to brands and categories...');
     // Get reference ids for brands
     data.forEach(d => assignReferenceId(d, 'brand', brands));
     // Get reference ids for categories
     data.forEach(d => assignReferenceId(d, 'category', categories));
     
     const validatedData = checkValidationsFromData(data);// validatedData.invalid will contain data that did not get the 
-
     // If entire data set is valid
     if (validatedData.invalid.length === 0) {
         // Just gets the valid data
@@ -247,80 +154,13 @@ const importProducts = async (datas, userId) => {
              * So the only way to make it work for tables that have auto generated ids is to restrict the bulkCreate to specific fields.
              */
             const results = await Product.bulkCreate(checkedData, {
-                fields: savedFields, // IMPORTANT
+                fields: savedFields,
                 returning: true
             });
-            // Shall it have the same concept of you have to at least have a single product item even you don't have size/color?
-            const pvResults = await processProductVariants(dataVariants, vendor, results);
-            return { products: results, productItems: pvResults };
-        }
-    }
-    return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData });
-}
-
-const createProductItemObject = (data, vendor) => {
-    return {
-        'productId': null,
-        'productColorId': null,
-        'productSizeId': null,
-        'stock': +data.stock,
-        'model': data.model,
-        'code': data.code,
-        'sku': data.sku,
-        ...vendor  && { vendor: +vendor.id },
-        'unitCost': +data.cost,
-        'unitPrice': +data.amount,
-        'amount6': +data.halfDozen,
-        'amount12': +data.dozen,
-        'retailPrice': +data.amount,
-        'statusId': 1,
-        'source': IMPORT
-    }
-}
-
-/**
- * Processes product variants (product items is how they are stored as)
- * @param {[*]} data Product variants
- * @param {*} vendor 
- * @param {[*]} importedProducts
- */
-const processProductVariants = async (data, vendor, importedProducts) => {
-    if (Array.isArray(data)) {
-        const productItems = [];
-        for (let n=0; n<data.length; ++n) {
-            const d = data[n];
-            // Find base product
-            const baseProduct = searchParentProduct(d, importedProducts);
-            if (baseProduct) {
-                const productItem = createProductItemObject(d, vendor);
-                productItem.productId = +baseProduct.id; // Assign the parent product
-                // Need to create the productSize and productColor :facepalm:
-                // Check the original data for color or size
-                if (d.color) { // Create color
-                    const color = await createProductColor({ productId: +baseProduct.id, name: d.color, color: d.color });
-                    productItem.productColorId = +color.id;
-                }
-                if (d.size) { // Create size
-                    const size = await createProductSize({ productId: +baseProduct.id, name: d.size });
-                    productItem.productSizeId = +size.id;
-                }
-                productItems.push(productItem);
-            }
-        };
-        if (productItems.length > 0) {
-            const results = await createProductItems(productItems);
             return results;
         }
     }
-    return []
-}
-
-const searchParentProduct = (productVariant, products) => {
-    if (productVariant && Array.isArray(products)) {
-        // Will try to match the given matchFields and assume it is the parent
-        return products.find(p => productVariant.name === p.name);
-    }
-    return null;
+    return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData });
 }
 
 const deleteProduct = async (id) => {
