@@ -31,7 +31,7 @@ router.get('/', async(req, res, next) => {
     }
   } else {
     try {
-      sweetbox = await SweetBox.findAll({ where: {statusId: 1}, include: includes});
+      sweetbox = await SweetBox.findAll({ include: includes});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})
