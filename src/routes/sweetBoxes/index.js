@@ -17,21 +17,21 @@ router.get('/', async(req, res, next) => {
   
   if (req.query.id) {
     try {
-      sweetbox = await SweetBox.findOne({ where: {id: req.query.id}, include: includes});
+      sweetbox = await SweetBox.findOne({ where: {id: req.query.id, statusId: 1}, include: includes});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else if (req.query.type) {
     try {
-      sweetbox = await SweetBox.findAll({ where: {sweetBoxTypeId: req.query.type}, include: includes});
+      sweetbox = await SweetBox.findAll({ where: {sweetBoxTypeId: req.query.type, statusId: 1}, include: includes});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})
     }
   } else {
     try {
-      sweetbox = await SweetBox.findAll({include: includes});
+      sweetbox = await SweetBox.findAll({where: { statusId: 1}},{include: includes});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})
