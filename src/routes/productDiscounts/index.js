@@ -6,6 +6,7 @@ const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const parser = require('../../middlewares/multerParser');
 const utils = require('../../controllers/orders');
 const { Op } = require('sequelize');
+const { createProductDiscount } = require('../../services/productDiscount.service');
 
 const includes = ['productDiscountProduct'];
 
@@ -62,15 +63,7 @@ router.put('/:id', [verifyAdmin, parser.none()], (req, res, next) => {
 
 router.post('/', [verifyAdmin, parser.none()], (req, res, next) => {
   const body = req.body;
-  ProductDiscount.create({
-    'productId': body.productId,
-    'price': body.price,
-    'name': body.name,
-    'startDate': body.startDate,
-    'endDate': body.endDate,
-    'minQuantity': body.minQuantity,
-    'percentage': body.percentage,
-  }).then((data) => {
+  createProductDiscount(body).then((data) => {
     res.status(200).json({status: true, data: data});
   }).catch((err) => {
     res.status(500).json({status: false, message: err})
@@ -97,7 +90,7 @@ router.get('/', [verifyAdmin, parser.none()], async(req, res, next) => {
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
-  }  else if (req.query.ids) {
+  } else if (req.query.ids) {
     try {
       discount = await ProductDiscount.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
       res.status(200).json(discount)

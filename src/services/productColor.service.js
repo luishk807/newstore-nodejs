@@ -15,14 +15,22 @@ const createProductColor = async (value) => {
     return null;
 }
 
-const getProductColorById = (id) => {
+const getProductColorById = async (id) => {
     if (id) {
         return ProductColor.findOne({ where: { id: id }, include: includes});
     }
     return null;
 }
 
+const getProductColorByProductId = async (id) => {
+    if (id) {
+        return ProductColor.findAll({ where: { productId: +id } });
+    }
+    return null;
+}
+
 module.exports = {
     createProductColor,
-    getProductColorById
+    getProductColorById,
+    getProductColorByProductId
 }

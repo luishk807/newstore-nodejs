@@ -6,12 +6,19 @@ const createProductSize = (value) => {
             'name': value.name,
             'productId': value.productId
         }
-    
         return ProductSize.create(dataEntry);
     }
     return null;
 }
 
+const getProductSizeByProductId = async (id) => {
+    if (id) {
+        return ProductSize.findAll({ where: { productId: +id } });
+    }
+    return null;
+}
+
 module.exports = {
-    createProductSize
+    createProductSize,
+    getProductSizeByProductId
 }

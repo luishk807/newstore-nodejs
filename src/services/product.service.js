@@ -1,21 +1,21 @@
 const Product = require('../pg/models/Products');
 const { saveBrands, getAllBrands } = require('../services/brand.service');
 const { saveCategories, getAllCategories } = require('../services/category.service');
-const { createProductColor } = require('../services/productColor.service');
-const { createProductSize } = require('../services/productSize.service');
+const { createProductColor, getProductColorByProductId } = require('../services/productColor.service');
+const { createProductSize, getProductSizeByProductId } = require('../services/productSize.service');
 const { createProductItems } = require('../services/productItem.service');
 const config = require('../config');
 const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
 const { safeString, getLowerCaseSafeString } = require('../utils/string.utils');
-const { getDistinctValues } = require('../utils')
+const { getDistinctValues, getUniqueValuesByField, existFields } = require('../utils')
 const validationField = '__validation__';
 const requiredfields = [
     'name',
     'stock',
     'amount',
-    // 'category', // Commenting out because there are inputs without category
-    // 'brand', // Commenting out because there are inputs without brand
+    'category',
+    'brand',
     'sku',
     'code',
     'description'
@@ -24,28 +24,14 @@ const IMPORT = 'IMPORT';
 /** Only these fields will be used to save on the database */
 const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
 
-/** Returns a boolean indicating if all provided fields exists */
-const existFields = (obj, fields) => {
-    if (obj) {
-        for (let n = 0; n < fields.length; ++n) {
-            if (!obj[fields[n]]) {
-                return false;
-            }
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
-
 /** Creates a new product object with the given data */
 const createProductObject = (data, vendor) => {
     return {
         'name': data.name,
         'stock': +data.stock,
         'amount': +data.amount,
-        'category': data.category,
-        'brand': data.brand,
+        'category': (data.category) ? data.category : null,
+        'brand': (data.brand) ? data.brand : null,
         'sku': data.sku,
         'code': data.code,
         'description': data.description,
@@ -188,6 +174,10 @@ const importProducts = async (datas, userId) => {
     
     const data = filterForRequiredFields(datas, requiredfields);
     const dataVariants = filterOnlyProductVariants(datas);
+    const uniqueProducts = getUniqueValuesByField(datas, 'name');
+    logger.info('Unique products', uniqueProducts.length);
+    logger.info('Product variants', dataVariants.length);
+
 
     logger.info('Checking for missing brands and categories...');
     // Should check for non existing brands and create them
@@ -219,40 +209,25 @@ const importProducts = async (datas, userId) => {
     // Get reference ids for categories
     data.forEach(d => assignReferenceId(d, 'category', categories));
     
-    const validatedData = checkValidationsFromData(data);// validatedData.invalid will contain data that did not get the 
+    const validatedData = checkValidationsFromData(uniqueProducts); // checkValidationsFromData(data);// validatedData.invalid will contain data that did not get the 
 
     // If entire data set is valid
     if (validatedData.invalid.length === 0) {
         // Just gets the valid data
         const checkedData = verifyImportDataFormat(validatedData.valid, vendor);
         if (checkedData !== null) {
-            /**
-             * For Sequelize#bulkCreate to work on PostgreSQL we need to specifiy the fields option, so we restrict the fields to the one's we want without having id field in it.
-             * So basically, the query that it generates when using bulkCreate will generate an error because the id is being set to auto generated.
-             * For example the query below, if ran directly on PostgreSQL, it fails asking you to use OVERRIDING SYSTEM VALUE, but there is no way for you to put it.
-             * INSERT INTO "products" ("id","name","amount","categoryId","brandId","stock","description","model","code","createdAt","updatedAt") 
-             * VALUES 
-             * (DEFAULT,'pp laptop',100,1,16,1,'Laptop from great PP brand','pp0001','12345678','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00'),
-             * (DEFAULT,'Apple',0.5,1,16,3,'2 apple from the mountains where bigfoot lives','cfa001','12345677','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00')
-             * RETURNING "id","name","amount","categoryId","brandId","vendorId","statusId","image","stock","description","model","code","createdAt","updatedAt";
-             * 
-             * If you change the above query to the one below, by adding OVERRIDING SYSTEM VALUE before VALUES, then it works, but there is no way to do it in Sequelize.
-             * INSERT INTO "products" ("id","name","amount","categoryId","brandId","stock","description","model","code","createdAt","updatedAt") 
-             * OVERRIDING SYSTEM VALUE
-             * VALUES 
-             * (DEFAULT,'pp laptop',100,1,16,1,'Laptop from great PP brand','pp0001','12345678','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00'),
-             * (DEFAULT,'Apple',0.5,1,16,3,'2 apple from the mountains where bigfoot lives','cfa001','12345677','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00')
-             * RETURNING "id","name","amount","categoryId","brandId","vendorId","statusId","image","stock","description","model","code","createdAt","updatedAt";
-             * 
-             * So the only way to make it work for tables that have auto generated ids is to restrict the bulkCreate to specific fields.
-             */
-            const results = await Product.bulkCreate(checkedData, {
-                fields: savedFields, // IMPORTANT
-                returning: true
-            });
-            // Shall it have the same concept of you have to at least have a single product item even you don't have size/color?
-            const pvResults = await processProductVariants(dataVariants, vendor, results);
-            return { products: results, productItems: pvResults };
+            try {
+                const results = await Product.bulkCreate(checkedData, {
+                    fields: savedFields, // IMPORTANT
+                    returning: true
+                });
+                const pvResults = await processProductVariants(dataVariants, vendor, results);
+                const productDiscounts = await processProductDiscounts(products, productItems);
+                return { products: results, productItems: pvResults, productDiscounts };
+            } catch (err) {
+                logger.error(err);
+                return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData, err: err });
+            }
         }
     }
     return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData });
@@ -264,7 +239,7 @@ const createProductItemObject = (data, vendor) => {
         'productColorId': null,
         'productSizeId': null,
         'stock': +data.stock,
-        'model': data.model,
+        'model': data.code,
         'code': data.code,
         'sku': data.sku,
         ...vendor  && { vendor: +vendor.id },
@@ -282,11 +257,12 @@ const createProductItemObject = (data, vendor) => {
  * Processes product variants (product items is how they are stored as)
  * @param {[*]} data Product variants
  * @param {*} vendor 
- * @param {[*]} importedProducts
+ * @param {[*]} importedProducts already saved products
  */
 const processProductVariants = async (data, vendor, importedProducts) => {
     if (Array.isArray(data)) {
         const productItems = [];
+        // For each of the product variants (product items) in data
         for (let n=0; n<data.length; ++n) {
             const d = data[n];
             // Find base product
@@ -296,12 +272,31 @@ const processProductVariants = async (data, vendor, importedProducts) => {
                 productItem.productId = +baseProduct.id; // Assign the parent product
                 // Need to create the productSize and productColor :facepalm:
                 // Check the original data for color or size
-                if (d.color) { // Create color
-                    const color = await createProductColor({ productId: +baseProduct.id, name: d.color, color: d.color });
+                if (d.color) { // Create color if it does not exist
+                    // Search if the color exists for the base color
+                    const baseProductColors = await getProductColorByProductId(+baseProduct.id);
+                    let color = null;
+                    if (!!baseProductColors.length) {
+                        color = baseProductColors.find(c => c.name === d.color); // If it already exists
+                        if (!color) { // If not, then create
+                            color = await createProductColor({ productId: +baseProduct.id, name: d.color, color: d.color });
+                        }
+                    } else {
+                        color = await createProductColor({ productId: +baseProduct.id, name: d.color, color: d.color });
+                    }
                     productItem.productColorId = +color.id;
                 }
-                if (d.size) { // Create size
-                    const size = await createProductSize({ productId: +baseProduct.id, name: d.size });
+                if (d.size) { // Create size if it does not exist
+                    const baseProductSizes = await getProductSizeByProductId(+baseProduct.id);
+                    let size = null;
+                    if (!!baseProductSizes.length) {
+                        size = baseProductSizes.find(s => s.name === d.size);
+                        if (!size) {
+                            size = await createProductSize({ productId: +baseProduct.id, name: d.size });
+                        }
+                    } else {
+                        size = await createProductSize({ productId: +baseProduct.id, name: d.size });
+                    }
                     productItem.productSizeId = +size.id;
                 }
                 productItems.push(productItem);
@@ -321,6 +316,10 @@ const searchParentProduct = (productVariant, products) => {
         return products.find(p => productVariant.name === p.name);
     }
     return null;
+}
+
+const processProductDiscounts = async (products, productItems) => {
+    
 }
 
 const deleteProduct = async (id) => {
