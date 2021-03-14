@@ -2,6 +2,7 @@ const Product = require('../pg/models/Products');
 const { saveBrands, getAllBrands } = require('../services/brand.service');
 const { saveCategories, getAllCategories } = require('../services/category.service');
 const { createProductColor, getProductColorByProductId } = require('../services/productColor.service');
+const { createColor } = require('../services/color.service');
 const { createProductSize, getProductSizeByProductId } = require('../services/productSize.service');
 const { createProductItems } = require('../services/productItem.service');
 const { createProductDiscount } = require('../services/productDiscount.service');
@@ -227,7 +228,7 @@ const importProducts = async (datas, userId) => {
                     returning: true
                 });
                 const pvResults = await processProductVariants(dataVariants, vendor, results);
-                await processProductDiscounts(results, checkedData);
+                const productDiscounts = await processProductDiscounts(results, checkedData);
                 return { products: results, productItems: pvResults, productDiscounts };
             } catch (err) {
                 logger.error(err);
@@ -283,10 +284,9 @@ const processProductVariants = async (data, vendor, importedProducts) => {
                     let color = null;
                     if (!!baseProductColors.length) {
                         color = baseProductColors.find(c => c.name === d.color); // If it already exists
-                        if (!color) { // If not, then create
-                            color = await createProductColor({ productId: +baseProduct.id, name: d.color, color: d.color });
-                        }
-                    } else {
+                    }
+                    if (!color) {
+                        await createColor({ name: d.color, color: d.color });
                         color = await createProductColor({ productId: +baseProduct.id, name: d.color, color: d.color });
                     }
                     productItem.productColorId = +color.id;
@@ -325,7 +325,7 @@ const searchParentProduct = (productVariant, products) => {
 
 const createProductDiscountName = (percentage, minQty) => {
     if (percentage && minQty) {
-        return `Buy ${minQty} or more for ${percentage*100.0}% discount`;
+        return `Compra ${minQty} unidades y recibe ${percentage*100.0}% descuento`;
     }
     return '';
 }
