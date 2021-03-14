@@ -328,19 +328,24 @@ const deleteProduct = async (id) => {
         include: ['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']
     });
     if (product) {
-        const mapFiles = product.productImages.map(data => data.img_url);
-        try {
-            mapFiles.forEach(data => {
-                s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
-                    if (err) {
-                        // res.status(500).send({status: false, message: err})
-                    }
+        if (product.productImages && product.productImages.length) {
+            const mapFiles = product.productImages.map(data => data.img_url);
+            try {
+                mapFiles.forEach(data => {
+                    s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
+                        if (err) {
+                            // res.status(500).send({status: false, message: err})
+                        }
+                    })
                 })
-            })
+                await Product.destroy({ where: { id: product.id } });
+                return { status: true, message: "Product successfully deleted" };
+            } catch (e) {
+                return { status: false, message: "Product delete, but error on deleting image!", error: e.toString() };
+            }
+        } else {
             await Product.destroy({ where: { id: product.id } });
             return { status: true, message: "Product successfully deleted" };
-        } catch (e) {
-            return { status: false, message: "Product delete, but error on deleting image!", error: e.toString() };
         }
     }
     return { status: false, message: 'Product not found for deletion', notFound: true };
