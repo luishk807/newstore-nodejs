@@ -4,6 +4,7 @@ const { saveCategories, getAllCategories } = require('../services/category.servi
 const { createProductColor, getProductColorByProductId } = require('../services/productColor.service');
 const { createProductSize, getProductSizeByProductId } = require('../services/productSize.service');
 const { createProductItems } = require('../services/productItem.service');
+const { createProductDiscount } = require('../services/productDiscount.service');
 const config = require('../config');
 const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
@@ -37,6 +38,10 @@ const createProductObject = (data, vendor) => {
         'description': data.description,
         ...vendor  && { vendor: +vendor.id },
         ...data['status'] && { statusId: data.status },
+        'discount1': +data.discount1,
+        'discount1MinQty': +data.discount1MinQty,
+        'discount2': +data.discount2,
+        'discount2MinQty': +data.discount2MinQty,
         'source': IMPORT // This is to indicate that the source of input was from an IMPORT
     }
 }
@@ -222,7 +227,7 @@ const importProducts = async (datas, userId) => {
                     returning: true
                 });
                 const pvResults = await processProductVariants(dataVariants, vendor, results);
-                const productDiscounts = await processProductDiscounts(products, productItems);
+                await processProductDiscounts(results, checkedData);
                 return { products: results, productItems: pvResults, productDiscounts };
             } catch (err) {
                 logger.error(err);
@@ -318,8 +323,53 @@ const searchParentProduct = (productVariant, products) => {
     return null;
 }
 
-const processProductDiscounts = async (products, productItems) => {
-    
+const createProductDiscountName = (percentage, minQty) => {
+    if (percentage && minQty) {
+        return `Buy ${minQty} or more for ${percentage*100.0}% discount`;
+    }
+    return '';
+}
+
+const createProductDiscount1Object = (data, productId) => {
+    return {
+        'productId': +productId,
+        'price': (data.price) ? +data.price : null,
+        'name': createProductDiscountName(data.discount1, data.discount1MinQty),
+        'startDate': (data.startDate) ? data.startDate : null,
+        'endDate': (data.endDate) ? (data.endDate) : new Date(9999, 11, 31),
+        'minQuantity': +data.discount1MinQty,
+        'percentage': +data.discount1,
+    }
+}
+
+const createProductDiscount2Object = (data, productId) => {
+    return {
+        'productId': +productId,
+        'price': (data.price) ? +data.price : null,
+        'name': createProductDiscountName(data.discount2, data.discount2MinQty),
+        'startDate': (data.startDate) ? data.startDate : null,
+        'endDate': (data.endDate) ? (data.endDate) : new Date(9999, 11, 31),
+        'minQuantity': +data.discount2MinQty,
+        'percentage': +data.discount2,
+    }
+}
+
+const processProductDiscounts = async (products, importData) => {
+    for (let n=0; n<importData.length; ++n) {
+        try {
+            const foundProduct = searchParentProduct(importData[n], products);
+            if (importData[n].discount1) {
+                const discount1 = createProductDiscount1Object(importData[n], foundProduct.id);
+                const result = await createProductDiscount(discount1);
+            }
+            if (importData[n].discount2) {
+                const discount2 = createProductDiscount2Object(importData[n], foundProduct.id);
+                const result = await createProductDiscount(discount2);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
 }
 
 const deleteProduct = async (id) => {
