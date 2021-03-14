@@ -155,7 +155,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
           product: carts[cart].product,
           size: carts[cart].productItemSize.name,
           code: carts[cart].sku,
-          productDiscountId: carts[cart].discount ? carts[cart].discount.id : null,
+          productDiscount: carts[cart].discount ? carts[cart].discount.name : null,
           category: carts[cart].productItemProduct.category,
           quantity: carts[cart].quantity,
           total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),

@@ -6,7 +6,7 @@ const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const parser = require('../../middlewares/multerParser');
 const utils = require('../../controllers/orders');
 const { Op } = require('sequelize');
-const { createProductDiscount } = require('../../services/productDiscount.service');
+const { createProductDiscount, updateProductDiscount } = require('../../services/productDiscount.service');
 
 const includes = ['productDiscountProduct'];
 
@@ -33,27 +33,10 @@ router.delete('/:id', verifyAdmin, (req, res, next) => {
 });
 
 router.put('/:id', [verifyAdmin, parser.none()], (req, res, next) => {
-  const body = req.body;
-  const id = req.params.id;
-  ProductDiscount.update(
-    {
-      'productId': body.productId,
-      'price': body.price,
-      'name': body.name,
-      'startDate': body.startDate,
-      'endDate': body.endDate,
-      'minQuantity': body.minQuantity,
-      'percentage': body.percentage,
-    },
-    {
-      where: {
-        id: id
-      }
-    }
-  ).then((updated) => {
+  updateProductDiscount(req).then((data) => {
     res.status(200).json({
       status: true,
-      data: updated,
+      data: data,
       message: "Discount Updated"
     });
   }).catch((err) => {

@@ -47,7 +47,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
       'brand': body.brand,
       'color': body.color,
       'size': body.size,
-      'productDiscountId': body.productDiscount
+      'productDiscount': body.productDiscount
     },
     {
       where: {
@@ -81,7 +81,7 @@ router.post('/', [verify, parser.none()], async(req, res, next) => {
     'brand': body.brand,
     'color': body.color,
     'size': body.size,
-    'productDiscountId': body.productDiscount
+    'productDiscount': body.productDiscount
   }
   OrderProduct.create(entry).then(async(order) => {
     res.status(200).json({
