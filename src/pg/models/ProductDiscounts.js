@@ -24,6 +24,9 @@ const ProductDiscount = sequelize.define('product_discounts', {
   },
   percentage: {
     type: Sequelize.FLOAT
+  },
+  useDate: {
+    type: Sequelize.BOOLEAN
   }
 });
 
