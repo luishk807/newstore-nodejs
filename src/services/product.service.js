@@ -325,7 +325,7 @@ const searchParentProduct = (productVariant, products) => {
 
 const createProductDiscountName = (percentage, minQty) => {
     if (percentage && minQty) {
-        return `Compra ${minQty} unidades y recibe ${percentage*100.0}% descuento`;
+        return `Compra ${minQty} unidades o más y recibe ${(percentage*100.0).toFixed(2)}% descuento`;
     }
     return '';
 }
