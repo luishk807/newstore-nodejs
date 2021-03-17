@@ -1,5 +1,7 @@
 const ProductColor = require('../pg/models/ProductColors');
 const includes = ['colorStatus'];
+const { paginate } = require('../utils');
+const { Op } = require('sequelize');
 
 const createProductColor = async (value) => {
     if (value) {
@@ -17,20 +19,74 @@ const createProductColor = async (value) => {
 
 const getProductColorById = async (id) => {
     if (id) {
-        return ProductColor.findOne({ where: { id: id }, include: includes});
+        const colors = await ProductColor.findOne({ where: { id: id }, include: includes});
+        return colors;
     }
     return null;
 }
 
 const getProductColorByProductId = async (id) => {
     if (id) {
-        return ProductColor.findAll({ where: { productId: +id } });
+        const colors = await ProductColor.findAll({ where: { productId: +id }, include: includes });
+        return colors;
     }
     return null;
+}
+
+const getProductColorByIds = async (ids, page = null) => {
+    const where = {
+        id: {
+            [Op.in]: ids
+        }
+    }
+
+    if (page) {
+        const offset = paginate(page);
+
+        const countResult = await ProductColor.findAndCountAll({ where });
+
+        const result = await ProductColor.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        });
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+        return results;
+    } else {
+        const product = await ProductColor.findAll({ where, include: includes});
+        return product;
+    }
+}
+
+const getProductColors = async (page = null) => {
+    let query = {
+        include: includes
+    }
+    
+    if (page) {
+        query = {
+            ...query,
+            limit: LIMIT,
+            distinct: true,
+            offset: paginate(page),
+        }
+    }
+
+    const product = await ProductColor.findAndCountAll(query);
+    return product;
 }
 
 module.exports = {
     createProductColor,
     getProductColorById,
-    getProductColorByProductId
+    getProductColorByProductId,
+    getProductColorByIds,
+    getProductColors
 }

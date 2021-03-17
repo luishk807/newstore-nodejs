@@ -211,13 +211,23 @@ router.post('/import', [verify], (req, res, next) => {
 });
 
 router.get('/:id', async(req, res, next) => {
-    let product = await ProductItems.findOne({ where: {id: req.params.id}, include: includes });
+    let product = await controller.getProductItemById(req.params.id);
     res.json(product)
 });
 
 router.get('/product/:id', async(req, res, next) => {
-  let product = await ProductItems.findAll({ where: {productId: req.params.id}, include: includes});
+  let product = await controller.getProductItemByProductId(req.params.id);
   res.json(product)
+});
+
+router.get('/filters/bulk', async(req, res, next) => {
+  // get colors
+  try {
+    const products = await controller.getProductItemByIds(req.query.ids);
+    res.status(200).json(products)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
 });
 
 router.get('/', async(req, res, next) => {
@@ -226,15 +236,14 @@ router.get('/', async(req, res, next) => {
   let product = null;
   if (req.query.id) {
     try {
-      product = await ProductItems.findOne({ where: {id: req.query.id}, include: includes});
-
+      product = await controller.getProductItemById(req.query.id);
       res.json(product)
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.ids) {
     try {
-      product = await ProductItems.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      product = await controller.getProductItemByIds(req.query.ids);
       res.status(200).json(product)
     } catch(err) {
       res.status(500).json({status: false, message: err})

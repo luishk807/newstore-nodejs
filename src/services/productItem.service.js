@@ -1,6 +1,9 @@
 const ProductItem = require('../pg/models/ProductItems');
 const s3 = require('./storage.service');
 const config = require('../config');
+const { paginate } = require('../utils');
+const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
+const { Op } = require('sequelize');
 
 const createProductItems = async (items) => {
     const savedFields = [
@@ -53,7 +56,80 @@ const deleteProductItem = async (id) => {
     return { status: false, message: 'Product Item not found for deletion', notFound: true };
 }
 
+const getProductItemByProductId = async (id) => {
+    if (id) {
+        const items = ProductItem.findAll({ where: { productId: +id }, include: includes });
+        return items;
+    }
+    return null;
+}
+
+
+const getProductItemById = async (id) => {
+    if (id) {
+        const items = await ProductItem.findOne({ where: { id: id }, include: includes});
+        return items;
+    }
+    return null;
+}
+
+
+const getProductItemByIds = async (ids, page = null) => {
+    const where = {
+        id: {
+            [Op.in]: ids
+        }
+    }
+
+    if (page) {
+        const offset = paginate(page);
+
+        const countResult = await ProductItem.findAndCountAll({ where });
+
+        const result = await ProductItem.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        });
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+        return results;
+    } else {
+        const product = await ProductItem.findAll({ where, include: includes});
+        return product;
+    }
+}
+
+const getProductItems = async (page = null) => {
+    let query = {
+        include: includes
+    }
+    
+    if (page) {
+        query = {
+            ...query,
+            limit: LIMIT,
+            distinct: true,
+            offset: paginate(page),
+        }
+    }
+
+    const product = await ProductItem.findAndCountAll(query);
+    return product;
+}
+
+
 module.exports = {
     createProductItems,
-    deleteProductItem
+    deleteProductItem,
+    getProductItemByProductId,
+    getProductItemById,
+    getProductItemByIds,
+    getProductItems
 }

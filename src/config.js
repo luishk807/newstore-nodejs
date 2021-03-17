@@ -27,7 +27,8 @@ const config = {
     contact: 'info@avenidaz.com',
     sales: 'ventas@avenidaz.com',
     noReply: 'no-reply@avenidaz.com',
-  }
+  },
+  defaultLimit: 30
 };
 
 module.exports = config;

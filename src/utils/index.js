@@ -1,3 +1,7 @@
+const config = require('../config');
+
+const limit = config.defaultLimit;
+
 const cleanData = (data) => {
   if (data) {
     return data.toLowerCase().replace(/\s/g, "")
@@ -56,9 +60,15 @@ const existFields = (obj, fields) => {
   }
 }
 
+const paginate = (pag) => {
+  const page = pag > 0 ? pag - 1 : 0;
+  return offset = page ? page * limit : 0;
+};
+
 module.exports = {
   cleanData,
   getDistinctValues,
   getUniqueValuesByField,
-  existFields
+  existFields,
+  paginate
 }

@@ -83,6 +83,16 @@ router.get('/:id', async(req, res, next) => {
     })
 });
 
+router.get('/filters/bulk', async(req, res, next) => {
+  // get colors
+  try {
+    const color = await Color.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+    res.status(200).json(color)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
 router.get('/', async(req, res, next) => {
   // get colors
   let color = null;

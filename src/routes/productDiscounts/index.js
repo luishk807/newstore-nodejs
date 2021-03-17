@@ -3,6 +3,7 @@ const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const ProductDiscount = require('../../pg/models/ProductDiscounts');
+const controller = require('../../controllers/productDiscounts');
 const parser = require('../../middlewares/multerParser');
 const utils = require('../../controllers/orders');
 const { Op } = require('sequelize');
@@ -54,35 +55,44 @@ router.post('/', [verifyAdmin, parser.none()], (req, res, next) => {
 });
 
 router.get('/:id', [verifyAdmin, parser.none()], async(req, res, next) => {
-  const product = await ProductDiscount.findOne({ where: {id: req.params.id}, include: includes });
+  const product = await controller.getProductDiscountById(req.params.id);
   res.json(product)
 });
 
 router.get('/product/:id', [verifyAdmin, parser.none()], async(req, res, next) => {
-  const product = await ProductDiscount.findAll({ where: {productId: req.params.id}, include: includes });
+  const product = await controller.getProductDiscountByProductId(req.params.id);
   res.json(product)
 });
 
+router.get('/filters/bulk', async(req, res, next) => {
+  // get discounts
+  try {
+    const discount = await controller.getProductDiscountByIds(req.query.ids);
+    res.status(200).json(discount)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
 
 router.get('/', [verifyAdmin, parser.none()], async(req, res, next) => {
   let discount = null;
   if (req.query.id) {
     try {
-      discount = await ProductDiscount.findOne({ where: {id: req.query.id}, include: includes});
+      discount = await controller.getProductDiscountById(req.query.id);
       res.status(200).json(discount)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else if (req.query.ids) {
     try {
-      discount = await ProductDiscount.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      discount = await controller.getProductDiscountByIds(req.query.ids);
       res.status(200).json(discount)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      discount = await ProductDiscount.findAll({include: includes});
+      discount = await controller.getProductDiscounts();
       res.status(200).json(discount)
     } catch(err) {
       res.status(500).json({status: false, message: err})
