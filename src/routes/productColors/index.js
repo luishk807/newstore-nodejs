@@ -3,7 +3,7 @@ const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const ProductColor = require('../../pg/models/ProductColors');
 const parser = require('../../middlewares/multerParser');
-const service = require('../../services/productColor.service');
+const controller = require('../../controllers/productColors');
 const uuid = require('uuid');
 const config = require('../../config');
 const includes = ['colorStatus'];
@@ -59,7 +59,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
 });
 
 router.post('/', [verify, parser.none()], (req, res, next) => {
-  service.createProductColor(req.body)
+  controller.createProductColor(req.body)
     .then(result => {
       res.status(200).json(result);
     })
@@ -69,37 +69,36 @@ router.post('/', [verify, parser.none()], (req, res, next) => {
 })
 
 router.get('/product/:product', async(req, res, next) => {
-  const color = await ProductColor.findAll({ where: {productId: req.params.product}, include: includes});
+  const color = await controller.getProductColorByProductId(req.params.product);
   res.json(color)
 });
 
 router.get('/:id', async(req, res, next) => {
-  service.getProductColorById(req.params.id)
-    .then(color => {
-      res.status(200).json(color);
-    })
-    .catch(err => {
-      res.status(500).json({ message: 'Error getting product color', error: err })
-    })
+  try {
+    const color = await controller.getProductColorById(req.params.id);
+    res.status(200).json(color)
+  } catch(err) {
+    res.status(500).json({ message: 'Error getting product color', error: err })
+  }
+});
+
+router.get('/filters/bulk', async(req, res, next) => {
+  // get colors
+  try {
+    const color = await controller.getProductColorByIds(req.query.ids);
+    res.status(200).json(color)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
 });
 
 router.get('/', async(req, res, next) => {
   // get colors
-  let color = null;
-  if (req.query.id) { // Do we need this (/?id=1) also?  We already have the top one /:id. This is duplicated functionality
-    try {
-      color = await ProductColor.findOne({ where: {id: req.query.id}, include: includes});
-      res.status(200).json(color)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
-  } else {
-    try {
-      color = await ProductColor.findAll({include: includes});
-      res.status(200).json(color)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
+  try {
+    const color = await controller.getProductColors();
+    res.status(200).json(color)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
   }
 });
 

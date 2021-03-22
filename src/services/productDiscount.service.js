@@ -1,4 +1,7 @@
 const ProductDiscount = require('../pg/models/ProductDiscounts');
+const { Op } = require('sequelize');
+const { paginate } = require('../utils');
+const includes = ['productDiscountProduct'];
 
 const createProductDiscount = async (value) => {
     let startDate = null;
@@ -52,7 +55,77 @@ const updateProductDiscount = async (value) => {
     });
 }
 
+const getProductDiscountById = async (id) => {
+    if (id) {
+        const colors = await ProductDiscount.findOne({ where: { id: id }, include: includes});
+        return colors;
+    }
+    return null;
+}
+
+const getProductDiscountByProductId = async (id) => {
+    if (id) {
+        const colors = await ProductDiscount.findAll({ where: { productId: +id }, include: includes });
+        return colors;
+    }
+    return null;
+}
+
+const getProductDiscountByIds = async (ids, page = null) => {
+    const where = {
+        id: {
+            [Op.in]: ids
+        }
+    }
+
+    if (page) {
+        const offset = paginate(page);
+
+        const countResult = await ProductDiscount.findAndCountAll({ where });
+
+        const result = await ProductDiscount.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        });
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+        return results;
+    } else {
+        const product = await ProductDiscount.findAll({ where, include: includes});
+        return product;
+    }
+}
+
+const getProductDiscounts = async (page = null) => {
+    let query = {
+        include: includes
+    }
+    
+    if (page) {
+        query = {
+            ...query,
+            limit: LIMIT,
+            distinct: true,
+            offset: paginate(page),
+        }
+    }
+
+    const product = await ProductDiscount.findAndCountAll(query);
+    return product;
+}
+
 module.exports = {
     createProductDiscount,
-    updateProductDiscount
+    updateProductDiscount,
+    getProductDiscountById,
+    getProductDiscountByProductId,
+    getProductDiscountByIds,
+    getProductDiscounts
 }

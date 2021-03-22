@@ -1,15 +1,20 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
+// const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const Product = require('../../pg/models/Products');
 const ProductImages = require('../../pg/models/ProductImages');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
+const { paginate } = require('../../utils');
 const config = require('../../config');
 const controller = require('../../controllers/products');
 const s3 = require('../../services/storage.service');
 const { Op } = require('sequelize');
+
 const includes = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems', 'categories', 'subCategoryProduct'];
+
+const limit = config.defaultLimit;
 
 router.all('*', cors());
 
@@ -200,166 +205,81 @@ router.post('/import', [verify], (req, res, next) => {
   });
 });
 
-router.get('/:id', async(req, res, next) => {
-    let product = await Product.findAll({ where: {id: req.params.id}});
-    res.json(product)
-});
-
-router.get('/admin/home', async(req, res, next) => {
-  try {
-    let query = {
-      include:['productProductDiscount','productBrand','categories','productStatus', 'productSizes', 'productColors', 'productProductItems', 'subCategoryProduct']
-    }
-    if (req.query.page) {
-      const page = req.query.page > 0 ? req.query.page - 1 : 0;
-      query = {
-        ...query,
-        limit: limit,
-        offset: page ? page * limit : 0,
-      }
-    }
-    product = await Product.findAll(query);
-    res.json(product)
-  } catch(err) {
-    res.send(err)
-  }
-});
-
-const paginate = ({ page, pageSize }) => {
-  const offset = page * pageSize;
-  const limit = pageSize;
-
-  return {
-    offset,
-    limit,
-  };
-};
-
-router.get('/', async(req, res, next) => {
-  // get products
-  const limit = 10;
-  let product = null;
-  if (req.query.id) {
+router.get('/search', async(req, res, next) => {
+  if (req.query.vendor) {
     try {
-      product = await Product.findOne({ where: {id: req.query.id}, include: includes});
-
-      res.json(product)
-    } catch(err) {
-      res.send(err)
-    }
-  } else if (req.query.vendor) {
-    try {
-      product = await Product.findAll({ where: {vendorId: req.query.vendor}, include: includes});
-
-      res.json(product)
+      const product = await controller.searchProductByType('vendorId', req.query.vendor, req.query.page);
+      res.json(product);
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.ids) {
     try {
-      product = await Product.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
+      const product = await controller.searchProductByIds(req.query.ids, req.query.page);
       res.status(200).json(product)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else if (req.query.search) {
     try {
-      if (req.query.page) {
-        const page = req.query.page > 0 ? req.query.page - 1 : 0;
-        const offset = page ? page * limit : 0;
-        Product.findAndCountAll({ 
-          where: {
-            name: {
-              [Op.iLike]: `%${req.query.search}%`
-            }
-          }
-        }).then((countResult) => {
-          Product.findAll({
-            where: {
-              name: {
-                [Op.iLike]: `%${req.query.search}%`
-              }
-            },
-            include: includes,
-            offset: offset,
-            limit: limit
-          }).then((result) => {
-            const pages = Math.ceil(countResult.count / limit)
-            const results = {
-              count: countResult.count,
-              items: result,
-              pages: pages
-            }
-            res.json(results);
-          }).catch((err) => {
-            res.send(err)
-          })
-        }).catch((err) => {
-          res.send(err)
-        })
-      } else {
-        product = await Product.findAll({ where: {
-          name: {
-            [Op.iLike]: `%${req.query.search}%`
-          }
-        }, include: includes});
-        res.json(product);
-      }
+      const product = await controller.searchProductByName(req.query.search, req.query.page);
+      res.json(product);
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.category) {
     try {
-      if (req.query.page) {
-        const page = req.query.page > 0 ? req.query.page - 1 : 0;
-        const offset = page ? page * limit : 0;
-        Product.findAndCountAll({ 
-          where: {categoryId: req.query.category}
-        }).then(countResult => {
-          Product.findAll({ 
-            where: {categoryId: req.query.category}, 
-            include: includes,
-            limit: limit,
-            offset: offset,
-          }).then(result => {
-            const pages = Math.ceil(countResult.count / limit)
-            const results = {
-              count: countResult.count,
-              items: result,
-              pages: pages
-            }
-            res.json(results);
-          }).catch((err) => {
-            res.send(err)
-          });
-        }).catch((err) => {
-          res.send(err)
-        })
-      } else {
-        product = await Product.findAll({ where: {categoryId: req.query.category}, include: includes});
-        res.json(product)
-      }
+      const product = await controller.searchProductByType('categoryId', req.query.category, req.query.page);
+      res.status(200).json(product);
     } catch(err) {
       res.send(err)
     }
-  } else {
+  }
+});
+
+router.get('/vendor/:id', async(req, res, next) => {
+  try {
+    const product = await controller.searchProductByType('vendorId', req.params.id, req.query.page);
+    res.json(product);
+  } catch(err) {
+    res.send(err)
+  }
+});
+
+router.get('/bulk', async(req, res, next) => {
+  try {
+    const product = await controller.searchProductByIds(req.query.ids, req.query.page);
+    res.status(200).json(product)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
+router.get('/cat/:id', async(req, res, next) => {
+  try {
+    const product = await controller.searchProductByType('categoryId', req.params.id, req.query.page);
+    res.json(product);
+  } catch(err) {
+    res.send(err)
+  }
+});
+
+router.get('/:id', async(req, res, next) => {
     try {
-      let query = {
-        include:['productProductDiscount','productImages','productVendor', 'productBrand','categories','productStatus', 'rates', 'productSizes', 'productColors', 'subCategoryProduct']
-      }
-      if (req.query.page) {
-        const page = req.query.page > 0 ? req.query.page - 1 : 0;
-        query = {
-          ...query,
-          limit: limit,
-          offset: page ? page * limit : 0,
-        }
-      }
-      product = await Product.findAll(query);
+      const product = await controller.searchProductById(req.params.id);
       res.json(product)
     } catch(err) {
       res.send(err)
     }
+});
+
+router.get('/',async(req, res, next) => {
+  // // get products
+  try {
+    const product = await controller.getAllProducts(req.query.page);
+    res.json(product)
+  } catch(err) {
+    res.send(err)
   }
 });
 

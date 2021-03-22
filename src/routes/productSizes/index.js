@@ -2,7 +2,8 @@ const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const ProductSize = require('../../pg/models/ProductSizes');
-const service = require('../../services/productSize.service');
+// const service = require('../../services/productSize.service');
+const controller = require('../../controllers/productSizes');
 const Product = require('../../pg/models/Products');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
@@ -59,7 +60,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
 });
 
 router.post('/', [verify, parser.none()], (req, res, next) => {
-  service.createProductSize(req.body)
+  controller.createProductSize(req.body)
     .then(result => {
       res.status(200).json(result);
     })
@@ -69,32 +70,32 @@ router.post('/', [verify, parser.none()], (req, res, next) => {
 })
 
 router.get('/product/:product', async(req, res, next) => {
-  const size = await ProductSize.findAll({ where: {productId: req.params.product}, include: includes});
+  const size = await controller.getProductSizeByProductId(req.params.product); 
   res.json(size)
 });
 
+router.get('/filters/bulk', async(req, res, next) => {
+  // get sizes
+  try {
+    const size = await controller.getProductSizeByIds(req.query.ids);
+    res.status(200).json(size)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
 router.get('/:id', async(req, res, next) => {
-  const size = await ProductSize.findOne({ where: {id: req.params.id}, include: includes});
+  const size = await controller.getProductSizeById(req.params.id);
   res.json(size)
 });
 
 router.get('/', async(req, res, next) => {
   // get sizes
-  let size = null;
-  if (req.query.id) {
-    try {
-      size = await ProductSize.findOne({ where: {id: req.query.id}, include: includes});
-      res.status(200).json(size)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
-  } else {
-    try {
-      size = await ProductSize.findAll({include: includes});
-      res.status(200).json(size)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
+  try {
+    const size = await controller.getProductSizes();
+    res.status(200).json(size)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
   }
 });
 

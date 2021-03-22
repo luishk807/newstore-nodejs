@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const Product = require('../pg/models/Products');
 const { saveBrands, getAllBrands } = require('../services/brand.service');
 const { saveCategories, getAllCategories } = require('../services/category.service');
@@ -10,6 +11,7 @@ const config = require('../config');
 const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
 const { safeString, getLowerCaseSafeString } = require('../utils/string.utils');
+const { paginate } = require('../utils');
 const { getDistinctValues, getUniqueValuesByField, existFields } = require('../utils')
 const validationField = '__validation__';
 const requiredfields = [
@@ -22,6 +24,8 @@ const requiredfields = [
     'code',
     'description'
 ];
+const LIMIT = config.defaultLimit;
+const MAIN_INCLUDES = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems', 'categories', 'subCategoryProduct'];
 const IMPORT = 'IMPORT';
 /** Only these fields will be used to save on the database */
 const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
@@ -401,7 +405,163 @@ const deleteProduct = async (id) => {
     return { status: false, message: 'Product not found for deletion', notFound: true };
 }
 
+const searchProductByName = async (search, page = null) => {
+    const includes = MAIN_INCLUDES;
+
+    const where = {
+        [Op.or]: [
+            {
+                'name': {
+                    [Op.iLike]: `%${search}%`
+                }
+            },
+            {
+                'sku': {
+                    [Op.iLike]: `%${search}%`
+                }
+            },
+            {
+                'model': {
+                    [Op.iLike]: `%${search}%`
+                }
+            }
+        ]
+    }
+
+    if (page) {
+        const offset = paginate(page);
+
+        const countResult = await Product.findAndCountAll({ where });
+
+        const result = await Product.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        });
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+        return results;
+    } else {
+        const product = await Product.findAll({ where, include: includes});
+        return product;
+    }
+}
+
+const searchProductByType = async (type, search, page = null) => {
+    const includes = MAIN_INCLUDES;
+
+    const where = {
+        [type]: search
+    }
+    
+    const parPage = Number(page);
+    
+    if (parPage) {
+        const offset = paginate(parPage);
+
+        const countResult = await  Product.findAndCountAll({ 
+            where
+        });
+
+        const result = await Product.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        })
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+
+        return results;
+    } else {
+        const product = await Product.findAll({ where, include: includes});
+        return product;
+    }
+}
+
+const searchProductByIds = async (ids, page = null) => {
+    const includes = MAIN_INCLUDES;
+
+    const where = {
+        id: {
+            [Op.in]: ids
+        }
+    }
+
+    if (page) {
+        const offset = paginate(page);
+
+        const countResult = await Product.findAndCountAll({ where });
+
+        const result = await Product.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        });
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+        return results;
+    } else {
+        const product = await Product.findAll({ where, include: includes});
+        return product;
+    }
+}
+
+const searchProductById = async (id) => {
+    const includes = MAIN_INCLUDES;
+
+    const where = {
+        id: id
+    }
+
+    const product = await Product.findOne({ where, include: includes});
+    return product;
+}
+
+const getAllProducts = async (page = null) => {
+    const includes = MAIN_INCLUDES;
+
+    let query = {
+        include: includes
+    }
+    
+    if (page) {
+        query = {
+            ...query,
+            limit: LIMIT,
+            distinct: true,
+            offset: paginate(page),
+        }
+    }
+
+    const product = await Product.findAndCountAll(query);
+    return product;
+}
+
+
 module.exports = {
     importProducts,
-    deleteProduct
+    deleteProduct,
+    searchProductByName,
+    searchProductByType,
+    searchProductByIds,
+    searchProductById,
+    getAllProducts,
 }
