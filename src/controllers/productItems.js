@@ -5,5 +5,6 @@ module.exports = {
   getProductItemByProductId: productItemService.getProductItemByProductId,
   getProductItemById: productItemService.getProductItemById,
   getProductItemByIds: productItemService.getProductItemByIds,
-  getProductItems: productItemService.getProductItems
+  getProductItems: productItemService.getProductItems,
+  searchProductItemByName: productItemService.searchProductItemByName
 }
