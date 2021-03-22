@@ -1,4 +1,5 @@
 const ProductItem = require('../pg/models/ProductItems');
+const ProductColor = require('../pg/models/ProductColors');
 const s3 = require('./storage.service');
 const config = require('../config');
 const { paginate } = require('../utils');
@@ -64,6 +65,73 @@ const getProductItemByProductId = async (id) => {
     return null;
 }
 
+
+const searchProductItemByName = async (search, page = null) => {
+
+    const color = await ProductColor.findOne({ 
+        where: {
+            [Op.or]: [
+                {
+                    'name': {
+                        [Op.iLike]: `%${search}%`
+                    }
+                },
+                {
+                    'color': {
+                        [Op.iLike]: `%${search}%`
+                    }
+                }
+            ]
+        }
+    });
+
+    console.log('color', color);
+
+    const where = {
+        [Op.or]: [
+            {
+                'sku': {
+                    [Op.iLike]: `%${search}%`
+                }
+            },
+            {
+                'model': {
+                    [Op.iLike]: `%${search}%`
+                }
+            }
+        ]
+    }
+
+    if (color) {
+        where[Op.or].push({
+            'productColorId': color.id
+        })
+    }
+
+    if (page) {
+        const offset = paginate(page);
+
+        const countResult = await ProductItem.findAndCountAll({ where });
+
+        const result = await ProductItem.findAll({
+            where,
+            include: includes,
+            offset: offset,
+            limit: LIMIT
+        });
+
+        const pages = Math.ceil(countResult.count / LIMIT)
+        const results = {
+            count: countResult.count,
+            items: result,
+            pages: pages
+        }
+        return results;
+    } else {
+        const product = await ProductItem.findAll({ where, include: includes});
+        return product;
+    }
+}
 
 const getProductItemById = async (id) => {
     if (id) {
@@ -131,5 +199,6 @@ module.exports = {
     getProductItemByProductId,
     getProductItemById,
     getProductItemByIds,
-    getProductItems
+    getProductItems,
+    searchProductItemByName
 }

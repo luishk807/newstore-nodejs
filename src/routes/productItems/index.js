@@ -230,6 +230,15 @@ router.get('/filters/bulk', async(req, res, next) => {
   }
 });
 
+router.get('/filters/search', async(req, res, next) => {
+    try {
+      const product = await controller.searchProductItemByName(req.query.search, req.query.page);
+      res.json(product);
+    } catch(err) {
+      res.send(err)
+    }
+});
+
 router.get('/', async(req, res, next) => {
   // get products
   const limit = 10;
