@@ -103,7 +103,6 @@ router.get('/all', async(req, res, next) => {
         where: {productId: req.query.id}, 
         include: ['rateUsers', 'rateProduct', 'rateStatus']
       }
-      console.log("jquery", query);
       data = await ProductRate.findAll(query);
       res.json(data)
     } catch(err) {

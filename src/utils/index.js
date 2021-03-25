@@ -65,10 +65,19 @@ const paginate = (pag) => {
   return offset = page ? page * limit : 0;
 };
 
+const getAdminEmail = (emailType = null) => {
+  let adminEmail = config.email.dev;
+  if (emailType && config.email[emailType]) {
+    adminEmail = config.email[emailType];
+  }
+  return process.env.NODE_ENV === "production" ? adminEmail : config.email.dev;
+}
+
 module.exports = {
   cleanData,
   getDistinctValues,
   getUniqueValuesByField,
   existFields,
-  paginate
+  paginate,
+  getAdminEmail
 }

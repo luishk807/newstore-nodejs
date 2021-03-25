@@ -100,11 +100,12 @@ router.post('/', [parser.none()], async(req, res, next) => {
   const body = req.body;
   const carts = JSON.parse(body.cart);
   const entryUser = parseInt(body.userid);
-
+  console.log("b", body)
   let entry = {
     'subtotal': body.subtotal,
     'grandtotal': body.grandtotal,
     'tax': body.tax,
+    'totalSaved': body.totalSaved,
     'delivery': body.delivery,
     'shipping_name': body.shipping_name,
     'shipping_address': body.shipping_address,
@@ -156,6 +157,10 @@ router.post('/', [parser.none()], async(req, res, next) => {
           size: carts[cart].productItemSize.name,
           code: carts[cart].sku,
           productDiscount: carts[cart].discount ? carts[cart].discount.name : null,
+          originalPrice: carts[cart].originalPrice,
+          savePercentageShow: carts[cart].save_percentag_show,
+          savePercentage: carts[cart].save_percentage,
+          savePrice: carts[cart].save_price,
           category: carts[cart].productItemProduct.category,
           quantity: carts[cart].quantity,
           total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),
@@ -164,7 +169,6 @@ router.post('/', [parser.none()], async(req, res, next) => {
       }
       orderObj.cart = cartArry
       OrderProduct.bulkCreate(cartArry).then(async(orderProducts) => {
-        // await sendgrid.sendOrderEmail(body.shipping_email, orderObj, 'order received', 'order process');
         await sendgrid.sendOrderEmail(orderObj, req);
         res.status(200).json({
           status: true,
@@ -173,7 +177,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
         });
       })
     } else {
-      // await sendgrid.sendOrderEmail(orderObj, req);
+      await sendgrid.sendOrderEmail(orderObj, req);
       res.status(200).json({
         status: false,
         data: order,
@@ -181,7 +185,6 @@ router.post('/', [parser.none()], async(req, res, next) => {
       });
     }
   }).catch((err) => {
-    console.log(err)
     res.status(500).json({status: false, message: err})
   })
 })

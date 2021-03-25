@@ -2,22 +2,24 @@ const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const SweetBox = require('../../pg/models/SweetBoxes');
+const controller = require('../../controllers/sweetBoxes')
 const parser = require('../../middlewares/multerParser');
+
+const includes = [
+  'sweetBoxSweetboxProduct', 
+  'sweetboxesStatus', 
+  'sweetBoxTypeSweetBox'
+];
 
 router.all('*', cors());
 
 router.get('/', async(req, res, next) => {
   // get statuses
   let sweetbox = null;
-  const includes = [
-    'sweetBoxSweetboxProduct', 
-    'sweetboxesStatus', 
-    'sweetBoxTypeSweetBox'
-  ];
   
   if (req.query.id) {
     try {
-      sweetbox = await SweetBox.findOne({ where: {id: req.query.id, statusId: 1}, include: includes});
+      sweetbox = await SweetBox.findOne({ where: {id: req.query.id}, include: includes});
       res.json(sweetbox)
     } catch(err) {
       res.send({status: false, message: err})
@@ -36,6 +38,28 @@ router.get('/', async(req, res, next) => {
     } catch(err) {
       res.send({status: false, message: err})
     }
+  }
+});
+
+router.get('/:id', async(req, res, next) => {
+  // get statuses
+
+  try {
+    const sweetbox = await controller.searchSweetBoxById(req.params.id);
+    res.json(sweetbox)
+  } catch(err) {
+    res.send({status: false, message: err})
+  }
+});
+
+router.get('/status/:id', async(req, res, next) => {
+  // get statuses
+
+  try {
+    const sweetbox = await controller.searchActiveSweetBoxById(req.params.id);
+    res.json(sweetbox)
+  } catch(err) {
+    res.send({status: false, message: err})
   }
 });
 
@@ -68,7 +92,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
     }
   ).then((updated) => {
     res.status(200).json({
-      data: updated,
+      status: true,
       message: 'Sweet Box Updated'
     });
   }).catch((err) => {
