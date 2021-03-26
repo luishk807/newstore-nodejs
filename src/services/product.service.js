@@ -31,7 +31,7 @@ const IMPORT = 'IMPORT';
 const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
 
 /** Creates a new product object with the given data */
-const createProductObject = (data, vendor) => {
+const createProductObject = (data, vendor, source) => {
     return {
         'name': data.name,
         'stock': +data.stock,
@@ -47,7 +47,7 @@ const createProductObject = (data, vendor) => {
         'discount1MinQty': +data.discount1MinQty,
         'discount2': +data.discount2,
         'discount2MinQty': +data.discount2MinQty,
-        'source': IMPORT // This is to indicate that the source of input was from an IMPORT
+        'source': source || IMPORT // This is to indicate that the source of input was from an IMPORT
     }
 }
 
@@ -64,11 +64,11 @@ const filterOnlyProductVariants = (data) => {
 }
 
 /** Returns a new array of newly created product object models */
-const verifyImportDataFormat = (data, vendor) => {
+const verifyImportDataFormat = (data, vendor, source) => {
     if (Array.isArray(data)) {
         const products = [];
         data.forEach((d) => {
-            products.push(createProductObject(d, vendor));
+            products.push(createProductObject(d, vendor, source));
         });
         return products;
     }
@@ -173,7 +173,14 @@ const createCategories = async (categories) => {
     }
 }
 
+/** Generates a batch source id to keep track of import groups */
+const generateBatchSourceId = () => {
+    return Math.random().toString(36).substring(0, 10);
+}
+
 const importProducts = async (datas, userId) => {
+    // Unique source id to indentify the batch import
+    const batchSource = generateBatchSourceId();
     // Get reference data from database
     logger.info('Getting brands, categories and vendor information from database...');
     let [vendor, brands, categories] = await Promise.all([
@@ -224,18 +231,20 @@ const importProducts = async (datas, userId) => {
     // If entire data set is valid
     if (validatedData.invalid.length === 0) {
         // Just gets the valid data
-        const checkedData = verifyImportDataFormat(validatedData.valid, vendor);
+        const checkedData = verifyImportDataFormat(validatedData.valid, vendor, batchSource);
         if (checkedData !== null) {
             try {
                 const results = await Product.bulkCreate(checkedData, {
                     fields: savedFields, // IMPORTANT
                     returning: true
                 });
-                const pvResults = await processProductVariants(dataVariants, vendor, results);
+                const pvResults = await processProductVariants(dataVariants, vendor, results, batchSource);
                 const productDiscounts = await processProductDiscounts(results, checkedData);
                 return { products: results, productItems: pvResults, productDiscounts };
             } catch (err) {
-                logger.error(err);
+                logger.error({ error: err, batchSource: batchSource });
+                // Try to rollback using batch source id to remove changes
+                await rollBackProducts(batchSource);
                 return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData, err: err });
             }
         }
@@ -243,7 +252,18 @@ const importProducts = async (datas, userId) => {
     return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData });
 }
 
-const createProductItemObject = (data, vendor) => {
+const rollBackProducts = (batchSource) => {
+    if (batchSource) {
+        return Product.destroy({
+            where: {
+                source: batchSource
+            }
+        });
+    }
+    return Promise.reject({ error: 'Cannot rollback without batch source id' })
+}
+
+const createProductItemObject = (data, vendor, source) => {
     return {
         'productId': null,
         'productColorId': null,
@@ -259,7 +279,7 @@ const createProductItemObject = (data, vendor) => {
         'amount12': +data.dozen,
         'retailPrice': +data.amount,
         'statusId': 1,
-        'source': IMPORT
+        'source': source || IMPORT
     }
 }
 
@@ -269,7 +289,7 @@ const createProductItemObject = (data, vendor) => {
  * @param {*} vendor 
  * @param {[*]} importedProducts already saved products
  */
-const processProductVariants = async (data, vendor, importedProducts) => {
+const processProductVariants = async (data, vendor, importedProducts, source) => {
     if (Array.isArray(data)) {
         const productItems = [];
         // For each of the product variants (product items) in data
@@ -278,7 +298,7 @@ const processProductVariants = async (data, vendor, importedProducts) => {
             // Find base product
             const baseProduct = searchParentProduct(d, importedProducts);
             if (baseProduct) {
-                const productItem = createProductItemObject(d, vendor);
+                const productItem = createProductItemObject(d, vendor, source);
                 productItem.productId = +baseProduct.id; // Assign the parent product
                 // Need to create the productSize and productColor :facepalm:
                 // Check the original data for color or size
