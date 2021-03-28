@@ -26,6 +26,7 @@ const config = {
   email: {
     contact: 'info@avenidaz.com',
     sales: 'ventas@avenidaz.com',
+    dev: 'luis@avenidaz.com',
     noReply: 'no-reply@avenidaz.com',
   },
   defaultLimit: 30

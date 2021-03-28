@@ -63,6 +63,18 @@ const OrderProduct = sequelize.define('order_products', {
   productDiscount: {
     type: Sequelize.TEXT
   },
+  savePercentageShow: {
+    type: Sequelize.TEXT
+  },
+  originalPrice: {
+    type: Sequelize.DECIMAL
+  },
+  savePercentage: {
+    type: Sequelize.DECIMAL
+  },
+  savePrice: {
+    type: Sequelize.DECIMAL
+  },
 });
 
 OrderProduct.belongsTo(OrderStatus, { foreignKey: 'orderStatusId', as: "orderStatusProduct"})

@@ -79,7 +79,10 @@ const Order = sequelize.define('orders', {
   deliveryId: {
     type: Sequelize.BIGINT,
     field: 'deliveryOptionId'
-  }
+  },
+  totalSaved: {
+    type: Sequelize.DECIMAL
+  },
 });
 
 Order.belongsTo(OrderCancelReason, { foreignKey: 'orderCancelReasonId', as: "orderCancelReasons"})

@@ -22,7 +22,6 @@ router.delete('/:id', verify,  (req, res, next) => {
       }
     }).then((deletedRecord) => {
       if (deletedRecord) {
-        // console.log(deletedRecord, mapFiles)
         try {
           const params = {
             Bucket: aw3Bucket,

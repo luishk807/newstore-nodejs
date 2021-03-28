@@ -131,7 +131,6 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
       res.status(500).json({status: false, message: err})
     }
   } else if (req.query.ids) {
-    console.log("hey hey ", req.query.ids)
     try {
       product = await OrderProduct.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
       res.status(200).json(product)

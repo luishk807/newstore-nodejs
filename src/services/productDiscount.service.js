@@ -9,7 +9,6 @@ const createProductDiscount = async (value) => {
     const nUseDate = value.useDate === 'true' ? true : false;
 
     if (nUseDate) {
-        console.log("dont use dates");
         startDate = (value.startDate) ? value.startDate : null;
         endDate = (value.endDate) ? (value.endDate) : new Date(9999, 11, 31);
     } else {

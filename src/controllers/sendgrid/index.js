@@ -1,14 +1,16 @@
 const config = require('../../config');
+const { getAdminEmail } = require('../../utils');
 const sendGrid = require('@sendgrid/mail');
 sendGrid.setApiKey(config.sendGrid.key);
 
-const sendContactEmail = (from, subject, message) => {
+const sendContactEmail = (clientEmail, subject, message) => {
+  const toEmail = getAdminEmail('contact');
   const msg = {
-    to: config.email.contact, // Change to your recipient
-    from: config.email.contact, // Change to your verified sender
+    to: toEmail, // Change to your recipient
+    from: clientEmail, // Change to your verified sender
     subject: `Email from customer: ${subject}`,
     text: `${message}`,
-    html: `<p>Name: ${from}</p><p>Message: ${message}</p>`,
+    html: `<p>Name: ${clientEmail}</p><p>Message: ${message}</p>`,
   }
   let result = null;
   return sendGrid.send(msg).then(() => {

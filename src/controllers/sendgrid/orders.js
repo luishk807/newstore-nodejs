@@ -2,6 +2,7 @@ const config = require('../../config');
 const ProductItem = require('../../pg/models/ProductItems');
 const Delivery = require('../../pg/models/DeliveryOptions');
 const ProductDiscount = require('../../pg/models/ProductDiscounts');
+const { getAdminEmail } = require('../../utils');
 const sendGrid = require('@sendgrid/mail');
 const aws_url = process.env.IMAGE_URL;
 const logo = `${aws_url}/avenidaz.png`;
@@ -42,9 +43,11 @@ const sendOrderCancelRequest = async(obj, req) => {
   const mainUrlAdmin = `${req.headers.referer}admin/orders/${obj.id}`;
   let result = false;
 
+  const toEmail = getAdminEmail('contact');
+
   // send admin
   sendGrid.send({
-    to: config.email.contact, // Change to your recipient
+    to: toEmail, // Change to your recipient
     from: config.email.noReply, // Change to your verified sender
     subject: `${obj.order_number}: ${subject}`,
     html: `
@@ -76,6 +79,7 @@ const sendOrderCancelRequest = async(obj, req) => {
 }
 
 const sendOrderEmail = async(obj, req) => {
+  const toEmail = getAdminEmail('sales');
   const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
   const newCart = [];
   const subject = `ORDER #${obj.order_num}: Order Received`;
@@ -92,15 +96,9 @@ const sendOrderEmail = async(obj, req) => {
     })
 
     let ProductDiscount = '';
-    if (item.productDiscountId) {
-      const getProductDisc = await ProductItem.findOne({
-        where: {
-          id: item.productDiscountId
-        }
-      })
-      if (getProductDisc) {
-        ProductDiscount = `Discount: ${ProductDiscount.name}`;
-      }
+    if (item.productDiscount) {
+        ProductDiscount = `Discount: ${item.productDiscount}`;
+  
     }
 
     const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
@@ -130,7 +128,7 @@ const sendOrderEmail = async(obj, req) => {
 
   }
 
-  const totalHtml = `
+  let totalHtml = `
     <hr/>
     <table>
     <tr>
@@ -143,20 +141,35 @@ const sendOrderEmail = async(obj, req) => {
     </tr>
     <tr>
       <td style='width: 50%'>
-        Shipping
-      </td>
-      <td style='width: 50%'>
-        $${obj.entry.delivery}
-      </td>
-    </tr>
-    <tr>
-      <td style='width: 50%'>
-        Tax
+        ITBMS 7%
       </td>
       <td style='width: 50%'>
         $${obj.entry.tax}
       </td>
     </tr>
+    <tr>
+      <td style='width: 50%'>
+        Shipping
+      </td>
+      <td style='width: 50%'>
+        $${obj.entry.delivery}
+      </td>
+    </tr> `;
+  
+  if (obj.entry.totalSaved > 0) {
+    totalHtml += `
+    <tr>
+      <td style='width: 50%'>
+        You Saved
+      </td>
+      <td style='width: 50%'>
+        - $${obj.entry.totalSaved}
+      </td>
+    </tr>
+    `;
+  }
+  
+  totalHtml += `
   </table>
   <hr/>
   <table>
@@ -224,17 +237,14 @@ const sendOrderEmail = async(obj, req) => {
       Phone: ${obj.entry.shipping_phone}<br/>
     </p>
     ${deliveryHtml}`;
-
-
-
+  
   const msg = {
-    to: 'luishk807@gmail.com', // Change to your recipient
+    to: toEmail, // Change to your recipient
     from: config.email.contact, // Change to your verified sender
     subject: `${subject}`,
     html: message,
   }
-  
-  let result = null;
+
   return sendGrid.send(msg).then(() => {
     return true;
   })
@@ -245,5 +255,6 @@ const sendOrderEmail = async(obj, req) => {
 
 module.exports = {
   sendOrderEmail,
+  sendOrderUpdate,
   sendOrderCancelRequest
 }

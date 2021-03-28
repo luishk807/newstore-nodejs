@@ -84,9 +84,7 @@ const searchProductItemByName = async (search, page = null) => {
             ]
         }
     });
-
-    console.log('color', color);
-
+    
     const where = {
         [Op.or]: [
             {
