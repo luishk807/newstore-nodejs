@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
-const controller = require('../../controllers/deliveryOptions');
+const controller = require('../../controllers/paymentOptions');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
 const config = require('../../config');
@@ -12,8 +12,8 @@ router.all('*', cors());
 router.delete('/:id', verify,  async(req, res, next) => {
   // delete delivery
   try {
-    await controller.deleteDeliveryOptionById(req.params.id);
-    res.status(200).json({ status: true, message: "Delivery option successfully deleted" });
+    await controller.deletePaymentOptionById(req.params.id);
+    res.status(200).json({ status: true, message: "Payment option successfully deleted" });
   } catch(err) {
     res.status(500).json({status: false, message: err});
   }
@@ -23,11 +23,11 @@ router.put('/:id', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
   try {
-    const delivery = await controller.saveDeliveryOption(body, bid);
+    const product = await controller.savePaymentOption(body, bid);
     res.status(200).json({
-      data: delivery,
       status: true,
-      message: 'Delivery option Updated'
+      data: product,
+      message: 'Payment option Updated'
     });
   } catch(err) {
     res.status(500).json({status: false, message: err})
@@ -37,36 +37,50 @@ router.put('/:id', [verify, parser.none()], async(req, res, next) => {
 router.post('/', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
   try {
-    const delivery = await controller.createDeliveryOption(body);
-    res.status(200).json(delivery);
+    const product = await controller.createPaymentOption(body);
+    res.status(200).json({
+      data: delivery,
+      status: true,
+      message: 'Payment option service created'
+    });
   } catch(err) {
     res.status(500).json({status: false, message: err})
   }
 })
 
+router.get('/active-payments', async(req, res, next) => {
+  // get products
+  try {
+    paymentOption = await controller.getActivePaymentOptions();
+    res.status(200).json(paymentOption)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
 router.get('/:id', async(req, res, next) => {
-    try {
-      const delivery = await controller.getDeliveryOptionById(req.params.id);
-      res.json(delivery)
-    } catch(err) {
-      res.status(500).json({status: false, message: err});
-    }
+  try {
+    const delivery = await controller.getPaymentOptionById(req.params.id);
+    res.json(delivery)
+  } catch(err) {
+    res.send(err)
+  }
 });
 
 router.get('/', async(req, res, next) => {
   // get products
-  let delivery = null;
+  let paymentOption = null;
   if (req.query.id) {
     try {
-      delivery = await controller.getDeliveryOptionById(req.query.id);
-      res.status(200).json(delivery)
+      paymentOption = await controller.getPaymentOptionById(req.query.id);
+      res.status(200).json(paymentOption)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      delivery = await controller.getDeliveryOptions();
-      res.status(200).json(delivery)
+      paymentOption = await controller.getPaymentOptions();
+      res.status(200).json(paymentOption)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }

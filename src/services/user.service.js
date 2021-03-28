@@ -35,8 +35,8 @@ const deleteFromStorage = async (fileKey) => {
     return { status: false, message: "No file key has been provided to delete from storage" }
 }
 
-const findById = (id) => {
-    return User.findOne(id);
+const findById = async(id) => {
+    return await User.findOne({where:{id: id}});
 }
 
 const create = async (user, file) => {

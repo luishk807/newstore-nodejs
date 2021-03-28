@@ -21,6 +21,8 @@ const Corregimiento = require('../../pg/models/Corregimientos');
 const District = require('../../pg/models/Districts');
 const OrderCancelReason = require('../../pg/models/OrderCancelReasons');
 const OrderStatus = require('../../pg/models/OrderStatuses');
+const DeliveryService = require('../../pg/models/DeliveryServices');
+const Zone = require('../../pg/models/Zones');
 router.all('*', cors());
 
 router.get('/user', async(req, res, next) => {
@@ -52,6 +54,8 @@ router.get('/user', async(req, res, next) => {
     const district = await District.findAll();
     const orderCancelReason = await OrderCancelReason.findAll();
     const orderStatus = await OrderStatus.findAll();
+    const deliveryService = await DeliveryService.findAll();
+    const zone = await Zone.findAll();
     data['sweetBoxType'] = sweetboxtype;
     data['vendor'] = vendor;
     data['brand'] = brand;
@@ -71,6 +75,8 @@ router.get('/user', async(req, res, next) => {
     data['corregimiento'] = corregimiento;
     data['orderCancelReason'] = orderCancelReason;
     data['orderStatus'] = orderStatus;
+    data['deliveryService'] = deliveryService;
+    data['zone'] = zone;
     res.status(200).json(data)
   } catch(err) {
     res.send({status: false, message: err})
@@ -89,6 +95,7 @@ router.get('/admin', [verify], async(req, res, next) => {
       const brand = await Brand.findAll({where: {statusId: 1}, include:['brandStatus']});
       const gender = await Gender.findAll();
       const status = await Status.findAll();
+      const zone = await Zone.findAll();
       const country = await Country.findAll({
         attributes: ['id', ['nicename', 'name']] //id, first AS firstName
       });
@@ -110,6 +117,7 @@ router.get('/admin', [verify], async(req, res, next) => {
       const district = await District.findAll();
       const orderCancelReason = await OrderCancelReason.findAll();
       const orderStatus = await OrderStatus.findAll();
+      const deliveryService = await DeliveryService.findAll();
       data['user'] = user;
       data['sweetBoxType'] = sweetboxtype;
       data['vendor'] = vendor;
@@ -128,6 +136,8 @@ router.get('/admin', [verify], async(req, res, next) => {
       data['corregimiento'] = corregimiento;
       data['orderCancelReason'] = orderCancelReason;
       data['orderStatus'] = orderStatus;
+      data['deliveryService'] = deliveryService;
+      data['zone'] = zone;
       res.status(200).json(data)
     } catch(err) {
       res.send({status: false, message: err})

@@ -132,6 +132,9 @@ router.post('/', [parser.single('image')], (req, res, next) => {
 });
 
 router.get('/:id', [verify], async(req, res, next) => {
+  if (req.user.type !== 1 && req.user.id !== req.params.id) {
+    res.status(401).json("not authorized");
+  }
   const user = await controller.findById(req.params.id);
   res.json(user);
 });

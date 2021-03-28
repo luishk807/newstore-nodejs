@@ -6,12 +6,19 @@ const User = require('./Users');
 const Country = require('./Countries');
 const Province = require('./Provinces');
 const District = require('./Districts');
+const Zone = require('./Zones');
 const Corregimiento = require('./Corregimientos');
 const UserAddress = sequelize.define('user_addresses', {
   name: {
     type: Sequelize.TEXT
   },
   address: {
+    type: Sequelize.TEXT
+  },
+  addressB: {
+    type: Sequelize.TEXT
+  },
+  note: {
     type: Sequelize.TEXT
   },
   province: {
@@ -21,6 +28,10 @@ const UserAddress = sequelize.define('user_addresses', {
   district: {
     type: Sequelize.BIGINT,
     field: 'districtId'
+  },
+  zone: {
+    type: Sequelize.BIGINT,
+    field: 'zoneId'
   },
   corregimiento: {
     type: Sequelize.BIGINT,
@@ -51,6 +62,9 @@ const UserAddress = sequelize.define('user_addresses', {
   email: {
     type: Sequelize.TEXT
   },
+  note: {
+    type: Sequelize.TEXT
+  },
   selected: {
     type: Sequelize.BOOLEAN
   },
@@ -65,6 +79,8 @@ UserAddress.belongsTo(User, { foreignKey: 'userId', as: 'addressesUsers'})
 UserAddress.belongsTo(Country, { foreignKey: 'countryId', as: 'addressCountry'});
 
 UserAddress.belongsTo(District, { foreignKey: 'districtId', as: 'addressDistrict'});
+
+UserAddress.belongsTo(Zone, { foreignKey: 'zoneId', as: 'addressZone'});
 
 UserAddress.belongsTo(Province, { foreignKey: 'provinceId', as: 'addressProvince'});
 
