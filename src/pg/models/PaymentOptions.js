@@ -5,15 +5,12 @@ const sequelize = pgconfig.getSequelize();
 
 const Statuses = require('./Statuses');
 
-const DeliveryOption = sequelize.define('delivery_options', {
+const PaymentOption = sequelize.define('payment_options', {
   name: {
     type: Sequelize.TEXT
   },
   description: {
     type: Sequelize.TEXT
-  },
-  total: {
-    type: Sequelize.DECIMAL
   },
   status: {
     type: Sequelize.BIGINT,
@@ -27,6 +24,6 @@ const DeliveryOption = sequelize.define('delivery_options', {
   },
 });
 
-DeliveryOption.belongsTo(Statuses, {foreignKey: 'statusId', as: 'deliveryOptionStatus'});
+PaymentOption.belongsTo(Statuses, {foreignKey: 'statusId', as: 'paymentOptionStatus'});
 
-module.exports = DeliveryOption;
+module.exports = PaymentOption;

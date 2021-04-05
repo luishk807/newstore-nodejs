@@ -5,6 +5,5 @@ module.exports = {
     getProductColorById: productColor.getProductColorById,
     getProductColorByProductId: productColor.getProductColorByProductId,
     getProductColorByIds: productColor.getProductColorByIds,
-    getProductColors: productColor.getProductColors,
-
+    getProductColors: productColor.getProductColors
 }

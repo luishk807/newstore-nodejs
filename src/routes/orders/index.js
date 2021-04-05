@@ -8,7 +8,7 @@ const Product = require('../../pg/models/Products');
 const utils = require('../../controllers/orders');
 const sendgrid = require('../../controllers/sendgrid/orders');
 const { Op } = require('sequelize');
-const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder'];
+const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 router.all('*', cors());
 
@@ -100,7 +100,6 @@ router.post('/', [parser.none()], async(req, res, next) => {
   const body = req.body;
   const carts = JSON.parse(body.cart);
   const entryUser = parseInt(body.userid);
-  console.log("b", body)
   let entry = {
     'subtotal': body.subtotal,
     'grandtotal': body.grandtotal,
@@ -117,11 +116,22 @@ router.post('/', [parser.none()], async(req, res, next) => {
     'shipping_township': body.shipping_township,
     'shipping_corregimiento': body.shipping_corregimiento,
     'shipping_zip': body.shipping_zip,
+    'shipping_zone': body.shipping_zone,
     'shipping_district': body.shipping_district,
+    'shipping_note': body.shipping_note,
   }
   
-  if (!!!isNaN(body.deliveryId)) {
-    entry['deliveryId'] = body.deliveryId;
+  if (!!!isNaN(body.deliveryOptionId)) {
+    entry['deliveryOptionId'] = body.deliveryOptionId;
+    entry['deliveryOption'] = body.deliveryOption;
+  }
+  if (!!!isNaN(body.deliveryServiceId)) {
+    entry['deliveryServiceId'] = body.deliveryServiceId;
+    entry['deliveryService'] = body.deliveryService;
+  }
+  if (!!!isNaN(body.paymentOptionId)) {
+    entry['paymentOptionId'] = body.paymentOptionId;
+    entry['paymentOption'] = body.paymentOption;
   }
   if (!!!isNaN(entryUser)) {
     entry['userId'] = body.userid;

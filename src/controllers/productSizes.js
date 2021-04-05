@@ -6,5 +6,4 @@ module.exports = {
     getProductSizeByProductId: productSize.getProductSizeByProductId,
     getProductSizeByIds: productSize.getProductSizeByIds,
     getProductSizes: productSize.getProductSizes,
-
 }
