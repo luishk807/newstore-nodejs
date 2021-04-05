@@ -32,6 +32,6 @@
   "devDependencies": {
     "@prisma/cli": "2.16.0",
     "mocha": "^8.3.0",
-    "prisma": "^2.16.1"
+    "prisma": "2.16.1"
   }
 }
