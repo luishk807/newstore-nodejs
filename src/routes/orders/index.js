@@ -182,7 +182,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
         await sendgrid.sendOrderEmail(orderObj, req);
         res.status(200).json({
           status: true,
-          data: order,
+          data: orderObj,
           message: 'Order Created'
         });
       })
@@ -190,7 +190,7 @@ router.post('/', [parser.none()], async(req, res, next) => {
       await sendgrid.sendOrderEmail(orderObj, req);
       res.status(200).json({
         status: false,
-        data: order,
+        data: orderObj,
         message: 'Order Created but unable to send email'
       });
     }
@@ -200,19 +200,41 @@ router.post('/', [parser.none()], async(req, res, next) => {
 })
 
 router.get('/:order_number/:email', [parser.none()], async(req, res, next) => {
-    let order = null;
     try {
-      order = await Order.findOne({ where: {order_number: req.params.order_number, shipping_email: req.params.email, userId: null}, include: includes, order: orderBy});
+      const order = await Order.findOne({ where: {order_number: req.params.order_number, shipping_email: req.params.email, userId: null}, include: includes, order: orderBy});
       res.status(200).json(order)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
 });
 
-router.get('/:user', [verify, parser.none()], async(req, res, next) => {
-  let order = null;
+router.get('/:id', [verify, parser.none()], async(req, res, next) => {
+  // let order = null;
   if (req.user.type == '1') {
-    order = await Order.findAll({ where: {userId: req.params.user}, include: includes, order: orderBy });
+    order = await Order.findOne({ where: {id: Number(req.params.id)}, include: includes, order: orderBy });
+    res.status(200).json(order)
+  } else {
+    order = await Order.findOne({ where: {id: req.params.id, userId: req.user.id}, include: includes, order: orderBy });
+    if (order) {
+      res.status(200).json(order)
+    } else {
+      res.status(401).json({status: false, message: 'not authorized'})
+    }
+  }
+});
+
+router.get('/:user/by-user', [verify, parser.none()], async(req, res, next) => {
+  if (req.user.type == '1') {
+    const order = await Order.findAll({ where: {userId: req.params.user}, include: includes, order: orderBy });
+    res.status(200).json(order)
+  } else {
+    res.status(401).json({status: false, message: 'not authorized'})
+  }
+});
+
+router.get('/admin/orders/all', [verify, parser.none()], async(req, res, next) => {
+  if (req.user.type == '1') {
+    const order = await Order.findAll({include: includes, order: orderBy});
     res.status(200).json(order)
   } else {
     res.status(401).json({status: false, message: 'not authorized'})
@@ -221,25 +243,11 @@ router.get('/:user', [verify, parser.none()], async(req, res, next) => {
 
 router.get('/', [verify, parser.none()], async(req, res, next) => {
   // get orders
-  let order = null;
-  if (req.query.id) {
-    try {
-      order = await Order.findOne({ where: {id: req.query.id}, include: includes, order: orderBy});
-      res.status(200).json(order)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
-  } else {
-    try {
-      if (req.user.type == '1') {
-        order = await Order.findAll({ include: includes, order: orderBy });
-      } else {
-        order = await Order.findAll({ where: {userId: req.user.id}, include: includes, order: orderBy });
-      }
-      res.status(200).json(order)
-    } catch(err) {
-      res.status(500).json({status: false, message: err})
-    }
+  try {
+    const order = await Order.findAll({ where: {userId: req.user.id}, include: includes, order: orderBy});
+    res.status(200).json(order)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
   }
 });
 
