@@ -105,6 +105,27 @@ router.get('/:id', [verify, parser.none()], async(req, res, next) => {
   }
 });
 
+router.get('/:id', [verify, parser.none()], async(req, res, next) => {
+  // get orders
+  let order = null;
+
+  if (req.user.type !== '1') {
+    try {
+      order = await OrderProduct.findOne({ where: {id: req.params.id}, include: includes});
+      res.status(200).json(order)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  } else {
+    try {
+      order = await OrderProduct.findOne({ where: {id: req.params.id, userId: req.user.id}, include: includes});
+      res.status(200).json(order)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  }
+});
+
 router.get('/', [verify, parser.none()], async(req, res, next) => {
   // get orders
   let order = null;

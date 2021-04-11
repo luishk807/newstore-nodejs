@@ -49,6 +49,15 @@ router.delete('/:id', verify, (req, res, next) => {
   })
 });
 
+router.get('/:id', async(req, res, next) => {
+  try {
+    const imageBox = await  ImageBox.findOne({ where: {id: req.params.id}, include: includes});
+    res.json(imageBox)
+  } catch(err) {
+    res.send(err)
+  }
+});
+
 router.get('/', async(req, res, next) => {
   // get statuses
   let imageBox = null;

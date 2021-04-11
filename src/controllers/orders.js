@@ -3,7 +3,9 @@ const OrderActivity = require('../pg/models/OrderActivities');
 
 const checkOrderUserId = async(req, bid) => {
   let allow = false;
-  if (req.user.type !== 1) {
+  if (req.user.type == 1) {
+    return true
+  } else {
     const confirm = await Order.findOne({
       where: {
         id: bid,
