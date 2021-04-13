@@ -6,5 +6,7 @@ const authenticate = async (email, password, onlyAdmin = false) => {
 }
 
 module.exports = {
-    authenticate
+    authenticate,
+    requestPasswordReset: service.requestPasswordReset,
+    resetPassword: service.resetPassword,
 }

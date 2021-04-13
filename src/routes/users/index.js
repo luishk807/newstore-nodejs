@@ -9,7 +9,8 @@ const uuid = require('uuid');
 const parser = require('../../middlewares/multerParser');
 const s3 = require('../../services/storage.service');
 const controller = require('../../controllers/users');
-
+const { response } = require('express');
+const includes = ['useStatus','userRoles'];
 router.all('*', cors());
 
 const aw3Bucket = `${config.s3.bucketName}/users`;
@@ -143,7 +144,7 @@ router.get('/', [verify], async(req, res, next) => {
   let user = null;
   if (req.query.id) {
     try {
-      user = await User.findOne({ where: {id: req.query.id}, include: ['useStatus','userRoles']});
+      user = await User.findOne({ where: {id: req.query.id}, include:  includes});
       res.status(200).json(user)
     } catch(err) {
       res.status(404).json({status:false, message: err})
@@ -156,11 +157,11 @@ router.get('/', [verify], async(req, res, next) => {
           where: {
             id: { [Op.ne]: req.user.id } // This does not work
           },
-          include:['useStatus','userRoles']
+          include: includes
         };
       } else {
         query = {
-          include:['useStatus','userRoles']
+          include: includes
         };
       }
       user = await User.findAll(query)
