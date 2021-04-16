@@ -66,12 +66,15 @@ router.get('/:id', async(req, res, next) => {
     }
 });
 
-router.get('/zone/:zone/:service', async(req, res, next) => {
+router.get('/filter/search/cost', [parser.none()], async(req, res, next) => {
+  const body = req.query;
   try {
     const query = {
-      zone: req.params.zone,
-      deliveryService: req.params.service
+      deliveryService: body.service ? body.service : null,
+      zone: body.zone ? body.zone : null,
+      corregimiento: body.corregimiento ? body.corregimiento : null
     }
+
     const delivery = await controller.getDeliveryServiceCostByFilter(query);
     res.json(delivery)
   } catch(err) {

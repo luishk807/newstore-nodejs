@@ -56,7 +56,7 @@ router.post('/', [verify, parser.none()], (req, res, next) => {
   const body = req.body;
   const user = req.user.id;
   UserWishlist.create({
-    'product': body.product,
+    'product': body.productId,
     'user': user
   }).then((data) => {
     res.status(200).json({status: true, message: 'Success: Wishlist Added', data: data});
