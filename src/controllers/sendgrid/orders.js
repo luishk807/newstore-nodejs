@@ -79,7 +79,8 @@ const sendOrderCancelRequest = async(obj, req) => {
 }
 
 const sendOrderEmail = async(obj, req) => {
-  const toEmail = getAdminEmail('sales');
+  let toEmail = [];
+  toEmail.push(getAdminEmail('sales'));
   const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
   const newCart = [];
   const subject = `ORDER #${obj.order_num}: Order Received`;
@@ -238,6 +239,11 @@ const sendOrderEmail = async(obj, req) => {
     </p>
     ${deliveryHtml}`;
   
+
+  if (process.env.NODE_ENV === "production") {
+    toEmail.push(obj.clientEmail);
+  }
+
   const msg = {
     to: toEmail, // Change to your recipient
     from: config.email.contact, // Change to your verified sender
@@ -245,6 +251,7 @@ const sendOrderEmail = async(obj, req) => {
     html: message,
   }
 
+  
   return sendGrid.send(msg).then(() => {
     return true;
   })

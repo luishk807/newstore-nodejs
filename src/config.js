@@ -29,7 +29,8 @@ const config = {
     dev: 'luis@avenidaz.com',
     noReply: 'no-reply@avenidaz.com',
   },
-  defaultLimit: 30
+  defaultLimit: 30,
+  taxTotal: 0.07
 };
 
 module.exports = config;

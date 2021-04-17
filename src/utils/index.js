@@ -9,6 +9,44 @@ const cleanData = (data) => {
   return data;
 }
 
+const calculateTotal = async(obj) => {
+
+  const carts = JSON.parse(obj.cart);
+  const TAX = parseFloat(config.taxTotal);
+  let subtotal = 0;
+  let taxes = 0;
+  let grandTotal = 0;
+  let savedGrandTotal = 0;
+  let delivery = !obj.delivery || obj.delivery === -1 ? 0 : parseFloat(obj.delivery);
+  let originalTotal = 0;
+
+  if (Object.keys(carts).length) {
+      for(const key in carts) {
+          const retailPrice = parseFloat(carts[key].retailPrice);
+          const quantity = parseInt(carts[key].quantity);
+          const originalPrice = parseFloat(carts[key].originalPrice);
+          subtotal += retailPrice * quantity;
+          originalTotal += originalPrice * quantity;
+      }
+  }
+
+  taxes = subtotal * TAX;
+
+  grandTotal = taxes + subtotal + delivery;
+
+  savedGrandTotal = originalTotal - subtotal;
+
+  return {
+      'subtotal': formatNumber(subtotal),
+      'delivery': formatNumber(delivery),
+      'taxes': formatNumber(taxes),
+      'saved': formatNumber(savedGrandTotal),
+      'grandTotal': formatNumber(grandTotal)
+  };
+}
+
+const formatNumber = (x) => x ? Number.parseFloat(x).toFixed(2) : 0.00;
+
 /** Returns an array of distict values for the given array object field */
 const getDistinctValues = (dataArray, field) => {
   if (!!dataArray.length) {
@@ -79,5 +117,7 @@ module.exports = {
   getUniqueValuesByField,
   existFields,
   paginate,
-  getAdminEmail
+  getAdminEmail,
+  formatNumber,
+  calculateTotal
 }
