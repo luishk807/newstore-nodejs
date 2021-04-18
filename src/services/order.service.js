@@ -34,7 +34,7 @@ const getOrder = async(id, user) => {
     }
 
     let order = null;
-    if (user.type !== 1) {
+    if (user.type !== '1') {
         order = await Order.findOne({ where: {id: id, userId: user.id }, include: includes});
     } else {
         order = await Order.findOne({ where: {id: id }, include: includes});
