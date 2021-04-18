@@ -33,6 +33,16 @@ const searchProductUnified = async (search,  { limit = LIMIT, page = null }) => 
                 }
             },
             {
+                'productColorName': {
+                    [Op.iLike]: `%${search}%`
+                }
+            },
+            {
+                'productSizeName': {
+                    [Op.iLike]: `%${search}%`
+                }
+            },
+            {
                 'productItemModel': {
                     [Op.iLike]: `%${search}%`
                 }
