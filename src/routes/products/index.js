@@ -34,8 +34,6 @@ router.delete('/:id', verify, async (req, res, next) => {
 
 
 router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
-
-
   const imagesUploaded = req.files.map((file) => {
     let myFile = file.originalname.split('.');
     const fileType = myFile[myFile.length - 1];

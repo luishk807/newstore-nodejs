@@ -13,6 +13,9 @@ const SweetBox = sequelize.define('sweet_boxes', {
   name: {
     type: Sequelize.TEXT
   },
+  key: {
+    type: Sequelize.TEXT
+  },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'

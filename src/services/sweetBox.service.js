@@ -7,26 +7,55 @@ const includes = [
 ];
 const { Op } = require('sequelize');
 
-const createColor = async (value) => {
+const createSweetBox = async (value) => {
     if (value) {
-        const checkColor = await SweetBox.findOne({where: { 
+        const checkSweetBox = await SweetBox.findOne({where: { 
             [Op.or]: [
-                {color: value.color},
+                {key: value.key},
                 {name: value.name}
             ]
         }})
-        if (!checkColor) {
-            const dataEntry = {
-                'color': value.color,
-                'name': value.name
-            }
-            const result = await SweetBox.create(dataEntry);
-            return result;
-        } else {
-            return {status: false, message: 'Sweetbox or name already exists'};
+
+        if (checkSweetBox) {
+            return {code: 500, status: false, message: 'Sweetbox or name already exists'};
         }
+        
+        return await SweetBox.create({
+            'name': value.name,
+            'sweetBoxType': value.sweetBoxType,
+            'key': value.key
+        });
     }
     return null;
+}
+
+const saveSweetBox = async (value, id) => {    
+    return await SweetBox.update(
+      {
+        'name': value.name,
+        'sweetBoxType': value.sweetBoxType,
+        'status': value.status,
+        'key': value.key
+      },
+      {
+        where: {
+          id: id
+        }
+      }
+    );
+}
+
+const deleteSweetBox = async (id) => {
+    const fsweetbox = await SweetBox.findOne({ where: {id: id}})
+    if (fsweetbox) {
+        return await SweetBox.destroy({
+            where: {
+                id: id
+            }
+        })
+    } else {
+        return {code: 500, status: false, message: 'Invalid sweetbox'};
+    }
 }
 
 const searchSweetBoxById = async (id) => {
@@ -48,8 +77,32 @@ const searchActiveSweetBoxById = async (id) => {
     return product;
 }
 
+const getSweetBoxById = async (id) => {
+    return await SweetBox.findOne({ where: { id: id }, include: includes});
+}
+
+const getActiveSweetBoxByType = async (type) => {
+    return await SweetBox.findAll({ where: {sweetBoxTypeId: type, statusId: 1}, include: includes});
+}
+
+const getAllSweetBox = async () => {
+    return await SweetBox.findAll({ include: includes});
+}
+
+
+const getAllActiveSweetBox = async () => {
+    return await SweetBox.findAll({ where: {statusId: 1},include: includes});
+}
+
 module.exports = {
-    createColor,
+    createSweetBox,
     searchSweetBoxById,
-    searchActiveSweetBoxById
+    searchActiveSweetBoxById,
+    deleteSweetBox,
+    saveSweetBox,
+    createSweetBox,
+    getSweetBoxById,
+    getActiveSweetBoxByType,
+    getAllSweetBox,
+    getAllActiveSweetBox
 }

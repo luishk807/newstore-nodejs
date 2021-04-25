@@ -23,4 +23,5 @@ const ImageBoxImage = sequelize.define('image_box_images', {
   },
 });
 
+
 module.exports = ImageBoxImage;

@@ -11,6 +11,9 @@ const ImageBox = sequelize.define('image_boxes', {
   name: {
     type: Sequelize.TEXT
   },
+  key: {
+    type: Sequelize.TEXT
+  },
   imageBoxType: {
     type: Sequelize.BIGINT,
     field: 'imageBoxTypeId'
