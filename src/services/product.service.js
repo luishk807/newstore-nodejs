@@ -451,7 +451,7 @@ const searchProductByName = async (search, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await Product.findAndCountAll({ where });
+        const countResult = await Product.count({ where });
 
         const result = await Product.findAll({
             where,
@@ -460,9 +460,9 @@ const searchProductByName = async (search, page = null) => {
             limit: LIMIT
         });
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }
@@ -485,7 +485,7 @@ const searchProductByType = async (type, search, page = null) => {
     if (parPage) {
         const offset = paginate(parPage);
 
-        const countResult = await  Product.findAndCountAll({ 
+        const countResult = await  Product.count({ 
             where
         });
 
@@ -496,9 +496,9 @@ const searchProductByType = async (type, search, page = null) => {
             limit: LIMIT
         })
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }
@@ -522,7 +522,7 @@ const searchProductByIds = async (ids, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await Product.findAndCountAll({ where });
+        const countResult = await Product.count({ where });
 
         const result = await Product.findAll({
             where,
@@ -531,9 +531,9 @@ const searchProductByIds = async (ids, page = null) => {
             limit: LIMIT
         });
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }
