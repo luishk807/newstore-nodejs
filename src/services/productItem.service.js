@@ -39,7 +39,7 @@ const deleteProductItem = async (id) => {
         include: ['productItemsStatus','productImages', 'productItemColor', 'productItemSize']
     });
     if (productItem) {
-        const mapFiles = productItem.productItemImages.map(data => data.img_url);
+        const mapFiles = productItem.productImages.map(data => data.img_url);
         try {
             mapFiles.forEach(data => {
                 s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
