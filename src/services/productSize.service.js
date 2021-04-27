@@ -42,7 +42,7 @@ const getProductSizeByIds = async (ids, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await ProductSize.findAndCountAll({ where });
+        const countResult = await ProductSize.count({ where });
 
         const result = await ProductSize.findAll({
             where,
@@ -51,9 +51,9 @@ const getProductSizeByIds = async (ids, page = null) => {
             limit: LIMIT
         });
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }

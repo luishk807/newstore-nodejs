@@ -43,7 +43,7 @@ const getProductColorByIds = async (ids, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await ProductColor.findAndCountAll({ where });
+        const countResult = await ProductColor.count({ where });
 
         const result = await ProductColor.findAll({
             where,
@@ -52,9 +52,9 @@ const getProductColorByIds = async (ids, page = null) => {
             limit: LIMIT
         });
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }

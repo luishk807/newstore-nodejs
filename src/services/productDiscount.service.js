@@ -80,7 +80,7 @@ const getProductDiscountByIds = async (ids, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await ProductDiscount.findAndCountAll({ where });
+        const countResult = await ProductDiscount.count({ where });
 
         const result = await ProductDiscount.findAll({
             where,
@@ -89,9 +89,9 @@ const getProductDiscountByIds = async (ids, page = null) => {
             limit: LIMIT
         });
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }

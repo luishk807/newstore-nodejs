@@ -109,7 +109,7 @@ const searchProductItemByName = async (search, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await ProductItem.findAndCountAll({ where });
+        const countResult = await ProductItem.count({ where });
 
         const result = await ProductItem.findAll({
             where,
@@ -120,7 +120,7 @@ const searchProductItemByName = async (search, page = null) => {
 
         const pages = Math.ceil(countResult.count / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }
@@ -150,7 +150,7 @@ const getProductItemByIds = async (ids, page = null) => {
     if (page) {
         const offset = paginate(page);
 
-        const countResult = await ProductItem.findAndCountAll({ where });
+        const countResult = await ProductItem.count({ where });
 
         const result = await ProductItem.findAll({
             where,
@@ -159,9 +159,9 @@ const getProductItemByIds = async (ids, page = null) => {
             limit: LIMIT
         });
 
-        const pages = Math.ceil(countResult.count / LIMIT)
+        const pages = Math.ceil(countResult / LIMIT)
         const results = {
-            count: countResult.count,
+            count: countResult,
             items: result,
             pages: pages
         }
