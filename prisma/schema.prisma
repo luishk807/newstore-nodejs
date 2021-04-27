@@ -8,14 +8,14 @@ datasource db {
 }
 
 model brand {
-  id            BigInt          @id @default(autoincrement())
-  name          String?         @db.VarChar(50)
+  id            Int             @id @default(autoincrement())
+  name          String?
   brand_product brand_product[]
 }
 
 model brand_product {
-  brand_id   BigInt
-  product_id BigInt
+  brand_id   Int
+  product_id Int
   brand      brand   @relation(fields: [brand_id], references: [id])
   product    product @relation(fields: [product_id], references: [id])
 
@@ -23,14 +23,14 @@ model brand_product {
 }
 
 model category {
-  id               BigInt             @id @default(autoincrement())
-  name             String?            @db.VarChar(50)
+  id               Int                @id @default(autoincrement())
+  name             String?
   category_product category_product[]
 }
 
 model category_product {
-  category_id BigInt
-  product_id  BigInt
+  category_id Int
+  product_id  Int
   category    category @relation(fields: [category_id], references: [id])
   product     product  @relation(fields: [product_id], references: [id])
 
@@ -38,39 +38,39 @@ model category_product {
 }
 
 model client {
-  id             BigInt           @id @default(autoincrement())
-  first_name     String           @db.VarChar(50)
-  last_name      String?          @db.VarChar(50)
-  phones         String?          @db.VarChar(50)
-  email          String?          @db.VarChar(254)
-  created_at     DateTime         @default(now()) @db.Date
-  identification String?          @db.VarChar(30)
+  id             Int              @id @default(autoincrement())
+  first_name     String
+  last_name      String?
+  phones         String?
+  email          String?
+  created_at     DateTime         @default(now())
+  identification String?
   client_address client_address[]
   order          order[]
 }
 
 model client_address {
-  id         BigInt  @id @default(autoincrement())
-  client_id  BigInt
+  id         Int     @id @default(autoincrement())
+  client_id  Int
   address    String
   is_default Boolean @default(false)
-  type       String? @db.Char(10)
-  latitude   String? @db.VarChar(20)
-  longitude  String? @db.VarChar(20)
+  type       String?
+  latitude   String?
+  longitude  String?
   client     client  @relation(fields: [client_id], references: [id])
   order      order[]
 }
 
 model department {
-  id                 BigInt               @id @default(autoincrement())
-  name               String               @db.VarChar(50)
-  description        String?              @db.VarChar(100)
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  description        String?
   department_product department_product[]
 }
 
 model department_product {
-  department_id BigInt
-  product_id    BigInt
+  department_id Int
+  product_id    Int
   department    department @relation(fields: [department_id], references: [id])
   product       product    @relation(fields: [product_id], references: [id])
 
@@ -78,10 +78,10 @@ model department_product {
 }
 
 model discount_rule {
-  id                    BigInt                  @id @default(autoincrement())
-  name                  String                  @db.VarChar(50)
+  id                    Int                     @id @default(autoincrement())
+  name                  String
   min_quantity          Int
-  discount_percentage   Decimal                 @db.Decimal(3, 2)
+  discount_percentage   Float
   product_discount_rule product_discount_rule[]
 }
 
@@ -94,55 +94,55 @@ model oauth_clients {
 }
 
 model oauth_tokens {
-  id                       String   @id @db.Uuid
+  id                       String   @id
   access_token             String
-  access_token_expires_on  DateTime @db.Timestamp(6)
+  access_token_expires_on  DateTime
   client_id                String
   refresh_token            String
-  refresh_token_expires_on DateTime @db.Timestamp(6)
-  user_account_id          String   @db.Uuid
+  refresh_token_expires_on DateTime
+  user_account_id          String
 }
 
 model option {
-  id                     BigInt                   @id @default(autoincrement())
-  name                   String                   @db.VarChar(20)
-  description            String?                  @db.VarChar(100)
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  description            String?
   option_value           option_value[]
   product_variant_option product_variant_option[]
 }
 
 model option_value {
-  id                     BigInt                   @id @default(autoincrement())
-  value                  String                   @db.VarChar(30)
-  option_id              BigInt
+  id                     Int                      @id @default(autoincrement())
+  value                  String
+  option_id              Int
   option                 option                   @relation(fields: [option_id], references: [id])
   product_variant_option product_variant_option[]
 }
 
 model order {
-  id                BigInt          @id @default(autoincrement())
-  order_number      String?         @db.VarChar(40)
-  uuid              String          @db.Uuid
-  client_id         BigInt
-  client_address_id BigInt?
-  subtotal          Decimal         @default(0) @db.Money
-  tax               Decimal         @default(0) @db.Money
-  total             Decimal         @default(0) @db.Money
-  payment_type      String?         @db.Char(20)
+  id                Int             @id @default(autoincrement())
+  order_number      String?
+  uuid              String
+  client_id         Int
+  client_address_id Int?
+  subtotal          Float           @default(0)
+  tax               Float           @default(0)
+  total             Float           @default(0)
+  payment_type      String?
   client_address    client_address? @relation(fields: [client_address_id], references: [id])
   client            client          @relation(fields: [client_id], references: [id])
   order_item        order_item[]
 }
 
 model order_item {
-  id                 BigInt          @id @default(autoincrement())
-  order_id           BigInt
-  product_id         BigInt
-  product_variant_id BigInt
+  id                 Int             @id @default(autoincrement())
+  order_id           Int
+  product_id         Int
+  product_variant_id Int
   quantity           Int
-  price              Decimal         @db.Money
-  product_deal_id    BigInt?
-  tax                Decimal         @default(0) @db.Money
+  price              Float
+  product_deal_id    Int?
+  tax                Float           @default(0)
   order              order           @relation(fields: [order_id], references: [id])
   product_deal       product_deal?   @relation(fields: [product_deal_id], references: [id])
   product            product         @relation(fields: [product_id], references: [id])
@@ -150,8 +150,8 @@ model order_item {
 }
 
 model product {
-  id                    BigInt                  @id @default(autoincrement())
-  name                  String?                 @db.VarChar(50)
+  id                    Int                     @id @default(autoincrement())
+  name                  String?
   description           String?
   taxable               Boolean                 @default(true)
   brand_product         brand_product[]
@@ -168,21 +168,21 @@ model product {
 }
 
 model product_attribute {
-  id         BigInt  @id @default(autoincrement())
-  product_id BigInt
-  name       String  @db.VarChar(30)
-  value      String  @db.VarChar(30)
+  id         Int     @id @default(autoincrement())
+  product_id Int
+  name       String
+  value      String
   product    product @relation(fields: [product_id], references: [id])
 }
 
 model product_deal {
-  id                  BigInt           @id @default(autoincrement())
-  product_id          BigInt
-  product_variant_id  BigInt?
-  price               Decimal?         @db.Money
-  discount_percentage Decimal?         @db.Decimal(3, 2)
-  start_date          DateTime         @db.Date
-  end_date            DateTime         @db.Date
+  id                  Int              @id @default(autoincrement())
+  product_id          Int
+  product_variant_id  Int?
+  price               Float?
+  discount_percentage Float?
+  start_date          DateTime
+  end_date            DateTime
   limit_quantity      Int              @default(0)
   product             product          @relation(fields: [product_id], references: [id])
   product_variant     product_variant? @relation(fields: [product_variant_id], references: [id])
@@ -190,8 +190,8 @@ model product_deal {
 }
 
 model product_discount_rule {
-  product_id       BigInt
-  discount_rule_id BigInt
+  product_id       Int
+  discount_rule_id Int
   discount_rule    discount_rule @relation(fields: [discount_rule_id], references: [id])
   product          product       @relation(fields: [product_id], references: [id])
 
@@ -199,19 +199,19 @@ model product_discount_rule {
 }
 
 model product_image {
-  id                 BigInt           @id @default(autoincrement())
-  product_id         BigInt
-  product_variant_id BigInt?
+  id                 Int              @id @default(autoincrement())
+  product_id         Int
+  product_variant_id Int?
   product            product          @relation(fields: [product_id], references: [id])
   product_variant    product_variant? @relation(fields: [product_variant_id], references: [id])
 }
 
 model product_variant {
-  id                     BigInt                   @id @default(autoincrement())
-  product_id             BigInt
-  sku                    String                   @db.VarChar(50)
-  model                  String?                  @db.VarChar(50)
-  description            String?                  @db.VarChar(1000)
+  id                     Int                      @id @default(autoincrement())
+  product_id             Int
+  sku                    String
+  model                  String?
+  description            String?
   product                product                  @relation(fields: [product_id], references: [id])
   order_item             order_item[]
   product_deal           product_deal[]
@@ -222,11 +222,11 @@ model product_variant {
 }
 
 model stock {
-  id                 BigInt           @id @default(autoincrement())
-  product_id         BigInt
+  id                 Int              @id @default(autoincrement())
+  product_id         Int
   quantity           Int              @default(0)
-  product_variant_id BigInt?
-  price              Decimal          @default(1.0) @db.Money
+  product_variant_id Int?
+  price              Float            @default(1.0)
   product            product          @relation(fields: [product_id], references: [id])
   product_variant    product_variant? @relation(fields: [product_variant_id], references: [id])
 
@@ -234,22 +234,22 @@ model stock {
 }
 
 model stock_entry {
-  id                   BigInt          @id @default(autoincrement())
-  warehouse_id         BigInt
-  product_id           BigInt
-  warehouse_rack_id    BigInt?
-  created_at           DateTime        @db.Date
-  unit_cost            Decimal         @db.Money
-  unit_price           Decimal         @db.Money
-  reference            String?         @db.VarChar(50)
-  expiration_date      DateTime?       @db.Date
-  product_variant_id   BigInt
-  purchase_date        DateTime?       @db.Date
-  supplier_id          BigInt
+  id                   Int             @id @default(autoincrement())
+  warehouse_id         Int
+  product_id           Int
+  warehouse_rack_id    Int?
+  created_at           DateTime
+  unit_cost            Float
+  unit_price           Float
+  reference            String?
+  expiration_date      DateTime?
+  product_variant_id   Int
+  purchase_date        DateTime?
+  supplier_id          Int
   quantity             Int
-  supplier_invoice_ref String?         @db.VarChar(50)
+  supplier_invoice_ref String?
   deleted              Boolean         @default(false)
-  supplier_sku         String?         @db.VarChar(50)
+  supplier_sku         String?
   product              product         @relation(fields: [product_id], references: [id])
   product_variant      product_variant @relation(fields: [product_variant_id], references: [id])
   supplier             supplier        @relation(fields: [supplier_id], references: [id])
@@ -258,76 +258,45 @@ model stock_entry {
 }
 
 model supplier {
-  id          BigInt        @id @default(autoincrement())
-  name        String        @db.VarChar(50)
-  address     String?       @db.VarChar(100)
-  phone       String?       @db.VarChar(20)
+  id          Int           @id @default(autoincrement())
+  name        String
+  address     String?
+  phone       String?
   stock_entry stock_entry[]
 }
 
 model user_account {
-  id       String @id @db.Uuid
-  username String @db.VarChar(50)
-  password String @db.VarChar(100)
+  id       String @id
+  username String
+  password String
 }
 
 model warehouse {
-  id             BigInt           @id @default(autoincrement())
-  name           String?          @db.VarChar(50)
-  address        String?          @db.VarChar(100)
-  phone          String?          @db.VarChar(20)
-  email          String?          @db.VarChar(50)
+  id             Int              @id @default(autoincrement())
+  name           String?
+  address        String?
+  phone          String?
+  email          String?
   stock_entry    stock_entry[]
   warehouse_rack warehouse_rack[]
 }
 
 model warehouse_rack {
-  id           BigInt        @id @default(autoincrement())
-  warehouse_id BigInt
-  name         String        @db.VarChar(30)
+  id           Int           @id @default(autoincrement())
+  warehouse_id Int
+  name         String
   warehouse    warehouse     @relation(fields: [warehouse_id], references: [id])
   stock_entry  stock_entry[]
 }
 
 model product_variant_option {
-  product_variant_id BigInt
-  option_id          BigInt
-  option_value_id    BigInt
-  description        String?         @db.VarChar(1000)
+  product_variant_id Int
+  option_id          Int
+  option_value_id    Int
+  description        String?
   option             option          @relation(fields: [option_id], references: [id])
   option_value       option_value    @relation(fields: [option_value_id], references: [id])
   product_variant    product_variant @relation(fields: [product_variant_id], references: [id])
 
   @@unique([product_variant_id, option_id, option_value_id], name: "product_variant_option_product_variant_id_option_id_option__key")
-}
-
-model view_product {
-  id            		  BigInt @id
-  product_variant_id	BigInt?
-  product_id    		  BigInt
-  stock_id				    BigInt
-  name          		  String
-  description   		  String
-  sku           		  String
-  model         		  String?
-  brand         		  String?
-  category      		  String?
-  department    		  String?
-  option        		  String?
-  option_value  		  String?
-  quantity				    BigInt
-}
-
-model view_stock_summary {
-	row_number				  BigInt @id
-	product_id				  BigInt
-  product_variant_id	BigInt?
-	product_name			  String
-	option					    String?
-	option_value			  String?
-	sku						      String?
-	model					      String?
-	unit_price				  Float
-	quantity				    BigInt
-	entries					    BigInt
 }
