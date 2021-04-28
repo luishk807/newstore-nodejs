@@ -23,7 +23,8 @@ const createSweetBox = async (value) => {
         return await SweetBox.create({
             'name': value.name,
             'sweetBoxType': value.sweetBoxType,
-            'key': value.key
+            'key': value.key,
+            'maxItems': value.maxItems
         });
     }
     return null;
@@ -35,7 +36,8 @@ const saveSweetBox = async (value, id) => {
         'name': value.name,
         'sweetBoxType': value.sweetBoxType,
         'status': value.status,
-        'key': value.key
+        'key': value.key,
+        'maxItems': value.maxItems
       },
       {
         where: {
