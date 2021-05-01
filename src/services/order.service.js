@@ -7,6 +7,7 @@ const { calculateTotal } = require('../utils');
 const config = require('../config');
 const s3 = require('./storage.service');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment'];
+const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 const { Op } = require('sequelize');
 const sequelize = require('../pg/sequelize')
@@ -74,6 +75,7 @@ const updateOrder = async(req) => {
         }
       );
       if (result[0]) {
+        await sendgrid.sendOrderUpdate(order, req);
         return true;
       } else {
         return false;
@@ -119,7 +121,7 @@ const cancelOrder = async(req) => {
 }
 
 const getOrderByOrderNumberEmail = async(orderNumber, email) => {
-    return await Order.findOne({ where: {order_number: orderNumber, shipping_email: email, userId: null}, include: includes, order: orderBy});
+    return await Order.findOne({ where: {order_number: orderNumber, shipping_email: email}, include: includes_non_user, order: orderBy});
 }
 
 const getOrderByUser = async(loggedInUser, userId) => {
