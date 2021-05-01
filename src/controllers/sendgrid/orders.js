@@ -1,5 +1,6 @@
 const config = require('../../config');
 const ProductItem = require('../../pg/models/ProductItems');
+const Product = require('../../pg/models/Products');
 const Delivery = require('../../pg/models/DeliveryOptions');
 const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const { getAdminEmail } = require('../../utils');
@@ -11,10 +12,14 @@ sendGrid.setApiKey(config.sendGrid.key);
 const productIncludes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 const sendOrderUpdate = async(obj, req) => {
-  const message = `Your order has been updated.`;
-  const subject = `ORDER #${obj.order_num}: order updated`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
+  let status = obj.orderStatuses.name;
+  if (!status) {
+    status = `orden se ha actualizado`;
+  }
+  const subject = `ORDEN #${obj.order_num}: ${status}`;
   const client_email = obj.shipping_email;
-  const mainUrl = `${req.headers.referer}orders/account/${obj.id}`;
+  const client_name = obj.shipping_name;
   let result = false;
 
   // send user
@@ -26,7 +31,12 @@ const sendOrderUpdate = async(obj, req) => {
       <p>
         <img src="${logo}" width="300" />
       </p>
-      <p>Name: ${client_email}</p><p>Message: Your order has been recently updated.</p>
+      <p>${client_name},</p>
+      <p>Estado de orden: ${status}</p>
+      <p>Tu orden se ha actualizado recientemente.</p>
+      <p>Puede verificar el estado de su pedido en cualquier momento, yendo a <a target="_blank" href='${mainUrl}'>Tus Ordenes</a> en su cuenta</p>
+      <p>Si tiene alguna pregunta en relación a su pedido, comuníquese con nosotros a <a href='mailto:${config.email.sales}' target="_blank">ventas@avenidaz.com</a>.</p><br/>
+      <p>Gracias,<br/>AvenidaZ.com</p>
     `,
   }).then(() => {
     result = true;
@@ -102,7 +112,20 @@ const sendOrderEmail = async(obj, req) => {
   
     }
 
-    const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
+    // const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
+    let imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : null;
+
+    if (!imgUrl) {
+      const getBaseProduct = await Product.findOne({where: {id: product.productId}, include: ['productImages']});
+      
+      if (getBaseProduct) {
+        imgUrl = getBaseProduct.productImages && product.productImages.length ? `${aws_url}/${getBaseProduct.productImages[0].img_url}` : null;
+      }
+    }
+
+    if (!imgUrl) {
+      imgUrl = `${req.headers.referer}images/no-image.jpg`;
+    }
 
     temp['imgUrl'] = imgUrl;
     
