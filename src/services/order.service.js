@@ -9,6 +9,8 @@ const s3 = require('./storage.service');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 const { Op } = require('sequelize');
+const sequelize = require('../pg/sequelize')
+const { updateStock } = require('../services/product.stock.service');
 
 const saveStatusOrder = async(id, userId, status) => {
     const orderInfo = await Order.findOne({where: {id: id}});
@@ -192,61 +194,78 @@ const createOrder = async(req) => {
       }
     }
   
-    
-    const orderCreated = await Order.create(entry);
+    const t  = await sequelize.transaction();
 
-    if (orderCreated) {
-        let cartArry = [];
-        await saveStatusOrder(orderCreated.id, userId, 1);
-        const time = Date.now().toString() // '1492341545873'
-        const order_num = `${time}${orderCreated.id}`;
-        const updateCon = await Order.update(
-          {'order_number': order_num}, { where: {id: orderCreated.id}}
-        );
-        
-        orderObj = {
-          entry: entry,
-          orderId: orderCreated.id,
-          order_num: order_num,
-          cart: [],
-          clientEmail: email
-        }
-        if (Object.keys(carts).length) {
-          for(const cart in carts) {
-            cartArry.push({
-              orderId: orderCreated.id,
-              productItemId: carts[cart].id,
-              unit_total: carts[cart].retailPrice,
-              name: carts[cart].productItemProduct.name,
-              description: carts[cart].productItemProduct.description,
-              model: carts[cart].model,
-              color: carts[cart].productItemColor.name,
-              sku: carts[cart].sku,
-              product: carts[cart].product,
-              size: carts[cart].productItemSize.name,
-              code: carts[cart].sku,
-              productDiscount: carts[cart].discount ? carts[cart].discount.name : null,
-              originalPrice: carts[cart].originalPrice,
-              savePercentageShow: carts[cart].save_percentag_show,
-              savePercentage: carts[cart].save_percentage,
-              savePrice: carts[cart].save_price,
-              category: carts[cart].productItemProduct.category,
-              quantity: carts[cart].quantity,
-              total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),
-              brand: carts[cart].productItemProduct.brand,
-            });
-          }
-          orderObj.cart = cartArry;
-          await OrderProduct.bulkCreate(cartArry);
-          await sendgrid.sendOrderEmail(orderObj, req);
-          return orderObj;
+    try {
+        const orderCreated = await Order.create(entry, { transaction: t });
+
+        if (orderCreated) {
+            let cartArry = [];
+            await saveStatusOrder(orderCreated.id, userId, 1);
+            const time = Date.now().toString() // '1492341545873'
+            const order_num = `${time}${orderCreated.id}`;
+            await Order.update(
+                { 'order_number': order_num },
+                { where: { id: orderCreated.id }, transaction: t }
+            );
+            
+            let orderObj = {
+                entry: entry,
+                orderId: orderCreated.id,
+                order_num: order_num,
+                cart: [],
+                clientEmail: email
+            }
+            if (Object.keys(carts).length) {
+                for(const cart in carts) {
+                    cartArry.push({
+                        orderId: orderCreated.id,
+                        productItemId: carts[cart].id,
+                        unit_total: carts[cart].retailPrice,
+                        name: carts[cart].productItemProduct.name,
+                        description: carts[cart].productItemProduct.description,
+                        model: carts[cart].model,
+                        color: carts[cart].productItemColor.name,
+                        sku: carts[cart].sku,
+                        product: carts[cart].product,
+                        size: carts[cart].productItemSize.name,
+                        code: carts[cart].sku,
+                        productDiscount: carts[cart].discount ? carts[cart].discount.name : null,
+                        originalPrice: carts[cart].originalPrice,
+                        savePercentageShow: carts[cart].save_percentag_show,
+                        savePercentage: carts[cart].save_percentage,
+                        savePrice: carts[cart].save_price,
+                        category: carts[cart].productItemProduct.category,
+                        quantity: carts[cart].quantity,
+                        total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),
+                        brand: carts[cart].productItemProduct.brand,
+                    });
+                }
+                orderObj.cart = cartArry;
+                const orderProducts = await OrderProduct.bulkCreate(cartArry, { transaction: t, returning: true });
+                // Update stocks on product items, and creates history of stock movement
+                const updateResult = await updateStock(orderProducts, t);
+                if (!updateResult) {
+                    logger.error('Error updating stock');
+                }
+                // Commit the entire transaction
+                await t.commit();
+                await sendgrid.sendOrderEmail(orderObj, req);
+                return orderObj;
+            } else { // There will always be items in cart, will it ever reach this else?
+                // Commit the entire transaction
+                await t.commit();
+                await sendgrid.sendOrderEmail(orderObj, req);
+                return orderObj;
+            }
         } else {
-          await sendgrid.sendOrderEmail(orderObj, req);
-          return orderObj;
+            return false;
         }
-    } else {
-        return false;
+    } catch (error) {
+        logger.error('Error creating order, will rollback order', error);
+        await t.rollback();
     }
+    return false;
 }
 
 
