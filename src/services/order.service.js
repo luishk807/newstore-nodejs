@@ -6,22 +6,22 @@ const sendgrid = require('../controllers/sendgrid/orders');
 const { calculateTotal } = require('../utils');
 const config = require('../config');
 const s3 = require('./storage.service');
-const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment'];
-const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment'];
+const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
+const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 const { Op } = require('sequelize');
 const sequelize = require('../pg/sequelize')
 const { updateStock } = require('../services/product.stock.service');
 
-const saveStatusOrder = async(id, userId, status) => {
-    const orderInfo = await Order.findOne({where: {id: id}});
+const saveStatusOrder = async(orId, userId, status) => {
+    const orderInfo = await Order.findOne({where: {id: orId}});
     if (orderInfo) {
         if (orderInfo.orderStatusId !== status) {
                 const resp = await OrderActivity.create({
-                orderStatusId: status,
-                userId: userId ? userId : null,
-                orderId: id
-            });
+                    orderStatusId: status,
+                    userId: userId ? userId : null,
+                    orderId: orId
+                });
             return resp
         } else {
             return false;
@@ -181,7 +181,7 @@ const createOrder = async(req) => {
       entry['deliveryOption'] = body.deliveryOption;
     }
     if (!!!isNaN(body.deliveryServiceId)) {
-      entry['deliveryServiceId'] = body.deliveryServiceId;
+      entry['deliveryServiceGroupCostId'] = body.deliveryServiceId;
       entry['deliveryService'] = body.deliveryService;
     }
     if (!!!isNaN(body.paymentOptionId)) {
@@ -203,7 +203,10 @@ const createOrder = async(req) => {
 
         if (orderCreated) {
             let cartArry = [];
-            await saveStatusOrder(orderCreated.id, userId, 1);
+            await OrderActivity.create({
+                orderStatusId: 1,
+                orderId: orderCreated.id
+            });
             const time = Date.now().toString() // '1492341545873'
             const order_num = `${time}${orderCreated.id}`;
             await Order.update(

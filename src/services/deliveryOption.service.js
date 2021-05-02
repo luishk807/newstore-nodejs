@@ -1,5 +1,5 @@
 const DeliveryOption = require('../pg/models/DeliveryOptions');
-const includes = ['deliveryOptionStatus', 'deliveryOptionDeliveryServiceOptions'];
+const includes = ['deliveryOptionStatus', 'deliveryOptionDeliveryServiceGroupCost'];
 const { Op } = require('sequelize');
 
 const createDeliveryOption = async(obj) => {
