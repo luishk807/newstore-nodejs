@@ -12,10 +12,6 @@ const ProductColor = require('./ProductColors');
 const ProductSize = require('./ProductSizes');
 
 const ProductItem = sequelize.define('product_items', {
-  id: {
-    type: Sequelize.BIGINT,
-    primaryKey: true
-  },
   product: {
     type: Sequelize.BIGINT,
     field: 'productId',
