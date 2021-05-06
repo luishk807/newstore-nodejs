@@ -6,15 +6,10 @@ const Product = require('../../pg/models/Products');
 const ProductImages = require('../../pg/models/ProductImages');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
-const { paginate } = require('../../utils');
 const config = require('../../config');
 const controller = require('../../controllers/products');
 const s3 = require('../../services/storage.service');
-const { Op } = require('sequelize');
-
-const includes = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems', 'categories', 'subCategoryProduct'];
-
-const limit = config.defaultLimit;
+const imgStorageSvc = require('../../services/imageStorage.service');
 
 router.all('*', cors());
 
@@ -33,165 +28,156 @@ router.delete('/:id', verify, async (req, res, next) => {
 });
 
 
-router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
-  const imagesUploaded = req.files.map((file) => {
-    let myFile = file.originalname.split('.');
-    const fileType = myFile[myFile.length - 1];
-    const fileName = `${uuid.v4()}.${fileType}`;
-    const params = {
-      Bucket: config.s3.bucketName,
-      Key: fileName,
-      Body: file.buffer,
+router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
+  let quit = false;
+  const files = req.files;
+  const imagesUploaded = [];
+  for (let n=0; n<files.length; ++n) {
+    const f = files[n];
+    try {
+      const result = await imgStorageSvc.uploadAndCreateThumbnail(f);
+      imagesUploaded.push(result);
+    } catch (error) {
+      quit = true;
+      res.status(500).send(error);
     }
+  }
 
-    s3.upload(params, (err, data) => {
-      if (err) {
-        res.status(500).send({status: false, message: err})
-      }
-    })
-
-    return {
-      Key: fileName
-    };
-  })
-
-  const body = req.body;
-  const pid = req.params.id;
-  Product.update(
-    {
-      'name': body.name,
-      'stock': body.stock,
-      'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
-      'model': body.model,
-      'sku': body.sku,
-      'description': body.description,
-      'vendor': body.vendor,
-    },{
-      where: {
-        id: pid
-      }
-    }
-  ).then((updated) => {
-    let message = "Product Updated";
-    // delete all images first in servers
-    const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
-    if (partBodySaved && Object.keys(partBodySaved).length) {
-      let mapFiles = []
-      let index = []
-      Object.keys(partBodySaved).forEach((key) => {
-        mapFiles.push(partBodySaved[key].img_url)
-        index.push(partBodySaved[key].id)
-      })
-      
-      // delete image selected
-      try {
-        mapFiles.forEach(data => {
-          const params = {
-            Bucket: config.s3.bucketName,
-            Key: data,
-          }
-          s3.deleteObject(params, (err, data) => {
-            if (err) {
-              res.status(500).send({status: false, message: err})
-            }
-          })
-        })
-       // res.status(200).json({ status: true, message: "Product successfully deleted" });
-      } catch (e) {
-        message += " .Error on deleting image!";
-      }
-
-
-      // delete data from db
-      try{
-        ProductImages.destroy({ where: { id: index }})
-      } catch (e) {
-        console.log(e)
-      }
-    }
-
-    let counter = 1;
-    // save all data to product images
-    if (imagesUploaded && imagesUploaded.length) {
-      let newImages = imagesUploaded.map((data) => {
-        return {
-          'productId': pid,
-          'img_url': data.Key,
-          'position': counter++
+  if (!quit) {
+    const body = req.body;
+    const pid = req.params.id;
+    Product.update(
+      {
+        'name': body.name,
+        'stock': body.stock,
+        'amount': body.amount,
+        'category': body.category,
+        'brand': body.brand,
+        'model': body.model,
+        'sku': body.sku,
+        'description': body.description,
+        'vendor': body.vendor,
+      },{
+        where: {
+          id: pid
         }
-      })
+      }
+    ).then((updated) => {
+      let message = "Product Updated";
+      // delete all images first in servers
+      const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
+      if (partBodySaved && Object.keys(partBodySaved).length) {
+        let mapFiles = []
+        let index = []
+        Object.keys(partBodySaved).forEach((key) => {
+          mapFiles.push(partBodySaved[key].img_url)
+          index.push(partBodySaved[key].id)
+        })
+        
+        // delete image selected
+        try {
+          mapFiles.forEach(data => {
+            const params = {
+              Bucket: config.s3.bucketName,
+              Key: data,
+            }
+            s3.deleteObject(params, (err, data) => {
+              if (err) {
+                res.status(500).send({status: false, message: err})
+              }
+            })
+          })
+        // res.status(200).json({ status: true, message: "Product successfully deleted" });
+        } catch (e) {
+          message += " .Error on deleting image!";
+        }
 
-      // save entired bulk to product images
-      ProductImages.bulkCreate(newImages).then((images) => {
+
+        // delete data from db
+        try{
+          ProductImages.destroy({ where: { id: index }})
+        } catch (e) {
+          console.log(e)
+        }
+      }
+
+      let counter = 1;
+      // save all data to product images
+      if (imagesUploaded && imagesUploaded.length) {
+        let newImages = imagesUploaded.map((data) => {
+          return {
+            'productId': pid,
+            'img_url': data.image.Key,
+            'img_thumb_url': data.thumbnail.Key,
+            'position': counter++
+          }
+        })
+
+        // save entired bulk to product images
+        ProductImages.bulkCreate(newImages).then((images) => {
+          res.status(200).json({
+            status: updated,
+            message: message
+          });
+        })
+      } else {
         res.status(200).json({
           status: updated,
           message: message
         });
-      })
-    } else {
-      res.status(200).json({
-        status: updated,
-        message: message
-      });
-    }
-  })
+      }
+    })
+  }
 });
 
-router.post('/', [verify, parser.array('image')], (req, res, next) => {
+router.post('/', [verify, parser.array('image')], async (req, res, next) => {
   // add / update products
-
-  const imagesUploaded = req.files.map((file) => {
-    let myFile = file.originalname.split('.');
-    const fileType = myFile[myFile.length - 1];
-    const fileName = `${uuid.v4()}.${fileType}`;
-    const params = {
-      Bucket: config.s3.bucketName,
-      Key: fileName,
-      Body: file.buffer,
+  let quit = false;
+  const files = req.files;
+  const imgsUploads = [];
+  for (let n=0; n<files.length; ++n) {
+    const f = files[n];
+    try {
+      const result = await imgStorageSvc.uploadAndCreateThumbnail(f);
+      imgsUploads.push(result);
+    } catch (error) {
+      quit = true;
+      res.status(500).send(error);
     }
+  }
 
-    s3.upload(params, (err, data) => {
-      if (err) {
-        res.status(500).send(err)
+  if (!quit) { // Prevent the product to be created if image upload fails
+    const body = req.body;
+
+    Product.create(
+      {
+        'name': body.name,
+        'stock': body.stock,
+        'amount': body.amount,
+        'category': body.category,
+        'brand': body.brand,
+        'model': body.model,
+        'sku': body.sku,
+        'description': body.description,
+        'vendor': body.vendor,
       }
+    ).then((product) => {
+      let counter = 1;
+      const newImages = imgsUploads.map((data) => {
+        return {
+          'productId': product.id,
+          'img_url': data.image.Key,
+          'img_thumb_url': data.thumbnail.Key,
+          'position': counter++
+        }
+      })
+      ProductImages.bulkCreate(newImages).then((images) => {
+        res.status(200).json({status: true, message: "Product added", data: product});
+      })
+    }).catch(err => {
+      res.status(401).json({status: false, message: "Unable to add product"});
     })
-
-    return {
-      Key: fileName
-    };
-  })
-
-  const body = req.body;
-
-  Product.create(
-    {
-      'name': body.name,
-      'stock': body.stock,
-      'amount': body.amount,
-      'category': body.category,
-      'brand': body.brand,
-      'model': body.model,
-      'sku': body.sku,
-      'description': body.description,
-      'vendor': body.vendor,
-    }
-  ).then((product) => {
-    let counter = 1;
-    const newImages = imagesUploaded.map((data) => {
-      return {
-        'productId': product.id,
-        'img_url': data.Key,
-        'position': counter++
-      }
-    })
-    ProductImages.bulkCreate(newImages).then((images) => {
-      res.status(200).json({status: true, message: "Product added", data: product});
-    })
-  }).catch(err => {
-    res.status(401).json({status: false, message: "Unable to add product"});
-  })
+  }
 })
 
 router.post('/import', [verify], (req, res, next) => {

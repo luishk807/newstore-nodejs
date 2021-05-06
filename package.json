@@ -21,6 +21,7 @@
     "express-oauth-server": "^2.0.0",
     "hashids": "^2.2.8",
     "heroku-ssl-redirect": "^0.1.1",
+    "image-thumbnail": "^1.0.13",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
     "multer": "^1.4.2",
