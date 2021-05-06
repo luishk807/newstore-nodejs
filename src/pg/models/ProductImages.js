@@ -3,7 +3,7 @@ const pgconfig = require('../config')
 
 const sequelize = pgconfig.getSequelize();
 
-const ProductImaage = sequelize.define('product_images', {
+const ProductImage = sequelize.define('product_images', {
   productId: {
     type: Sequelize.BIGINT
   },
@@ -12,7 +12,10 @@ const ProductImaage = sequelize.define('product_images', {
   },
   position: {
     type: Sequelize.BIGINT
+  },
+  img_thumb_url: {
+    type: Sequelize.TEXT
   }
 });
 
-module.exports = ProductImaage;
+module.exports = ProductImage;
