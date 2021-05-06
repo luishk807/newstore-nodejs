@@ -551,7 +551,7 @@ const searchProductById = async (id) => {
         id: id
     }
 
-    const product = await Product.findOne({ where, include: includes});
+    const product = await Product.findOne({ where, include: ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct']});
     return product;
 }
 

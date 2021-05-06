@@ -13,6 +13,8 @@ const OrderCancelReason = require('./OrderCancelReasons');
 
 const DeliveryService = require('./DeliveryServices');
 
+const DeliveryServiceGroupCost = require('./DeliveryServiceGroupCosts');
+
 const PaymentOption = require('./PaymentOptions');
 
 const DeliveryOption = require('./DeliveryOptions');
@@ -100,6 +102,9 @@ const Order = sequelize.define('orders', {
   deliveryServiceId: {
     type: Sequelize.BIGINT
   },
+  deliveryServiceGroupCostId: {
+    type: Sequelize.BIGINT
+  },
   paymentOption: {
     type: Sequelize.TEXT
   },
@@ -120,6 +125,8 @@ Order.belongsTo(DeliveryOption, { foreignKey: 'deliveryOptionId', as: "deliveryO
 Order.belongsTo(User, { foreignKey: 'userId', as: 'orderUser' })
 
 Order.belongsTo(DeliveryService, { foreignKey: 'deliveryServiceId', as: 'orderDeliveryService' })
+
+Order.belongsTo(DeliveryServiceGroupCost, { foreignKey: 'deliveryServiceGroupCostId', as: 'orderDeliveryServiceGroupCost' })
 
 Order.belongsTo(PaymentOption, { foreignKey: 'paymentOptionId', as: 'orderPayment' })
 
