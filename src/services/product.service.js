@@ -26,6 +26,7 @@ const requiredfields = [
 ];
 const LIMIT = config.defaultLimit;
 const MAIN_INCLUDES = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems', 'categories', 'subCategoryProduct'];
+const MAIN_INCLUDES_LIGHT = ['productStatus', 'productImages', 'productProductItems'];
 const IMPORT = 'IMPORT';
 /** Only these fields will be used to save on the database */
 const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
@@ -425,8 +426,8 @@ const deleteProduct = async (id) => {
     return { status: false, message: 'Product not found for deletion', notFound: true };
 }
 
-const searchProductByName = async (search, page = null) => {
-    const includes = MAIN_INCLUDES;
+const searchProductByName = async (search, page = null, isFullDetail = false) => {
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;;
 
     const where = {
         [Op.or]: [
@@ -473,8 +474,8 @@ const searchProductByName = async (search, page = null) => {
     }
 }
 
-const searchProductByType = async (type, search, page = null) => {
-    const includes = MAIN_INCLUDES;
+const searchProductByType = async (type, search, page = null, isFullDetail = false) => {
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;;
 
     const where = {
         [type]: search
@@ -510,8 +511,8 @@ const searchProductByType = async (type, search, page = null) => {
     }
 }
 
-const searchProductByIds = async (ids, page = null) => {
-    const includes = MAIN_INCLUDES;
+const searchProductByIds = async (ids, page = null, isFullDetail = false) => {
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;;
 
     const where = {
         id: {
@@ -544,19 +545,19 @@ const searchProductByIds = async (ids, page = null) => {
     }
 }
 
-const searchProductById = async (id) => {
-    const includes = MAIN_INCLUDES;
+const searchProductById = async (id, isFullDetail = false) => {
+    const includes = isFullDetail ? ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct'] : MAIN_INCLUDES_LIGHT;;
 
     const where = {
         id: id
     }
 
-    const product = await Product.findOne({ where, include: ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct']});
+    const product = await Product.findOne({ where, include: includes});
     return product;
 }
 
-const getAllProducts = async (page = null) => {
-    const includes = MAIN_INCLUDES;
+const getAllProducts = async (page = null, isFullDetail = false) => {
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
 
     let query = {
         include: includes
@@ -575,7 +576,6 @@ const getAllProducts = async (page = null) => {
     return product;
 }
 
-
 module.exports = {
     importProducts,
     deleteProduct,
@@ -583,5 +583,5 @@ module.exports = {
     searchProductByType,
     searchProductByIds,
     searchProductById,
-    getAllProducts,
+    getAllProducts
 }

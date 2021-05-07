@@ -192,7 +192,7 @@ router.post('/import', [verify], (req, res, next) => {
 router.get('/search', async(req, res, next) => {
   if (req.query.vendor) {
     try {
-      const product = await controller.searchProductByType('vendorId', req.query.vendor, req.query.page);
+      const product = await controller.searchProductByType('vendorId', req.query.vendor, req.query.page, req.query.fullDetail);
       res.json(product);
     } catch(err) {
       res.send(err)
@@ -206,14 +206,14 @@ router.get('/search', async(req, res, next) => {
     }
   } else if (req.query.search) {
     try {
-      const product = await controller.searchProductByName(req.query.search, req.query.page);
+      const product = await controller.searchProductByName(req.query.search, req.query.page, req.query.fullDetail);
       res.json(product);
     } catch(err) {
       res.send(err)
     }
   } else if (req.query.category) {
     try {
-      const product = await controller.searchProductByType('categoryId', req.query.category, req.query.page);
+      const product = await controller.searchProductByType('categoryId', req.query.category, req.query.page, req.query.fullDetail);
       res.status(200).json(product);
     } catch(err) {
       res.send(err)
@@ -232,7 +232,7 @@ router.get('/vendor/:id', async(req, res, next) => {
 
 router.get('/bulk', async(req, res, next) => {
   try {
-    const product = await controller.searchProductByIds(req.query.ids, req.query.page);
+    const product = await controller.searchProductByIds(req.query.ids, req.query.page, req.query.fullDetail);
     res.status(200).json(product)
   } catch(err) {
     res.status(500).json({status: false, message: err})
@@ -241,7 +241,7 @@ router.get('/bulk', async(req, res, next) => {
 
 router.get('/cat/:id', async(req, res, next) => {
   try {
-    const product = await controller.searchProductByType('categoryId', req.params.id, req.query.page);
+    const product = await controller.searchProductByType('categoryId', req.params.id, req.query.page, req.query.fullDetail);
     res.json(product);
   } catch(err) {
     res.send(err)
@@ -260,7 +260,7 @@ router.get('/:id', async(req, res, next) => {
 router.get('/',async(req, res, next) => {
   // // get products
   try {
-    const product = await controller.getAllProducts(req.query.page);
+    const product = await controller.getAllProducts(req.query.page, req.query.fullDetail);
     res.json(product)
   } catch(err) {
     res.send(err)
