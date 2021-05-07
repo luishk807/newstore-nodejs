@@ -11,7 +11,8 @@ const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderPro
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 const { Op } = require('sequelize');
 const sequelize = require('../pg/sequelize')
-const { updateStock } = require('../services/product.stock.service');
+const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
+const logger = global.logger;
 
 const saveStatusOrder = async(orId, userId, status) => {
     const orderInfo = await Order.findOne({where: {id: orId}});
@@ -53,11 +54,17 @@ const deleteOrderById = async(id, user) => {
         return { code: 500, status: false, message: "Order invalido" }
     }
 
-    return await Order.destroy({
-        where: {
-            id: order.id
-        }
-    })
+    const t  = await sequelize.transaction();
+    try {
+        // STOCK_MODE.INCREASE, because we want to increase our product stock again
+        await updateStock(order.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
+        const result = await Order.destroy({ where: { id: order.id } }, { transaction: t });
+        t.commit();
+        return result;
+    } catch (error) {
+        logger.error(`Error updating stock and delting the order: ${id}`, error);
+        t.rollback();
+    }
 }
 
 const updateOrder = async(req) => {
@@ -90,7 +97,6 @@ const cancelOrder = async(req) => {
     const id = req.params.id;
     const cancel = req.params.cancel;
     const orderInfo = await getOrder(id, user);
-    const url = req.headers.referer;
     const allowedCancelStatus = [1,2];
 
     if (!orderInfo) {
@@ -104,15 +110,18 @@ const cancelOrder = async(req) => {
         const resp = await Order.update({
             orderCancelReasonId: cancel,
             orderStatusId: 7
-        },{
-            where: {
-                id: id
-            }
-        });
+        }, { where: { id: id } });
         
         if (resp) {
-            await sendgrid.sendOrderCancelRequest(orderInfo, req);
-            return true;
+            try {
+                await Promise.all([
+                    updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE }),
+                    sendgrid.sendOrderCancelRequest(orderInfo, req)
+                ]);
+                return true;
+            } catch (error) {
+                logger.error(`Error on canceling order: ${id}`, error)
+            }
         } else {
             return false
         }
@@ -249,9 +258,10 @@ const createOrder = async(req) => {
                 orderObj.cart = cartArry;
                 const orderProducts = await OrderProduct.bulkCreate(cartArry, { transaction: t, returning: true });
                 // Update stocks on product items, and creates history of stock movement
-                const updateResult = await updateStock(orderProducts, t);
+                const updateResult = await updateStock(orderProducts, { transaction: t });
                 if (!updateResult) {
                     logger.error('Error updating stock');
+                    throw new Error('Error updating stocks')
                 }
                 // Commit the entire transaction
                 await t.commit();
