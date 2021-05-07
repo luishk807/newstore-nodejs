@@ -7,5 +7,5 @@ module.exports = {
     searchProductByType: productService.searchProductByType,
     searchProductByIds: productService.searchProductByIds,
     searchProductById: productService.searchProductById,
-    getAllProducts: productService.getAllProducts,
+    getAllProducts: productService.getAllProducts
 }
