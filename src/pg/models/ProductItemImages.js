@@ -10,6 +10,9 @@ const ProductItemImage = sequelize.define('product_item_images', {
   img_url: {
     type: Sequelize.TEXT
   },
+  img_thumb_url: {
+    type: Sequelize.TEXT
+  },
   position: {
     type: Sequelize.BIGINT
   }

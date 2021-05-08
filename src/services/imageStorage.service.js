@@ -3,6 +3,7 @@ const s3 = require('./storage.service');
 const uuid = require('uuid');
 const imageThumbnail = require("image-thumbnail");
 const THUMB_SUFFIX = '__thumb';
+const THUMB_WIDTH = 150;
 const logger = global.logger;
 
 const getS3Params = (file, options) => {
@@ -27,7 +28,7 @@ const upload = (file, options) => {
 const getThumbnailBuffer = async (file) => {
     try {
         return await imageThumbnail(file.buffer, {
-            width: 150
+            width: THUMB_WIDTH
         });
     } catch (error) {
         logger.error(`Error creating thumbnail for ${file.originalname}`, error);
@@ -43,7 +44,27 @@ const uploadAndCreateThumbnail = async (file) => {
     return { image: data, thumbnail }
 }
 
+const remove = (fileKey) => {
+    return s3.deleteObject({ Bucket: config.s3.bucketName, Key: fileKey }).promise()
+}
+
+/** Upload the image and the thumbnail created */
+const uploadImages = async (files) => {
+    const imgsUploads = [];
+    for (let n=0; n<files.length; ++n) {
+      try {
+        const result = await uploadAndCreateThumbnail(files[n]);
+        imgsUploads.push(result);
+      } catch (error) {
+        return { error }
+      }
+    }
+    return { images: imgsUploads }
+}
+
 module.exports = {
     upload,
-    uploadAndCreateThumbnail
+    uploadAndCreateThumbnail,
+    remove,
+    uploadImages
 }

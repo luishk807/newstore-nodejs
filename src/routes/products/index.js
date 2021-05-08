@@ -5,10 +5,7 @@ const verify = require('../../middlewares/verifyToken');
 const Product = require('../../pg/models/Products');
 const ProductImages = require('../../pg/models/ProductImages');
 const parser = require('../../middlewares/multerParser');
-const uuid = require('uuid');
-const config = require('../../config');
 const controller = require('../../controllers/products');
-const s3 = require('../../services/storage.service');
 const imgStorageSvc = require('../../services/imageStorage.service');
 
 router.all('*', cors());
@@ -27,27 +24,21 @@ router.delete('/:id', verify, async (req, res, next) => {
   }
 });
 
-
 router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
   let quit = false;
-  const files = req.files;
-  const imagesUploaded = [];
-  for (let n=0; n<files.length; ++n) {
-    const f = files[n];
-    try {
-      const result = await imgStorageSvc.uploadAndCreateThumbnail(f);
-      imagesUploaded.push(result);
-    } catch (error) {
-      quit = true;
-      res.status(500).send(error);
-    }
+  let imagesUploaded = [];
+  const uploadResult = await imgStorageSvc.uploadImages(req.files);
+  if (uploadResult.error) {
+    quit = true;
+    res.status(500).send(uploadResult.error);
+  } else {
+    imagesUploaded = uploadResult.images;
   }
 
   if (!quit) {
     const body = req.body;
     const pid = req.params.id;
-    Product.update(
-      {
+    const updated = await Product.update({
         'name': body.name,
         'stock': body.stock,
         'amount': body.amount,
@@ -57,93 +48,80 @@ router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
         'sku': body.sku,
         'description': body.description,
         'vendor': body.vendor,
-      },{
-        where: {
-          id: pid
+    }, { where: { id: pid } });
+
+    let message = "Product Updated";
+    // delete all images first in servers
+    const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
+    if (partBodySaved && Object.keys(partBodySaved).length) {
+      let mapFiles = []
+      let index = []
+      Object.keys(partBodySaved).forEach((key) => {
+        mapFiles.push(partBodySaved[key].img_url)
+        if (partBodySaved[key].img_thumb_url) { // If a thumbnail exists, have to check if it comes from req.body.saved
+          mapFiles.push(partBodySaved[key].img_thumb_url)
         }
-      }
-    ).then((updated) => {
-      let message = "Product Updated";
-      // delete all images first in servers
-      const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
-      if (partBodySaved && Object.keys(partBodySaved).length) {
-        let mapFiles = []
-        let index = []
-        Object.keys(partBodySaved).forEach((key) => {
-          mapFiles.push(partBodySaved[key].img_url)
-          index.push(partBodySaved[key].id)
+        index.push(partBodySaved[key].id)
+      })
+      
+      // delete image selected
+      try {
+        const promises = [];
+        mapFiles.forEach(imageKeys => {
+          promises.push(imgStorageSvc.remove(imageKeys))
         })
-        
-        // delete image selected
-        try {
-          mapFiles.forEach(data => {
-            const params = {
-              Bucket: config.s3.bucketName,
-              Key: data,
-            }
-            s3.deleteObject(params, (err, data) => {
-              if (err) {
-                res.status(500).send({status: false, message: err})
-              }
-            })
-          })
-        // res.status(200).json({ status: true, message: "Product successfully deleted" });
-        } catch (e) {
-          message += " .Error on deleting image!";
-        }
-
-
-        // delete data from db
-        try{
-          ProductImages.destroy({ where: { id: index }})
-        } catch (e) {
-          console.log(e)
-        }
+        await Promise.all(promises);
+      // res.status(200).json({ status: true, message: "Product successfully deleted" });
+      } catch (e) {
+        message += " .Error on deleting image!";
       }
 
-      let counter = 1;
-      // save all data to product images
-      if (imagesUploaded && imagesUploaded.length) {
-        let newImages = imagesUploaded.map((data) => {
-          return {
-            'productId': pid,
-            'img_url': data.image.Key,
-            'img_thumb_url': data.thumbnail.Key,
-            'position': counter++
-          }
-        })
+      // delete data from db
+      try {
+        ProductImages.destroy({ where: { id: index }})
+      } catch (e) {
+        console.log(e)
+      }
+    }
 
-        // save entired bulk to product images
-        ProductImages.bulkCreate(newImages).then((images) => {
-          res.status(200).json({
-            status: updated,
-            message: message
-          });
-        })
-      } else {
+    let counter = 1;
+    // save all data to product images
+    if (imagesUploaded && imagesUploaded.length) {
+      let newImages = imagesUploaded.map((data) => {
+        return {
+          'productId': pid,
+          'img_url': data.image.Key,
+          'img_thumb_url': data.thumbnail.Key,
+          'position': counter++
+        }
+      })
+
+      // save entired bulk to product images
+      ProductImages.bulkCreate(newImages).then(() => {
         res.status(200).json({
           status: updated,
           message: message
         });
-      }
-    })
+      })
+    } else {
+      res.status(200).json({
+        status: updated,
+        message: message
+      });
+    }
   }
 });
 
 router.post('/', [verify, parser.array('image')], async (req, res, next) => {
   // add / update products
   let quit = false;
-  const files = req.files;
-  const imgsUploads = [];
-  for (let n=0; n<files.length; ++n) {
-    const f = files[n];
-    try {
-      const result = await imgStorageSvc.uploadAndCreateThumbnail(f);
-      imgsUploads.push(result);
-    } catch (error) {
-      quit = true;
-      res.status(500).send(error);
-    }
+  let imgsUploads = [];
+  const uploadResult = await imgStorageSvc.uploadImages(req.files);
+  if (uploadResult.error) {
+    quit = true;
+    res.status(500).send(uploadResult.error);
+  } else {
+    imgsUploads = uploadResult.images;
   }
 
   if (!quit) { // Prevent the product to be created if image upload fails
