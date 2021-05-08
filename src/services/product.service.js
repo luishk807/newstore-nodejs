@@ -12,7 +12,8 @@ const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
 const { safeString, getLowerCaseSafeString } = require('../utils/string.utils');
 const { paginate } = require('../utils');
-const { getDistinctValues, getUniqueValuesByField, existFields } = require('../utils')
+const { getDistinctValues, getUniqueValuesByField, existFields } = require('../utils');
+const imgStorageSvc = require('../services/imageStorage.service');
 const validationField = '__validation__';
 const requiredfields = [
     'name',
@@ -397,6 +398,19 @@ const processProductDiscounts = async (products, importData) => {
     }
 }
 
+const getProductImagesKeys = (productImages) => {
+    const keys = [];
+    productImages.forEach(pi => {
+        if (pi.img_url) {
+            keys.push(pi.img_url);
+        }
+        if (pi.img_thumb_url) {
+            keys.push(pi.img_thumb_url);
+        }
+    });
+    return keys;
+}
+
 const deleteProduct = async (id) => {
     const product = await Product.findOne({
         where: { id: id },
@@ -404,16 +418,14 @@ const deleteProduct = async (id) => {
     });
     if (product) {
         if (product.productImages && product.productImages.length) {
-            const mapFiles = product.productImages.map(data => data.img_url);
+            const imageKeys = getProductImagesKeys(product.productImages);
             try {
-                mapFiles.forEach(data => {
-                    s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
-                        if (err) {
-                            // res.status(500).send({status: false, message: err})
-                        }
-                    })
-                })
-                await Product.destroy({ where: { id: product.id } });
+                const promises = [];
+                imageKeys.forEach(imageKey => {
+                    promises.push(imgStorageSvc.remove(imageKey))
+                });
+                promises.push(Product.destroy({ where: { id: product.id } }));
+                await Promise.all(promises);
                 return { status: true, message: "Product successfully deleted" };
             } catch (e) {
                 return { status: false, message: "Product delete, but error on deleting image!", error: e.toString() };

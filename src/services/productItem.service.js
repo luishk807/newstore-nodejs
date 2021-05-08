@@ -1,10 +1,9 @@
 const ProductItem = require('../pg/models/ProductItems');
 const ProductColor = require('../pg/models/ProductColors');
-const s3 = require('./storage.service');
-const config = require('../config');
 const { paginate } = require('../utils');
 const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 const { Op } = require('sequelize');
+const imgStoreSvc = require('../services/imageStorage.service');
 
 const createProductItems = async (items) => {
     const savedFields = [
@@ -39,16 +38,19 @@ const deleteProductItem = async (id) => {
         include: ['productItemsStatus','productImages', 'productItemColor', 'productItemSize']
     });
     if (productItem) {
-        const mapFiles = productItem.productImages.map(data => data.img_url);
+        const images = productItem.productImages;
         try {
-            mapFiles.forEach(data => {
-                s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
-                    if (err) {
-                        // res.status(500).send({status: false, message: err})
-                    }
-                })
-            })
-            await ProductItem.destroy({ where: { id: productItem.id } });
+            const promises = [];
+            for (let n = 0; n < images.length; ++n) {
+                if (images[n].img_url) {
+                    promises.push(imgStoreSvc.remove(images[n].img_url))
+                }
+                if (images[n].img_thumb_url) {
+                    promises.push(imgStoreSvc.remove(images[n].img_thumb_url))
+                }
+            }
+            promises.push(ProductItem.destroy({ where: { id: productItem.id } }));
+            await Promise.all(promises);
             return { status: true, message: "Product Item successfully deleted" };
         } catch (e) {
             return { status: false, message: "Product Item delete, but error on deleting image!", error: e.toString() };
@@ -64,7 +66,6 @@ const getProductItemByProductId = async (id) => {
     }
     return null;
 }
-
 
 const searchProductItemByName = async (search, page = null) => {
 
