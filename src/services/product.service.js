@@ -568,18 +568,44 @@ const searchProductById = async (id, isFullDetail = false) => {
     return product;
 }
 
-const getAllProducts = async (page = null, isFullDetail = false) => {
+const getAllProducts = async (filter) => {
+    const {page, isFullDetail} = filter;
+
     const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
 
     let query = {
         include: includes
     }
     
+    let orderBy = null;
+
+    if (isFullDetail) {
+        orderBy = [
+            ['updatedAt', 'DESC'],
+            ['createdAt', 'DESC'],
+            ['productColors', 'updatedAt', 'DESC'],
+            ['productColors', 'createdAt', 'DESC'],
+            ['productProductItems', 'updatedAt', 'DESC'],
+            ['productProductItems', 'createdAt', 'DESC'],
+            ['productProductDiscount', 'updatedAt', 'DESC'],
+            ['productProductDiscount', 'createdAt', 'DESC'],
+            ['productSizes', 'updatedAt', 'DESC'],
+            ['productSizes', 'createdAt', 'DESC'],
+            ['productImages', 'updatedAt', 'DESC'],
+            ['productImages', 'createdAt', 'DESC'],
+        ]
+    } else {
+        orderBy = [
+            ['createdAt', 'DESC']
+        ]
+    }
+
     if (page) {
         query = {
             ...query,
             limit: LIMIT,
             distinct: true,
+            order: orderBy,
             offset: paginate(page),
         }
     }

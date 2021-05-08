@@ -143,6 +143,7 @@ router.post('/', [verify, parser.array('image')], async (req, res, next) => {
       'finalUnitPrice': body.finalUnitPrice,
       'unitPrice': body.unitPrice,
       'code': body.code,
+      'sku': body.sku,
       'exp_date': body.exp_date,
       'retailPrice': body.retailPrice,
       'vendorId': Number(body.vendor),
