@@ -24,10 +24,10 @@ const config = {
     key: process.env.SENDGRID_API_KEY
   },
   email: {
-    contact: 'info@avenidaz.com',
-    sales: 'ventas@avenidaz.com',
+    contact: 'Avenida Z <info@avenidaz.com>',
+    sales: 'Ventas - Avenida Z <ventas@avenidaz.com>',
     dev: 'luis@avenidaz.com',
-    noReply: 'no-reply@avenidaz.com',
+    noReply: 'No-Reply - Avenida Z <no-reply@avenidaz.com>',
   },
   defaultLimit: 30,
   taxTotal: 0.07
