@@ -232,7 +232,7 @@ const createOrder = async(req) => {
             }
             if (Object.keys(carts).length) {
                 for(const cart in carts) {
-                    cartArry.push({
+                    let item = {
                         orderId: orderCreated.id,
                         productItemId: carts[cart].id,
                         unit_total: carts[cart].retailPrice,
@@ -244,16 +244,25 @@ const createOrder = async(req) => {
                         product: carts[cart].product,
                         size: carts[cart].productItemSize.name,
                         code: carts[cart].sku,
-                        productDiscount: carts[cart].discount ? carts[cart].discount.name : null,
+                        productDiscount: null,
                         originalPrice: carts[cart].originalPrice,
                         savePercentageShow: carts[cart].save_percentag_show,
                         savePercentage: carts[cart].save_percentage,
                         savePrice: carts[cart].save_price,
                         category: carts[cart].productItemProduct.category,
-                        quantity: carts[cart].quantity,
+                        quantity: null,
                         total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),
                         brand: carts[cart].productItemProduct.brand,
-                    });
+                    }
+                    if (carts[cart].discount) {
+                        item.productDiscount = carts[cart].discount.name
+                        item.quantity = carts[cart].quantity
+                    }
+                    else if (carts[cart].bundle) {
+                        item.productDiscount = carts[cart].bundle.name;
+                        item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
+                    }
+                    cartArry.push(item);
                 }
                 orderObj.cart = cartArry;
                 const orderProducts = await OrderProduct.bulkCreate(cartArry, { transaction: t, returning: true });
