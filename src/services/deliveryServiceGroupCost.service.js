@@ -81,15 +81,21 @@ const getDeliveryServiceGroupCostById = async(id) => {
 }
 
 const getDeliveryServiceGroupCosts = async() => {
-    return await DeliveryServiceGroupCost.findAll({include: includes});
+    return await DeliveryServiceGroupCost.findAll({include: includes, orderBy:[
+      ['name', 'ASC']
+    ]});
 }
 
 const getDeliveryServiceGroupCostByFilter = async(filter) => {
-  return await DeliveryServiceGroupCost.findOne({ where: filter, include: includes});
+  return await DeliveryServiceGroupCost.findOne({ where: filter, include: includes, orderBy:[
+    ['name', 'ASC']
+  ]});
 }
 
 const getAllDeliveryServiceGroupCostByFilter = async(filter) => {
-  return await DeliveryServiceGroupCost.findAll({ where: filter, include: includes});
+  return await DeliveryServiceGroupCost.findAll({ where: filter, include: includes, orderBy:[
+    ['name', 'ASC']
+  ]});
 }
 
 module.exports = {

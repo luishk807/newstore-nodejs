@@ -1,7 +1,7 @@
 const ProductItem = require('../pg/models/ProductItems');
 const ProductColor = require('../pg/models/ProductColors');
 const { paginate } = require('../utils');
-const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
+const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize', 'productItemProductBundles'];
 const { Op } = require('sequelize');
 const imgStoreSvc = require('../services/imageStorage.service');
 
