@@ -2,9 +2,10 @@ const config = require('../../config');
 const ProductItem = require('../../pg/models/ProductItems');
 const Product = require('../../pg/models/Products');
 const Delivery = require('../../pg/models/DeliveryOptions');
-const ProductDiscount = require('../../pg/models/ProductDiscounts');
 const { getAdminEmail } = require('../../utils');
 const sendGrid = require('@sendgrid/mail');
+const { Op } = require('sequelize');
+const { getTemplateText } = require('../../templates/es/order.confirmation');
 const aws_url = process.env.IMAGE_URL;
 const logo = `${aws_url}/avenidaz.png`;
 sendGrid.setApiKey(config.sendGrid.key);
@@ -88,6 +89,7 @@ const sendOrderCancelRequest = async(obj, req) => {
   return result;
 }
 
+/** @deprecated Replaced by sendOrderConfirmationEmail */
 const sendOrderEmail = async(obj, req) => {
   let toEmail = [];
   toEmail.push(getAdminEmail('sales'));
@@ -283,8 +285,48 @@ const sendOrderEmail = async(obj, req) => {
   })
 }
 
+const baseProductSearchFunc = async (id) => {
+  return Product.findOne({ where: { id: id }, include: ['productImages'] });
+}
+
+const sendOrderConfirmationEmail = async(obj, { referer }) => {
+  const toEmail = [];
+  toEmail.push(getAdminEmail('sales'));
+  const mainUrl = `${referer}account/orders/${obj.orderId}`;
+  const subject = `ÓRDEN #${obj.order_num} RECIBIDA`;
+  const piIds = obj.cart.map(pi => pi.productItemId);
+  const promises = [];
+  promises.push(ProductItem.findAll({ where: { id: { [Op.in]: piIds } }, includes: productIncludes }));
+  // If there is an delivery id
+  if (obj.entry.deliveryId) {
+    promises.push(Delivery.findOne({ where: { id: obj.entry.deliveryId }, attributes: ['name'] }));
+  }
+  const [productItems, delivery] = await Promise.all(promises);
+
+  const message = await getTemplateText(obj, { logo: logo, mainUrl, productItems, referer, awsImageUrl: aws_url, delivery, productSearchFunc: baseProductSearchFunc });
+
+  if (process.env.NODE_ENV === "production") {
+    toEmail.push(obj.clientEmail);
+  }
+
+  const msg = {
+    to: toEmail, // Change to your recipient
+    from: config.email.contact, // Change to your verified sender
+    subject: `${subject}`,
+    html: message,
+  }
+
+  return sendGrid.send(msg).then(() => {
+    return true;
+  })
+  .catch(() => {
+    return false;
+  })
+}
+
 module.exports = {
   sendOrderEmail,
+  sendOrderConfirmationEmail,
   sendOrderUpdate,
   sendOrderCancelRequest
 }
