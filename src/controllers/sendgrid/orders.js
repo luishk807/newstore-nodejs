@@ -139,7 +139,7 @@ const sendOrderEmail = async(obj, req) => {
         </td>
         <td style='width: 50%'>
           <p><strong>${item.name}</strong></p>
-          <p>Model: ${item.model}</p>
+          <p>Sku: ${item.sku}</p>
           <p>Color: ${item.color}</p>
           <p>Size: ${item.size}</p>
           <p>Qt: ${item.quantity}</p>

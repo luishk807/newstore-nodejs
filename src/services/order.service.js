@@ -261,6 +261,8 @@ const createOrder = async(req) => {
                     else if (carts[cart].bundle) {
                         item.productDiscount = carts[cart].bundle.name;
                         item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
+                    } else {
+                        item.quantity = carts[cart].quantity;
                     }
                     cartArry.push(item);
                 }
