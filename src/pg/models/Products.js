@@ -18,7 +18,6 @@ const Brand = require('./Brands');
 const ProductItem = require('./ProductItems');
 
 const ProductDiscount = require('./ProductDiscounts');
-
 // const ProductQuestionModel = require('./ProductQuestions');
 // const ProductQuestion = ProductQuestionModel.getModel();
 
@@ -53,6 +52,7 @@ UserWishlist.belongsTo(Product, {foreignKey: 'productId', as: 'wishlistProduct'}
 Product.belongsTo(Brand, { foreignKey: 'brand', as: 'productBrand'});
 
 Brand.hasMany(Product, { foreignKey: 'brand', as: 'brandProduct'} )
+
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
 
 Product.hasMany(ProductImages, { as: "productImages"});
@@ -72,6 +72,5 @@ ProductItem.belongsTo(Product, { foreignKey: 'productId', as: 'productItemProduc
 //Product.hasMany(UserWishlist, { foreignKey: 'productId', as: 'productWishlist'})
 
 Product.belongsTo(Statuses, { foreignKey: 'statusId', as: 'productStatus'});
-
 
 module.exports = Product;

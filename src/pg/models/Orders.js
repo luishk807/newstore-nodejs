@@ -13,6 +13,8 @@ const OrderCancelReason = require('./OrderCancelReasons');
 
 const DeliveryService = require('./DeliveryServices');
 
+const PromotionCode = require('./PromotionCodes');
+
 const DeliveryServiceGroupCost = require('./DeliveryServiceGroupCosts');
 
 const PaymentOption = require('./PaymentOptions');
@@ -111,6 +113,15 @@ const Order = sequelize.define('orders', {
   paymentOptionId: {
     type: Sequelize.BIGINT
   },
+  promotionCode: {
+    type: Sequelize.TEXT
+  },
+  promotionCodeId: {
+    type: Sequelize.BIGINT
+  },
+  coupon: {
+    type: Sequelize.DECIMAL
+  },
   totalSaved: {
     type: Sequelize.DECIMAL
   },
@@ -129,6 +140,8 @@ Order.belongsTo(DeliveryService, { foreignKey: 'deliveryServiceId', as: 'orderDe
 Order.belongsTo(DeliveryServiceGroupCost, { foreignKey: 'deliveryServiceGroupCostId', as: 'orderDeliveryServiceGroupCost' })
 
 Order.belongsTo(PaymentOption, { foreignKey: 'paymentOptionId', as: 'orderPayment' })
+
+Order.belongsTo(PromotionCode, { foreignKey: 'promotionCodeId', as: 'orderPromotion' })
 
 Order.hasMany(OrderProduct, { as: 'orderOrderProduct'})
 

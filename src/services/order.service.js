@@ -1,12 +1,14 @@
 const Order = require('../pg/models/Orders');
 const OrderActivity = require('../pg/models/OrderActivities');
 const OrderProduct = require('../pg/models/OrderProducts');
+const ProductBundle = require('../pg/models/ProductBundles');
+const ProductDiscount = require('../pg/models/ProductDiscounts');
 const User = require('../pg/models/Users');
 const sendgrid = require('../controllers/sendgrid/orders');
 const { calculateTotal } = require('../utils');
 const config = require('../config');
 const s3 = require('./storage.service');
-const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
+const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost', 'orderPromotion'];
 const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 const { Op } = require('sequelize');
@@ -170,6 +172,7 @@ const createOrder = async(req) => {
       'tax': getTotal.taxes,
       'totalSaved': getTotal.saved,
       'delivery': getTotal.delivery,
+      'coupon': getTotal.coupon,
       'shipping_name': body.shipping_name,
       'shipping_address': body.shipping_address,
       'shipping_email': body.shipping_email,
@@ -197,6 +200,10 @@ const createOrder = async(req) => {
       entry['paymentOptionId'] = body.paymentOptionId;
       entry['paymentOption'] = body.paymentOption;
     }
+    if (!!!isNaN(body.promotionCodeId) && getTotal.coupon) {
+        entry['promotionCodeId'] = body.promotionCodeId;
+        entry['promotionCode'] = body.promotionCode;
+      }
     if (!!!isNaN(entryUser)) {
       entry['userId'] = body.userid;
       const findUser = await User.findOne({where: { id: body.userid}});
@@ -204,7 +211,7 @@ const createOrder = async(req) => {
           email = findUser.email;
       }
     }
-  
+
     const t  = await sequelize.transaction();
 
     try {
@@ -255,12 +262,24 @@ const createOrder = async(req) => {
                         brand: carts[cart].productItemProduct.brand,
                     }
                     if (carts[cart].discount) {
-                        item.productDiscount = carts[cart].discount.name
-                        item.quantity = carts[cart].quantity
+                        const getDiscount = await ProductDiscount.findOne({where: { id: carts[cart].discount.id }});
+                        if (getDiscount && carts[cart].quantity >= getDiscount.minQuantity) {
+                            item.productDiscount = carts[cart].discount.name
+                            item.quantity = carts[cart].quantity
+                        } else {
+                            await deleteOrderById(orderCreated.id);
+                            return {status: false, code: 500, message: 'error with discount'}
+                        }
                     }
                     else if (carts[cart].bundle) {
-                        item.productDiscount = carts[cart].bundle.name;
-                        item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
+                        const getBundle = await ProductBundle.findOne({where: { id: carts[cart].bundle.id, productItemId: carts[cart].id}});
+                        if (getBundle) {
+                            item.productDiscount = carts[cart].bundle.name;
+                            item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
+                        } else {
+                            await deleteOrderById(orderCreated.id);
+                            return {status: false, code: 500, message: 'error with bundle'}
+                        }
                     } else {
                         item.quantity = carts[cart].quantity;
                     }

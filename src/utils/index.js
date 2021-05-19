@@ -1,5 +1,5 @@
 const config = require('../config');
-
+const PromotionCode = require('../pg/models/PromotionCodes');
 const LIMIT = config.defaultLimit;
 
 const cleanData = (data) => {
@@ -17,6 +17,13 @@ const calculateTotal = async(obj) => {
   let taxes = 0;
   let grandTotal = 0;
   let savedGrandTotal = 0;
+  let coupon = 0;
+  const promoCode = await PromotionCode.findOne({
+    where: {
+      id: obj.promotionCodeId,
+      status: 1
+    }
+  })
   let delivery = !obj.delivery || obj.delivery === -1 ? 0 : parseFloat(obj.delivery);
   let originalTotal = 0;
 
@@ -36,10 +43,41 @@ const calculateTotal = async(obj) => {
 
   savedGrandTotal = originalTotal - subtotal;
 
+  let newCoupon = 0;
+
+  const today = new Date();
+  
+  let validCoupon = true;
+
+  if (promoCode) {
+    const getStartDate = new Date(promoCode.startDate);
+    const getEndDate = new Date(promoCode.endDate);
+    if (promoCode.useDate) {
+      if (today.getTime() > getStartDate.getTime() && today.getTime() < getEndDate.getTime()) {
+        validCoupon = true;
+      } else {
+        validCoupon = false;
+      }
+    }
+
+    if (validCoupon) {
+      let coupon = parseFloat(promoCode.percentage);
+      let oldTotal = grandTotal;
+      newCoupon = ((coupon / 100) * grandTotal);
+      grandTotal = grandTotal - newCoupon;
+      if (isNaN(savedGrandTotal)) {
+        savedGrandTotal = oldTotal - grandTotal;
+      } else {
+        savedGrandTotal = savedGrandTotal + newCoupon;
+      }
+    }
+  }
+
   return {
       'subtotal': formatNumber(subtotal),
       'delivery': formatNumber(delivery),
       'taxes': formatNumber(taxes),
+      'coupon': formatNumber(newCoupon),
       'saved': formatNumber(savedGrandTotal),
       'grandTotal': formatNumber(grandTotal)
   };
