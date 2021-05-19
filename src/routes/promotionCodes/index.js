@@ -2,7 +2,7 @@ const router = require('express').Router();
 const cors = require('cors');
 const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const PromotionCode = require('../../pg/models/PromotionCodes');
-const controller = require('../../controllers/PromotionCodes');
+const controller = require('../../controllers/promotionCodes');
 const parser = require('../../middlewares/multerParser');
 router.all('*', cors());
 
