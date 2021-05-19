@@ -17,13 +17,6 @@ const calculateTotal = async(obj) => {
   let taxes = 0;
   let grandTotal = 0;
   let savedGrandTotal = 0;
-  let coupon = 0;
-  const promoCode = await PromotionCode.findOne({
-    where: {
-      id: obj.promotionCodeId,
-      status: 1
-    }
-  })
   let delivery = !obj.delivery || obj.delivery === -1 ? 0 : parseFloat(obj.delivery);
   let originalTotal = 0;
 
@@ -49,26 +42,35 @@ const calculateTotal = async(obj) => {
   
   let validCoupon = true;
 
-  if (promoCode) {
-    const getStartDate = new Date(promoCode.startDate);
-    const getEndDate = new Date(promoCode.endDate);
-    if (promoCode.useDate) {
-      if (today.getTime() > getStartDate.getTime() && today.getTime() < getEndDate.getTime()) {
-        validCoupon = true;
-      } else {
-        validCoupon = false;
+  if (!isNaN(obj.promotionCodeId) && obj.promotionCodeId) {
+    const promoCode = await PromotionCode.findOne({
+      where: {
+        id: obj.promotionCodeId,
+        status: 1
       }
-    }
-
-    if (validCoupon) {
-      let coupon = parseFloat(promoCode.percentage);
-      let oldTotal = grandTotal;
-      newCoupon = ((coupon / 100) * grandTotal);
-      grandTotal = grandTotal - newCoupon;
-      if (isNaN(savedGrandTotal)) {
-        savedGrandTotal = oldTotal - grandTotal;
-      } else {
-        savedGrandTotal = savedGrandTotal + newCoupon;
+    })
+  
+    if (promoCode) {
+      const getStartDate = new Date(promoCode.startDate);
+      const getEndDate = new Date(promoCode.endDate);
+      if (promoCode.useDate) {
+        if (today.getTime() > getStartDate.getTime() && today.getTime() < getEndDate.getTime()) {
+          validCoupon = true;
+        } else {
+          validCoupon = false;
+        }
+      }
+  
+      if (validCoupon) {
+        let coupon = parseFloat(promoCode.percentage);
+        let oldTotal = grandTotal;
+        newCoupon = ((coupon / 100) * grandTotal);
+        grandTotal = grandTotal - newCoupon;
+        if (isNaN(savedGrandTotal)) {
+          savedGrandTotal = oldTotal - grandTotal;
+        } else {
+          savedGrandTotal = savedGrandTotal + newCoupon;
+        }
       }
     }
   }

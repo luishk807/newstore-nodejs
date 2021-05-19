@@ -19,10 +19,8 @@ const getSingleImageUrl = async (product, { referer, awsUrl, productSearchFunc }
 const getSingleItemHtml = (item, { imgUrl, productDiscount }) => {
     return `<table>
         <tr>
-          <td style='width: 20%; text-align: left; vertical-align:top'>
-            <img style='width: 100px;' src='${imgUrl}' />
-          </td>
-          <td style='width: 50%; text-align: center; vertical-align:top'>
+          <td style='width: 20%'><img style='width: 100px;' src='${imgUrl}' /></td>
+          <td style='width: 50%'>
             <p><strong>${item.name}</strong></p>
             <p>SKU: ${item.sku}</p>
             <p>Color: ${item.color}</p>
@@ -31,7 +29,7 @@ const getSingleItemHtml = (item, { imgUrl, productDiscount }) => {
             <p>Unidad: $${item.unit_total}</p>
             <p>${productDiscount}</p>
           </td>
-          <td style='width: 30%; text-align: right; vertical-align:top'>$${item.total}</td>
+          <td style='width: 30%'>$${item.total}</td>
         </tr>
       </table>`;
 }
@@ -64,31 +62,13 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         cartHtml += getSingleItemHtml(item, { imgUrl, productDiscount });
     }
     
-    let totalHtml = `<hr/>
-        <table style='width: 100%'>
-          <tr>
-            <td style='width: 50%'></td>
-            <td style='width: 50%'>
-              <table style='width: 100%'>
-                ${getTableRowFieldValue('Subtotal', `$${obj.entry.subtotal}`)}
-                ${getTableRowFieldValue('ITBMS 7%', `$${obj.entry.tax}`)}
-                ${getTableRowFieldValue('Envío', `$${obj.entry.delivery}`)}
-                ${getTableRowFieldValue('Descuento con cupon', `$${obj.entry.coupon}`, true)}
-                ${getTableRowFieldValue('Ahorraste', `- $${obj.entry.totalSaved}`, true)}
-              </table>
-            </td>
-          </tr>
-        </table>
-        <hr/>
-        <table style='width: 100%'>
-          <tr>
-            <td style='width: 50%'></td>
-            <td style='width: 50%'>
-              <table style='width: 100%'>
-                ${getTableRowFieldValue('Total', `$${obj.entry.grandtotal}`, false, true)}
-              </table>
-            </td>
-          </tr>
+    let totalHtml = `<hr/><table>
+        ${getTableRowFieldValue('Subtotal', `$${obj.entry.subtotal}`)}
+        ${getTableRowFieldValue('ITBMS 7%', `$${obj.entry.tax}`)}
+        ${getTableRowFieldValue('Envío', `$${obj.entry.delivery}`)}
+        ${getTableRowFieldValue('Ahorraste', `- $${obj.entry.totalSaved}`, true)}
+        </table><table><hr/>
+        ${getTableRowFieldValue('Total', `$${obj.entry.grandtotal}`, false, true)}
         </table>`;
     
     let deliveryHtml = '';
@@ -96,7 +76,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         deliveryHtml = `<p><strong>Shipping Method</strong><br/>${delivery.name}<br/></p>`;
     }
     
-    let message = `
+    const message = `
         <p>
           <img src="${logo}" width="300" />
         </p>
@@ -127,30 +107,18 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         ${totalHtml}
         <p>
           <strong>Información de Cliente</strong>
-        </p>`;
-        if (obj.entry.deliveryOptionId == 1) {
-          message = `
-          <p>
-            <strong>Dirección de Envío</strong><br/>
-            ${obj.entry.shipping_name}<br/>
-            Email: ${obj.entry.shipping_email}<br/>
-            Teléfono: ${obj.entry.shipping_phone}<br/>
-          </p>`;
-        } else {
-          message = `
-          <p>
-            <strong>Dirección de Envío</strong><br/>
-            ${obj.entry.shipping_name}<br/>
-            ${obj.entry.shipping_address}<br/>
-            ${obj.entry.shipping_district}<br/>
-            ${obj.entry.shipping_corregimiento}<br/>
-            ${obj.entry.shipping_province}<br/>
-            ${obj.entry.shipping_country}<br/><br/>
-            Email: ${obj.entry.shipping_email}<br/>
-            Teléfono: ${obj.entry.shipping_phone}<br/>
-          </p>`;
-        }
-        message = `${deliveryHtml}`;
+        </p>
+        <p>
+          <strong>Dirección de Envío</strong><br/>
+          ${obj.entry.shipping_name}<br/>
+          ${obj.entry.shipping_address}<br/>
+          ${obj.entry.shipping_district}<br/>
+          ${obj.entry.shipping_corregimiento}<br/>
+          ${obj.entry.shipping_province}<br/>
+          ${obj.entry.shipping_country}<br/><br/>
+          Teléfono: ${obj.entry.shipping_phone}<br/>
+        </p>
+        ${deliveryHtml}`;
     return message;
 }
 
