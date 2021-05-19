@@ -1,4 +1,4 @@
-const promotionCode = require('../services/PromotionCode.service');
+const promotionCode = require('../services/promotionCode.service');
 
 module.exports = {
     createPromotionCode: promotionCode.createPromotionCode,
