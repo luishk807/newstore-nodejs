@@ -132,12 +132,12 @@ const sendOrderEmail = async(obj, req) => {
     temp['imgUrl'] = imgUrl;
     
     cartHtml += `
-    <table>
+    <table style='width: 100%'>
       <tr>
-        <td style='width: 20%'>
+        <td style='width: 20%; vertical-align: top; text-align: left'>
           <img style='width: 100px;' src='${imgUrl}' />
         </td>
-        <td style='width: 50%'>
+        <td style='width: 50%; vertical-align: top; text-align: center'>
           <p><strong>${item.name}</strong></p>
           <p>Sku: ${item.sku}</p>
           <p>Color: ${item.color}</p>
@@ -146,7 +146,7 @@ const sendOrderEmail = async(obj, req) => {
           <p>Unit: $${item.unit_total}</p>
           <p>${ProductDiscount}</p>
         </td>
-        <td style='width: 30%'>
+        <td style='width: 30%; vertical-align: top; text-align: right'>
           $${item.total}
         </td>
       </tr>
@@ -156,56 +156,82 @@ const sendOrderEmail = async(obj, req) => {
 
   let totalHtml = `
     <hr/>
-    <table>
+    <table style='width: 100%'>
     <tr>
+      <td style='width: 50%'></td>
       <td style='width: 50%'>
-        Subtotal
-      </td>
-      <td style='width: 50%'>
-        $${obj.entry.subtotal}
-      </td>
-    </tr>
-    <tr>
-      <td style='width: 50%'>
-        ITBMS 7%
-      </td>
-      <td style='width: 50%'>
-        $${obj.entry.tax}
-      </td>
-    </tr>
-    <tr>
-      <td style='width: 50%'>
-        Shipping
-      </td>
-      <td style='width: 50%'>
-        $${obj.entry.delivery}
-      </td>
-    </tr> `;
+        <table style='width: 100%'>
+          <tr>
+            <td style='width: 50%; text-align: left'>
+              Subtotal
+            </td>
+            <td style='width: 50%; text-align: right'>
+              $${obj.entry.subtotal}
+            </td>
+          </tr>
+          <tr>
+            <td style='width: 50%; text-align: left'>
+              ITBMS 7%
+            </td>
+            <td style='width: 50%; text-align: right'>
+              $${obj.entry.tax}
+            </td>
+          </tr>
+          <tr>
+            <td style='width: 50%; text-align: left'>
+              Shipping
+            </td>
+            <td style='width: 50%; text-align: right'>
+              $${obj.entry.delivery}
+            </td>
+          </tr> `;
   
-  if (obj.entry.totalSaved > 0) {
-    totalHtml += `
-    <tr>
-      <td style='width: 50%'>
-        You Saved
+          if (obj.entry.coupon > 0) {
+            totalHtml += `
+            <tr>
+              <td style='width: 50%; text-align: left'>
+                Discount with coupon
+              </td>
+              <td style='width: 50%; text-align: right'>
+                - $${obj.entry.coupon}
+              </td>
+            </tr>
+            `;
+          }
+
+          if (obj.entry.totalSaved > 0) {
+            totalHtml += `
+            <tr>
+              <td style='width: 50%; text-align: left'>
+                You Saved
+              </td>
+              <td style='width: 50%; text-align: right'>
+                - $${obj.entry.totalSaved}
+              </td>
+            </tr>
+            `;
+          }
+  totalHtml += `  
+        </table>
       </td>
-      <td style='width: 50%'>
-        - $${obj.entry.totalSaved}
-      </td>
-    </tr>
-    `;
-  }
-  
+  </table>`;
   totalHtml += `
-  </table>
   <hr/>
-  <table>
+  <table style='width: 100%'>
     <tr>
-      <td style='width: 50%'>
-        Total
-      </td>
-      <td style='width: 50%'>
-        <strong>$${obj.entry.grandtotal}</strong>
-      </td>
+       <td style='width:50%'></td>
+       <td style='width:50%'>
+          <table style='width:100%'>
+            <tr>
+              <td style='width: 50%; text-align: left'>
+                Total
+              </td>
+              <td style='width: 50%; text-align: right'>
+                <strong>$${obj.entry.grandtotal}</strong>
+              </td>
+            </tr>
+          </table>
+       </td>
     </tr>
   </table>
   `;
@@ -228,7 +254,7 @@ const sendOrderEmail = async(obj, req) => {
     }
   }
 
-  const message = `
+  let message = `
     <p>
       <img src="${logo}" width="300" />
     </p>
@@ -251,19 +277,30 @@ const sendOrderEmail = async(obj, req) => {
     ${totalHtml}
     <p>
       <strong>Customer Information</strong>
-    </p>
-    <p>
-      <strong>Shipping address</strong><br/>
-      ${obj.entry.shipping_name}<br/>
-      ${obj.entry.shipping_address}<br/>
-      ${obj.entry.shipping_district}<br/>
-      ${obj.entry.shipping_corregimiento}<br/>
-      ${obj.entry.shipping_province}<br/>
-      ${obj.entry.shipping_country}<br/><br/>
-      Phone: ${obj.entry.shipping_phone}<br/>
-    </p>
-    ${deliveryHtml}`;
-  
+    </p>`;
+    if (obj.entry.deliveryOptionId == 1) {
+      message = `
+      <p>
+        <strong>Shipping address</strong><br/>
+        ${obj.entry.shipping_name}<br/>
+        Email: ${obj.entry.shipping_email}<br/>
+        Phone: ${obj.entry.shipping_phone}<br/>
+      </p>`;
+    } else {
+      message = `
+      <p>
+        <strong>Shipping address</strong><br/>
+        ${obj.entry.shipping_name}<br/>
+        ${obj.entry.shipping_address}<br/>
+        ${obj.entry.shipping_district}<br/>
+        ${obj.entry.shipping_corregimiento}<br/>
+        ${obj.entry.shipping_province}<br/>
+        ${obj.entry.shipping_country}<br/><br/>
+        Phone: ${obj.entry.shipping_phone}<br/>
+      </p>`;
+    }
+
+    message = `${deliveryHtml}`;
 
   if (process.env.NODE_ENV === "production") {
     toEmail.push(obj.clientEmail);
