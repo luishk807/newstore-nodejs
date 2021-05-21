@@ -125,6 +125,9 @@ const Order = sequelize.define('orders', {
   totalSaved: {
     type: Sequelize.DECIMAL
   },
+  deliveryServiceFee: {
+    type: Sequelize.DECIMAL
+  },
 });
 
 Order.belongsTo(OrderCancelReason, { foreignKey: 'orderCancelReasonId', as: "orderCancelReasons"})

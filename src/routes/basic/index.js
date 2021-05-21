@@ -23,6 +23,7 @@ const OrderCancelReason = require('../../pg/models/OrderCancelReasons');
 const OrderStatus = require('../../pg/models/OrderStatuses');
 const DeliveryService = require('../../pg/models/DeliveryServices');
 const Zone = require('../../pg/models/Zones');
+const { Op } = require('sequelize');
 router.all('*', cors());
 
 router.get('/user', async(req, res, next) => {
@@ -53,7 +54,11 @@ router.get('/user', async(req, res, next) => {
     const corregimiento = await Corregimiento.findAll();
     const district = await District.findAll();
     const orderCancelReason = await OrderCancelReason.findAll();
-    const orderStatus = await OrderStatus.findAll();
+    const orderStatus = await OrderStatus.findAll({where: { 
+      onlyAdmin: {
+        [Op.not]: true
+      }
+    }});
     const deliveryService = await DeliveryService.findAll();
     const zone = await Zone.findAll();
     data['sweetBoxType'] = sweetboxtype;

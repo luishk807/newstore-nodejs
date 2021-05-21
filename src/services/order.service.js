@@ -74,21 +74,39 @@ const updateOrder = async(req) => {
     const id = req.params.id;
     const user = req.user;
     const order = await getOrder(id, req.user);
+
+    if (Number(body.deliveryServiceFee) > 0) {
+        body.deliveryServiceFee = Number(body.deliveryServiceFee);
+    } else {
+        body.deliveryServiceFee = null;
+    }
+
     if (order) {
-      await saveStatusOrder(id, user.id, req.body.orderStatus);
-      const result = await Order.update(body,
-        {
-          where: {
-            id: id
-          }
+        if (req.body.orderStatus) {
+            await saveStatusOrder(id, user.id, req.body.orderStatus);
         }
-      );
-      if (result[0]) {
-        await sendgrid.sendOrderUpdate(order, req);
-        return true;
-      } else {
-        return false;
-      }
+        if (order.deliveryServiceFee != req.body.deliveryServiceFee) {
+            if (req.body.deliveryServiceFee > 0) {
+                await saveStatusOrder(id, user.id, 13);
+            } else {
+                await saveStatusOrder(id, user.id, 14);
+            }
+        }
+
+        const result = await Order.update(body,
+        {
+            where: {
+            id: id
+            }
+        }
+        );
+        if (result[0]) {
+            await sendgrid.sendOrderUpdate(order, req);
+            return true;
+        } else {
+            return false;
+        }
+
     } else {
         return { code: 401, status: false, message: 'not authorized'}
     }
