@@ -184,6 +184,7 @@ const createOrder = async(req) => {
     const entryUser = parseInt(body.userid);
     let email =body.shipping_email;;
     const getTotal = await calculateTotal(body);
+
     let entry = {
       'subtotal': getTotal.subtotal,
       'grandtotal': getTotal.grandTotal,

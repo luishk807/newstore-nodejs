@@ -13,12 +13,14 @@ const calculateTotal = async(obj) => {
 
   const carts = JSON.parse(obj.cart);
   const TAX = parseFloat(config.taxTotal);
+  const today = new Date();
   let subtotal = 0;
   let taxes = 0;
   let grandTotal = 0;
   let savedGrandTotal = 0;
   let delivery = !obj.delivery || obj.delivery === -1 ? 0 : parseFloat(obj.delivery);
   let originalTotal = 0;
+  let couponTotal = 0;
 
   if (Object.keys(carts).length) {
       for(const key in carts) {
@@ -30,18 +32,6 @@ const calculateTotal = async(obj) => {
       }
   }
 
-  taxes = subtotal * TAX;
-
-  grandTotal = taxes + subtotal + delivery;
-
-  savedGrandTotal = originalTotal - subtotal;
-
-  let newCoupon = 0;
-
-  const today = new Date();
-  
-  let validCoupon = true;
-
   if (!isNaN(obj.promotionCodeId) && obj.promotionCodeId) {
     const promoCode = await PromotionCode.findOne({
       where: {
@@ -49,37 +39,42 @@ const calculateTotal = async(obj) => {
         status: 1
       }
     })
-  
+    
     if (promoCode) {
       const getStartDate = new Date(promoCode.startDate);
       const getEndDate = new Date(promoCode.endDate);
+      let coupon = parseFloat(promoCode.percentage);
+      couponTotal = ((coupon / 100) * subtotal);
       if (promoCode.useDate) {
         if (today.getTime() > getStartDate.getTime() && today.getTime() < getEndDate.getTime()) {
           validCoupon = true;
         } else {
           validCoupon = false;
         }
-      }
-  
-      if (validCoupon) {
-        let coupon = parseFloat(promoCode.percentage);
-        let oldTotal = grandTotal;
-        newCoupon = ((coupon / 100) * grandTotal);
-        grandTotal = grandTotal - newCoupon;
-        if (isNaN(savedGrandTotal)) {
-          savedGrandTotal = oldTotal - grandTotal;
-        } else {
-          savedGrandTotal = savedGrandTotal + newCoupon;
-        }
+      } else {
+
+        validCoupon = true;
       }
     }
+  }
+
+  let newSubtotal = validCoupon ? subtotal - couponTotal : subtotal;
+
+  taxes = newSubtotal * TAX;
+
+  grandTotal = taxes + newSubtotal + delivery;
+
+  savedGrandTotal = isNaN(originalTotal) ? null : originalTotal - newSubtotal;
+
+  if (validCoupon && !isNaN(savedGrandTotal)) {
+    savedGrandTotal = savedGrandTotal + couponTotal;
   }
 
   return {
       'subtotal': formatNumber(subtotal),
       'delivery': formatNumber(delivery),
       'taxes': formatNumber(taxes),
-      'coupon': formatNumber(newCoupon),
+      'coupon': formatNumber(couponTotal),
       'saved': formatNumber(savedGrandTotal),
       'grandTotal': formatNumber(grandTotal)
   };
