@@ -3,10 +3,14 @@ const includes = ['deliveryOptionStatus', 'deliveryOptionDeliveryServiceGroupCos
 const { Op } = require('sequelize');
 
 const createDeliveryOption = async(obj) => {
+  let total = 0;
+  if (!isNaN(obj.total)) {
+    total = Number(obj.total);
+  }
   return await DeliveryOption.create({
     'name': obj.name,
     'description': obj.description,
-    'total': obj.total
+    'total': total
   })
 }
 
