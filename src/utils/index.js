@@ -21,6 +21,7 @@ const calculateTotal = async(obj) => {
   let delivery = !obj.delivery || obj.delivery === -1 ? 0 : parseFloat(obj.delivery);
   let originalTotal = 0;
   let couponTotal = 0;
+  let validCoupon = false;
 
   if (Object.keys(carts).length) {
       for(const key in carts) {
