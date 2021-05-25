@@ -1,4 +1,4 @@
-const { formatNumber } = require('../../utils');
+const { formatNumber, checkIfEmpty } = require('../../utils');
 
 const getSingleImageUrl = async (product, { referer, awsUrl, productSearchFunc }) => {
     let imgUrl = product && product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : null;
@@ -67,18 +67,20 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
     let totalHtml = `<hr/><table style="width: 99%; text-align: right;">
         ${getTableRowFieldValue('Subtotal', `$${formatNumber(obj.entry.subtotal)}`)}
         ${getTableRowFieldValue('ITBMS 7%', `$${formatNumber(obj.entry.tax)}`)}
-        ${getTableRowFieldValue('Envío', `$${formatNumber(obj.entry.delivery)}`)}
-        ${getTableRowFieldValue('Ahorraste', `- $${formatNumber(obj.entry.totalSaved)}`, true)}
-        </table><table style="width: 99%; text-align: right;"><hr/>
+        ${getTableRowFieldValue('Envío', `$${formatNumber(obj.entry.delivery)}`)}`
+    if (obj.entry.totalSaved && obj.entry.totalSaved > 0) {
+      totalHtml += `${getTableRowFieldValue('Ahorraste', `- $${formatNumber(obj.entry.totalSaved)}`, true)}`
+    }
+    totalHtml += `</table><hr/><table style="width: 99%; text-align: right;">
         ${getTableRowFieldValue('Total', `$${formatNumber(obj.entry.grandtotal)}`, false, true)}
         </table>`;
     
     let deliveryHtml = '';
     if (delivery) {
-        deliveryHtml = `<p><strong>Método de Envío</strong><br/>${delivery.name}<br/></p>`;
+        deliveryHtml += `<p><strong>Método de Envío</strong><br/>${delivery.name}<br/></p>`;
     }
     
-    const message = `
+    let message = `
         <p>
           <img src="${logo}" width="300" />
         </p>
@@ -106,17 +108,58 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         <hr/>
         <p>
           <strong>Información de Cliente</strong>
-        </p>
+        </p>`;
+        console.log("obj.entry", obj.entry)
+      const deliveryOption = Number(obj.entry.deliveryOptionId);
+      let addressSend = '';
+      console.log("deliveryOption", deliveryOption, ' and ', deliveryOption == 1)
+      if (deliveryOption == 1) {
+        if (!checkIfEmpty(obj.entry.shipping_name)) {
+          addressSend += `${obj.entry.shipping_name}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_email)) {
+          addressSend += `Email: ${obj.entry.shipping_email}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_phone)) {
+          addressSend += `Teléfono: ${obj.entry.shipping_phone}<br/>`;
+        }
+        message += `
+        <p>
+          <strong>Información del Cliente</strong><br/>
+          ${addressSend}
+        </p>`;
+      } else {
+        if (!checkIfEmpty(obj.entry.shipping_name)) {
+          addressSend += `${obj.entry.shipping_name}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_address)) {
+          addressSend += `${obj.entry.shipping_address}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_district)) {
+          addressSend += `${obj.entry.shipping_district}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_corregimiento)) {
+          addressSend += `${obj.entry.shipping_corregimiento}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_province)) {
+          addressSend += `${obj.entry.shipping_province}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_country)) {
+          addressSend += `${obj.entry.shipping_country}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_email)) {
+          addressSend += `Email: ${obj.entry.shipping_email}<br/>`;
+        }
+        if (!checkIfEmpty(obj.entry.shipping_phone)) {
+          addressSend += `Teléfono: ${obj.entry.shipping_phone}<br/>`;
+        }
+        message += `
         <p>
           <strong>Dirección de Envío</strong><br/>
-          ${obj.entry.shipping_name}<br/>
-          ${obj.entry.shipping_address}<br/>
-          ${obj.entry.shipping_district}<br/>
-          ${obj.entry.shipping_corregimiento}<br/>
-          ${obj.entry.shipping_province}<br/>
-          ${obj.entry.shipping_country}<br/><br/>
-          Teléfono: ${obj.entry.shipping_phone}<br/>
-        </p>
+          ${addressSend}
+        </p>`;
+      }
+      message += `
         <hr/>
         <p><strong>Resumen de la Orden</strong></p>
         ${cartHtml}
