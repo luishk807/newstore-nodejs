@@ -107,9 +107,8 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         <p><a target="_blank" href='${mainUrl}'>Ver su orden</a></p>
         <hr/>
         <p>
-          <strong>Información de Cliente</strong>
+          <strong>Opcion de Entrega: ${obj.entry.deliveryOption}</strong>
         </p>`;
-        console.log("obj.entry", obj.entry)
       const deliveryOption = Number(obj.entry.deliveryOptionId);
       let addressSend = '';
       console.log("deliveryOption", deliveryOption, ' and ', deliveryOption == 1)
