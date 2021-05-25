@@ -23,13 +23,13 @@ const getSingleItemHtml = (item, { imgUrl, productDiscount }) => {
         <tr>
         <td style="width: 20%; vertical-align: top;"><img style="width: 100px;" src="${imgUrl}" /></td>
         <td style="width: 50%">
-            <p><strong>${item.name}</strong></p>
-            <p>SKU: ${item.sku}</p>
-            <p>Color: ${item.color}</p>
-            <p>Size: ${item.size}</p>
-            <p>Quantity: ${item.quantity}</p>
-            <p>Unit: $${item.unit_total}</p>
-            <p>${productDiscount}</p>
+            <strong>${item.name}</strong><br/>
+            SKU: ${item.sku}<br/>
+            Color: ${item.color}<br/>
+            Size: ${item.size}<br/>
+            Quantity: ${item.quantity}<br/>
+            Unit: $${item.unit_total}<br/>
+            ${productDiscount}
           </td>
           <td style="width: 30%">$${item.total}</td>
         </tr>
