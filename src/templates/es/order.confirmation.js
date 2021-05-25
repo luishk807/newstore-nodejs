@@ -23,13 +23,13 @@ const getSingleItemHtml = (item, { imgUrl, productDiscount }) => {
         <tr>
           <td style="width: 20%; vertical-align: top;"><img style="width: 100px;" src="${imgUrl}" /></td>
           <td style="width: 50%">
-            <p><strong>${item.name}</strong></p>
-            <p>SKU: ${item.sku}</p>
-            <p>Color: ${item.color}</p>
-            <p>Tamaño: ${item.size}</p>
-            <p>Cantidad: ${item.quantity}</p>
-            <p>Unidad: $${item.unit_total}</p>
-            <p>${productDiscount}</p>
+            <strong>${item.name}</strong><br/>
+            SKU: ${item.sku}<br/>
+            Color: ${item.color}<br/>
+            Tamaño: ${item.size}<br/>
+            Cantidad: ${item.quantity}<br/>
+            Unidad: $${item.unit_total}<br/>
+            ${productDiscount}
           </td>
           <td style="width: 30%; vertical-align: top; text-align: right;">$${(item.total) ? item.total.toFixed(2) : item.total}</td>
         </tr>
