@@ -111,7 +111,6 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         </p>`;
       const deliveryOption = Number(obj.entry.deliveryOptionId);
       let addressSend = '';
-      console.log("deliveryOption", deliveryOption, ' and ', deliveryOption == 1)
       if (deliveryOption == 1) {
         if (!checkIfEmpty(obj.entry.shipping_name)) {
           addressSend += `${obj.entry.shipping_name}<br/>`;
