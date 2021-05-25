@@ -44,7 +44,7 @@ const getTableRowFieldValue = (label, value, blankIfNoValue, boldValue) => {
     if (boldValue) {
         htmlValue = `<strong>${value}</strong>`;
     }
-    return `<tr><td style="width: 50%">${label}</td><td style="width: 50%">${htmlValue}</td></tr>`;
+    return `<tr><td style="width: 70%">${label}</td><td style="width: 30%">${htmlValue}</td></tr>`;
   }
 
 const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUrl, delivery, productSearchFunc, logo }) => {
