@@ -5,7 +5,7 @@ const ProductBundle = require('../pg/models/ProductBundles');
 const ProductDiscount = require('../pg/models/ProductDiscounts');
 const User = require('../pg/models/Users');
 const sendgrid = require('../controllers/sendgrid/orders');
-const { calculateTotal } = require('../utils');
+const { calculateTotal, checkIfEmpty } = require('../utils');
 const config = require('../config');
 const s3 = require('./storage.service');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost', 'orderPromotion'];
@@ -192,19 +192,19 @@ const createOrder = async(req) => {
       'totalSaved': getTotal.saved,
       'delivery': getTotal.delivery,
       'coupon': getTotal.coupon,
-      'shipping_name': body.shipping_name,
-      'shipping_address': body.shipping_address,
-      'shipping_email': body.shipping_email,
-      'shipping_city': body.shipping_city,
-      'shipping_country': body.shipping_country,
-      'shipping_phone': body.shipping_phone,
-      'shipping_province': body.shipping_province,
-      'shipping_township': body.shipping_township,
-      'shipping_corregimiento': body.shipping_corregimiento,
-      'shipping_zip': body.shipping_zip,
-      'shipping_zone': body.shipping_zone,
-      'shipping_district': body.shipping_district,
-      'shipping_note': body.shipping_note,
+      'shipping_name': checkIfEmpty(body.shipping_name) ? null : body.shipping_name,
+      'shipping_address': checkIfEmpty(body.shipping_address) ? null : body.shipping_address,
+      'shipping_email': checkIfEmpty(body.shipping_email) ? null : body.shipping_email,
+      'shipping_city': checkIfEmpty(body.shipping_city) ? null : body.shipping_city,
+      'shipping_country': checkIfEmpty(body.shipping_country) ? null : body.shipping_country,
+      'shipping_phone': checkIfEmpty(body.shipping_phone) ? null : body.shipping_phone,
+      'shipping_province': checkIfEmpty(body.shipping_province) ? null : body.shipping_province,
+      'shipping_township': checkIfEmpty(body.shipping_township) ? null : body.shipping_township,
+      'shipping_corregimiento': checkIfEmpty(body.shipping_corregimiento) ? null : body.shipping_corregimiento,
+      'shipping_zip': checkIfEmpty(body.shipping_zip) ? null : body.shipping_zip,
+      'shipping_zone': checkIfEmpty(body.shipping_zone) ? null : body.shipping_zone,
+      'shipping_district': checkIfEmpty(body.shipping_district) ? null : body.shipping_district,
+      'shipping_note': checkIfEmpty(body.shipping_note) ? null : body.shipping_note,
     }
     
     if (!!!isNaN(body.deliveryOptionId)) {

@@ -9,6 +9,10 @@ const cleanData = (data) => {
   return data;
 }
 
+const checkIfEmpty = (data) => {
+  return data == 'null' || data == "undefined" || !data;
+}
+
 const calculateTotal = async(obj) => {
 
   const carts = JSON.parse(obj.cart);
@@ -155,5 +159,6 @@ module.exports = {
   paginate,
   getAdminEmail,
   formatNumber,
-  calculateTotal
+  calculateTotal,
+  checkIfEmpty
 }
