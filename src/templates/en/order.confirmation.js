@@ -19,19 +19,19 @@ const getSingleImageUrl = async (product, { referer, awsUrl, productSearchFunc }
 }
   
 const getSingleItemHtml = (item, { imgUrl, productDiscount }) => {
-    return `<table style="width: 99%;">
+    return `<table>
         <tr>
-          <td style="width: 20%; vertical-align: top;"><img style="width: 100px;" src="${imgUrl}" /></td>
-          <td style="width: 50%">
+        <td style="width: 20%; vertical-align: top;"><img style="width: 100px;" src="${imgUrl}" /></td>
+        <td style="width: 50%">
             <p><strong>${item.name}</strong></p>
             <p>SKU: ${item.sku}</p>
             <p>Color: ${item.color}</p>
-            <p>Tamaño: ${item.size}</p>
-            <p>Cantidad: ${item.quantity}</p>
-            <p>Unidad: $${item.unit_total}</p>
+            <p>Size: ${item.size}</p>
+            <p>Quantity: ${item.quantity}</p>
+            <p>Unit: $${item.unit_total}</p>
             <p>${productDiscount}</p>
           </td>
-          <td style="width: 30%; vertical-align: top; text-align: right;">$${(item.total) ? item.total.toFixed(2) : item.total}</td>
+          <td style="width: 30%">$${item.total}</td>
         </tr>
       </table>`;
 }
@@ -45,7 +45,7 @@ const getTableRowFieldValue = (label, value, blankIfNoValue, boldValue) => {
         htmlValue = `<strong>${value}</strong>`;
     }
     return `<tr><td style="width: 50%">${label}</td><td style="width: 50%">${htmlValue}</td></tr>`;
-  }
+}
 
 const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUrl, delivery, productSearchFunc, logo }) => {
     let cartHtml = '';
@@ -53,7 +53,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         const product = productItems.find(pi => +pi.id === +item.productItemId)
         let productDiscount = '';
         if (item.productDiscount) {
-          productDiscount = `Descuento: ${item.productDiscount}`;
+          productDiscount = `Discount: ${item.productDiscount}`;
         }
 
         const imgUrl = await getSingleImageUrl(product, { referer, awsUrl: awsImageUrl, productSearchFunc });
@@ -66,49 +66,49 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
     
     let totalHtml = `<hr/><table style="width: 99%; text-align: right;">
         ${getTableRowFieldValue('Subtotal', `$${formatNumber(obj.entry.subtotal)}`)}
-        ${getTableRowFieldValue('ITBMS 7%', `$${formatNumber(obj.entry.tax)}`)}
-        ${getTableRowFieldValue('Envío', `$${formatNumber(obj.entry.delivery)}`)}
-        ${getTableRowFieldValue('Ahorraste', `- $${formatNumber(obj.entry.totalSaved)}`, true)}
+        ${getTableRowFieldValue('Tax 7%', `$${formatNumber(obj.entry.tax)}`)}
+        ${getTableRowFieldValue('Shipping', `$${formatNumber(obj.entry.delivery)}`)}
+        ${getTableRowFieldValue('Saved', `- $${formatNumber(obj.entry.totalSaved)}`, true)}
         </table><table style="width: 99%; text-align: right;"><hr/>
         ${getTableRowFieldValue('Total', `$${formatNumber(obj.entry.grandtotal)}`, false, true)}
         </table>`;
     
     let deliveryHtml = '';
     if (delivery) {
-        deliveryHtml = `<p><strong>Método de Envío</strong><br/>${delivery.name}<br/></p>`;
+        deliveryHtml = `<p><strong>Shipping Method</strong><br/>${delivery.name}<br/></p>`;
     }
     
     const message = `
         <p>
           <img src="${logo}" width="300" />
         </p>
-        <p>ÓRDEN #${obj.order_num}</p>
-        <p><strong>Confirmación de Orden</strong></p>
-        <p>Hemos recibido su orden de compra. Debajo se encuentran las opciones disponibles e instrucciones para realizar su pago:</p>
+        <p>ORDER #${obj.order_num}</p>
+        <p><strong>Order Confirmation</strong></p>
+        <p>We have recieved your purchase order.  Please follow the instructions depending on the payment method you want to choose:</p>
         <ul>
         <li><strong>YAPPY</strong><br/>
-        Ingrese a la aplicación de Banco General y busque en el Directorio de Yappy nuestro comercio por <strong>@avenidaZ</strong>.  Complete la información de pago e ingrese en la sección de comentario el número de su orden.
+        Open Banco General application and search in the Yappy directory for our business name <strong>@avenidaZ</strong>.  Complete the payment information and in the comment section add your order number (very important).
         </li>
-        <li><strong>Transferencia Bancaria o Depósito en Taquilla</strong><br/>
-        Realizar su pago a nombre de: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Cuenta # 0395011351638</strong>.  Enviar su comprobante de pago por esta misma vía.
+        <li><strong>Wire Transfer or Deposit at the Bank</strong><br/>
+        Make the transfer to: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Account # 0395011351638</strong>.  Send your proof of payment through email or chat.
         </li>
         </ul>
         <p>
-        Pronto estaremos habilitando otras opciones de pago
+        We will soon enable other payment methods or options
         </p>
         <p>
-        Una vez realizado su pago, procesaremos su orden y entrega según la opción que fue seleccionado.
+        Once the payment has been made, we will proceed to process the order and shipment based on the selected choice.
         <p>
-        <p>Para mayor información contáctanos al 6770-2440.</p>
-        <p>¡Gracias por Preferirnos!</p>
+        <p>For more information, please contact us at +507 6770-2440.</p>
+        <p>Thank you for choosing us!</p>
         <p><strong>Avenida Z</strong></p>
-        <p><a target="_blank" href='${mainUrl}'>Ver su orden</a></p>
+        <p><a target="_blank" href='${mainUrl}'>View your order</a></p>
         <hr/>
         <p>
-          <strong>Información de Cliente</strong>
+          <strong>Client Information</strong>
         </p>
         <p>
-          <strong>Dirección de Envío</strong><br/>
+          <strong>Shipping Address</strong><br/>
           ${obj.entry.shipping_name}<br/>
           ${obj.entry.shipping_address}<br/>
           ${obj.entry.shipping_district}<br/>
@@ -118,7 +118,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
           Teléfono: ${obj.entry.shipping_phone}<br/>
         </p>
         <hr/>
-        <p><strong>Resumen de la Orden</strong></p>
+        <p><strong>Order Summary</strong></p>
         ${cartHtml}
         ${totalHtml}
         ${deliveryHtml}`;
