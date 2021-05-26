@@ -1,174 +1,111 @@
 const router = require('express').Router();
 const cors = require('cors');
-const config = require('../../config');
 const bcrypt = require('bcryptjs');
-const User = require('../../pg/models/Users');
-const verify = require('../../middlewares/verifyToken');
 const { Op } = require('sequelize');
 const uuid = require('uuid');
+const { response } = require('express');
+const config = require('../../config');
+const User = require('../../pg/models/Users');
+const verify = require('../../middlewares/verifyToken');
+const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const parser = require('../../middlewares/multerParser');
 const s3 = require('../../services/storage.service');
 const controller = require('../../controllers/users');
-const { response } = require('express');
 const includes = ['useStatus','userRoles'];
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
 
 const aw3Bucket = `${config.s3.bucketName}/users`;
 
-router.delete('/:id',verify, (req, res, next) => {
-  controller.deleteUser(req.params.id)
-    .then(result => {
-      if (result.status) {
-        res.status(200).json(result);
+// TODO: only admin can delete
+router.delete('/:id',verifyAdmin, async(req, res, next) => {
+
+  try {
+    const user = await controller.deleteById(req.params.id)
+    if (user.status) {
+      res.status(200).json({status: true, message: "User succesfully deleted"});
+    } else {
+      if (user.notFound) {
+        res.status(400).json(user);
       } else {
-        if (result.notFound) {
-          res.status(404).json(result);
-        } else {
-          res.status(500).json(result);
-        }
+        console.log("err", user)
+        res.status(500).json(user);
       }
-    });
+    }
+  } catch(err) {
+    console.log("err", err)
+    res.status(500).json({status:false, message: err})
+  }
 });
 
-
-router.put('/:id',[verify, parser.single('image')], (req, res, next) => {
-  let dataInsert = null;
+// TODO: only admin can set admin role
+router.put('/:id',[verify, parser.single('image')], async(req, res, next) => {
   const body = req.body;
   const id = req.params.id;
 
-  const partBodySaved = JSON.parse(body.saved)
-
-    // delete current image
-  if (partBodySaved[0] || req.file) {
-    const paramsDelete = {
-      Bucket: aw3Bucket,
-      Key: partBodySaved[0],
-    }
-    s3.deleteObject(paramsDelete, (err, data) => {
-      if (!err) {
-        User.update({ img: null },{
-          where: {
-            id: id
-          }
-        });
-      }
-    })
-  }
-  if (req.file) {
-    let myFile = req.file.originalname.split('.');
-    const fileType = myFile[myFile.length - 1];
-    const fileName = `${uuid.v4()}.${fileType}`;
-    const params = {
-      Bucket: aw3Bucket,
-      Key: fileName,
-      Body: req.file.buffer,
-    }
   
-    s3.upload(params, (err, data) => {})
+  const role = req.user ? req.user.type : null;
 
-    dataInsert = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
-      'date_of_birth': body.date_of_birth,
-      'phone': body.phone,
-      'gender': body.gender,
-      'mobile': body.mobile,
-      'status': body.status,
-      'userRole': body.userRole,
-      'img':fileName
-    }
-  } else {
-    dataInsert = {
-      'last_name': body.last_name,
-      'first_name': body.first_name,
-      'date_of_birth': body.date_of_birth,
-      'phone': body.phone,
-      'gender': body.gender,
-      'mobile': body.mobile,
-      'userRole': body.userRole,
-      'status': body.status,
-      'email': body.email,
-    }
+  if (body.userRole == 1 && (!role || (role && role != 1))) {
+    res.status(401).json({status:false, message: 'unathorized user type'})
   }
 
-  if (body.password && body.password !=='null') {
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(body.password, salt, (err, hash) => {
-        if (err) {
-          res.status(500).json({status: false, message: err});
-        }
-        User.update({password: hash },{where: {id: id }})
-      });
-    })
-  }
-  User.update(
-    dataInsert,
-    {
-      where: {
-        id: id
-      }
+  try {
+    const user = await controller.update(body, id, req.file)
+    if (user) {
+      res.status(200).json({status: true, message: "User succesfully update"});
+    } else {
+      res.status(400).json({status: false, message: "Unable to update user, please try again later"});
     }
-  ).then((updated) => {
-    let message = "User Updated";
-    // delete all images first in servers
-    res.status(200).json({
-      status: updated,
-      message: message
-    });
-  }).catch((err) => {
-    res.status(500).json({status: false, message: err})
-  })
+  } catch(err) {
+    res.status(500).json({status:false, message: err})
+  }
+
 });
 
-router.post('/', [parser.single('image')], (req, res, next) => {
+// TODO: only admin can set admin role
+router.post('/', [parser.single('image')], async(req, res, next) => {
   const body = req.body;
-  controller.create(body, req.file)
-    .then(result => {
-      if (result.status) {
-        res.status(200).json(result);
-      } else {
-        res.status(500).json(result);
-      }
-    });
+
+  try {
+    const user = await controller.create(body, req.file)
+    if (user) {
+      res.status(200).json({status: true, message: "User succesfully created"});
+    } else {
+      res.status(400).json({status: false, message: "Unable to create user, please try again later"});
+    }
+  } catch(err) {
+    res.status(500).json({status:false, message: err})
+  }
 });
 
 router.get('/:id', [verify], async(req, res, next) => {
-  if (req.user.type !== 1 && req.user.id !== req.params.id) {
+  if (req.user.type != 1 && req.user.id != req.params.id) {
     res.status(401).json("not authorized");
   }
   const user = await controller.findById(req.params.id);
   res.json(user);
 });
 
+router.get('/all/users', [verifyAdmin], async(req, res, next) => {
+  try {
+    const user = await controller.getAllUsers(req);
+    res.status(200).json(user)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
 router.get('/', [verify], async(req, res, next) => {
-  let user = null;
-  if (req.query.id) {
-    try {
-      user = await User.findOne({ where: {id: req.query.id}, include:  includes});
-      res.status(200).json(user)
-    } catch(err) {
-      res.status(404).json({status:false, message: err})
-    }
-  } else {
-    try {
-      let query = {}
-      if (req.user) {
-        query = {
-          where: {
-            id: { [Op.ne]: req.user.id } // This does not work
-          },
-          include: includes
-        };
-      } else {
-        query = {
-          include: includes
-        };
-      }
-      user = await User.findAll(query)
-      res.status(200).json(user)
-    } catch(err) {
-      res.status(404).json({status:false, message: err})
-    }
+  try {
+    const user = await controller.findById(req.user.id);
+    res.status(200).json(user)
+  } catch(err) {
+    res.status(404).json({status:false, message: err})
   }
 });
 

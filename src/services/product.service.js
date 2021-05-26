@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const Product = require('../pg/models/Products');
+const ProductImages = require('../pg/models/ProductImages');
 const { saveBrands, getAllBrands } = require('../services/brand.service');
 const { saveCategories, getAllCategories } = require('../services/category.service');
 const { createProductColor, getProductColorByProductId } = require('../services/productColor.service');
@@ -12,7 +13,7 @@ const Vendor = require('../pg/models/Vendors');
 const s3 = require('./storage.service');
 const { safeString, getLowerCaseSafeString } = require('../utils/string.utils');
 const { paginate } = require('../utils');
-const { getDistinctValues, getUniqueValuesByField, existFields } = require('../utils');
+const { getDistinctValues, getUniqueValuesByField, existFields, returnSlugName } = require('../utils');
 const imgStorageSvc = require('../services/imageStorage.service');
 const validationField = '__validation__';
 const requiredfields = [
@@ -34,6 +35,7 @@ const savedFields = requiredfields.concat(['status', 'vendor', 'source']);
 
 /** Creates a new product object with the given data */
 const createProductObject = (data, vendor, source) => {
+    const slugName = returnSlugName(data.name, data.sku);
     return {
         'name': data.name,
         'stock': +data.stock,
@@ -49,7 +51,139 @@ const createProductObject = (data, vendor, source) => {
         'discount1MinQty': +data.discount1MinQty,
         'discount2': +data.discount2,
         'discount2MinQty': +data.discount2MinQty,
+        'slug': slugName,
         'source': source || IMPORT // This is to indicate that the source of input was from an IMPORT
+    }
+}
+
+const createManualProduct = async(req) => {
+  // add / update products
+  let quit = false;
+  let imgsUploads = [];
+  const uploadResult = await imgStorageSvc.uploadImages(req.files);
+  if (uploadResult.error) {
+    quit = true;
+    res.status(500).send(uploadResult.error);
+  } else {
+    imgsUploads = uploadResult.images;
+  }
+
+  if (!quit) { // Prevent the product to be created if image upload fails
+    const body = req.body;
+
+    const slugName = returnSlugName(body.name, body.sku);
+
+    const product = await Product.create(
+        {
+            'name': body.name,
+            'stock': body.stock,
+            'amount': body.amount,
+            'category': body.category,
+            'brand': body.brand,
+            'model': body.model,
+            'sku': body.sku,
+            'description': body.description,
+            'vendor': body.vendor,
+            'slug': slugName
+        }
+    );
+
+    if (product) {
+        let counter = 1;
+        const newImages = imgsUploads.map((data) => {
+          return {
+            'productId': product.id,
+            'img_url': data.image.Key,
+            'img_thumb_url': data.thumbnail.Key,
+            'position': counter++
+          }
+        })
+        await ProductImages.bulkCreate(newImages);
+        return product;
+    } else {
+        return {status: false, code: 401, message: 'Unable to add product'}
+    }
+  }
+}
+
+const updateProduct = async(req) => {
+    let quit = false;
+    let imagesUploaded = [];
+    const uploadResult = await imgStorageSvc.uploadImages(req.files);
+    if (uploadResult.error) {
+      quit = true;
+      res.status(500).send(uploadResult.error);
+    } else {
+      imagesUploaded = uploadResult.images;
+    }
+
+    if (!quit) {
+      const body = req.body;
+      const slugName = returnSlugName(body.name, body.sku);
+      const pid = req.params.id;
+      const updated = await Product.update({
+          'name': body.name,
+          'stock': body.stock,
+          'amount': body.amount,
+          'category': body.category,
+          'brand': body.brand,
+          'model': body.model,
+          'sku': body.sku,
+          'description': body.description,
+          'vendor': body.vendor,
+          'slug': slugName
+      }, { where: { id: pid } });
+  
+      let message = "Product Updated";
+      // delete all images first in servers
+      const partBodySaved = req.body.saved ? JSON.parse(req.body.saved) : null;
+      if (partBodySaved && Object.keys(partBodySaved).length) {
+        let mapFiles = []
+        let index = []
+        Object.keys(partBodySaved).forEach((key) => {
+          mapFiles.push(partBodySaved[key].img_url)
+          if (partBodySaved[key].img_thumb_url) { // If a thumbnail exists, have to check if it comes from req.body.saved
+            mapFiles.push(partBodySaved[key].img_thumb_url)
+          }
+          index.push(partBodySaved[key].id)
+        })
+        
+        // delete image selected
+        try {
+          const promises = [];
+          mapFiles.forEach(imageKeys => {
+            promises.push(imgStorageSvc.remove(imageKeys))
+          })
+          await Promise.all(promises);
+        // res.status(200).json({ status: true, message: "Product successfully deleted" });
+        } catch (e) {
+          message += " .Error on deleting image!";
+        }
+  
+        // delete data from db
+        try {
+          ProductImages.destroy({ where: { id: index }})
+        } catch (e) {
+          console.log(e)
+        }
+      }
+  
+      let counter = 1;
+      // save all data to product images
+      if (imagesUploaded && imagesUploaded.length) {
+        let newImages = imagesUploaded.map((data) => {
+          return {
+            'productId': pid,
+            'img_url': data.image.Key,
+            'img_thumb_url': data.thumbnail.Key,
+            'position': counter++
+          }
+        })
+  
+        // save entired bulk to product images
+        await ProductImages.bulkCreate(newImages);
+      }
+      return true;
     }
 }
 
@@ -439,7 +573,7 @@ const deleteProduct = async (id) => {
 }
 
 const searchProductByName = async (search, page = null, isFullDetail = false) => {
-    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;;
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
 
     const where = {
         [Op.or]: [
@@ -487,7 +621,7 @@ const searchProductByName = async (search, page = null, isFullDetail = false) =>
 }
 
 const searchProductByType = async (type, search, page = null, isFullDetail = false) => {
-    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;;
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
 
     const where = {
         [type]: search
@@ -524,7 +658,7 @@ const searchProductByType = async (type, search, page = null, isFullDetail = fal
 }
 
 const searchProductByIds = async (ids, page = null, isFullDetail = false) => {
-    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;;
+    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
 
     const where = {
         id: {
@@ -557,8 +691,42 @@ const searchProductByIds = async (ids, page = null, isFullDetail = false) => {
     }
 }
 
+const searchProductBySlugs = async (slugs, page = null, isFullDetail = false) => {
+  const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
+
+  const where = {
+      slug: {
+          [Op.in]: slugs
+      }
+  }
+
+  if (page) {
+      const offset = paginate(page);
+
+      const countResult = await Product.count({ where });
+
+      const result = await Product.findAll({
+          where,
+          include: includes,
+          offset: offset,
+          limit: LIMIT
+      });
+
+      const pages = Math.ceil(countResult / LIMIT)
+      const results = {
+          count: countResult,
+          items: result,
+          pages: pages
+      }
+      return results;
+  } else {
+      const product = await Product.findAll({ where, include: includes});
+      return product;
+  }
+}
+
 const searchProductById = async (id, isFullDetail = false) => {
-    const includes = isFullDetail ? ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct'] : MAIN_INCLUDES_LIGHT;;
+    const includes = isFullDetail ? ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct'] : MAIN_INCLUDES_LIGHT;
 
     const where = {
         id: id
@@ -566,6 +734,16 @@ const searchProductById = async (id, isFullDetail = false) => {
 
     const product = await Product.findOne({ where, include: includes});
     return product;
+}
+
+const searchProductBySlug = async (id, isFullDetail = false) => {
+  const includes = isFullDetail ? ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct'] : MAIN_INCLUDES_LIGHT;
+  const where = {
+      slug: id
+  }
+
+  const product = await Product.findOne({ where, include: includes});
+  return product;
 }
 
 const getAllProducts = async (filter) => {
@@ -621,5 +799,9 @@ module.exports = {
     searchProductByType,
     searchProductByIds,
     searchProductById,
-    getAllProducts
+    getAllProducts,
+    createManualProduct,
+    updateProduct,
+    searchProductBySlug,
+    searchProductBySlugs
 }

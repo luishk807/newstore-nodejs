@@ -3,8 +3,12 @@ const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
 const parser = require('../../middlewares/multerParser');
 const controller = require('../../controllers/productBundles');
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
 
 router.delete('/:id', verify,  async(req, res, next) => {
   // delete color

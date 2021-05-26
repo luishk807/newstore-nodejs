@@ -1,8 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
 const controller = require('../../controllers/login');
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
 
 router.post('/', async(req, res, next) => {
   const body = req.body;

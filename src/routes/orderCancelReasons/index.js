@@ -1,8 +1,13 @@
 const router = require('express').Router();
 const cors = require('cors');
 const OrderCancelReason = require('../../pg/models/OrderCancelReasons');
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
+
 
 router.get('/:id', async(req, res, next) => {
     let st = await OrderCancelReason.findAll({ where: {id: req.params.id}});

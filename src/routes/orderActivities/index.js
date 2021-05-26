@@ -4,7 +4,12 @@ const verify = require('../../middlewares/verifyToken');
 const parser = require('../../middlewares/multerParser');
 const controller = require('../../controllers/orderActivities');
 
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
 
 router.get('/:id', [verify, parser.none()], async(req, res, next) => {
   try {

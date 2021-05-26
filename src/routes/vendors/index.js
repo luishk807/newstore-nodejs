@@ -6,8 +6,12 @@ const Vendor = require('../../pg/models/Vendors');
 const uuid = require('uuid');
 const config = require('../../config');
 const s3 = require('../../services/storage.service');
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
 
 const aw3Bucket = `${config.s3.bucketName}/vendors`;
 

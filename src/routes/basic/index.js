@@ -24,7 +24,13 @@ const OrderStatus = require('../../pg/models/OrderStatuses');
 const DeliveryService = require('../../pg/models/DeliveryServices');
 const Zone = require('../../pg/models/Zones');
 const { Op } = require('sequelize');
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
+
 
 router.get('/user', async(req, res, next) => {
   let data = {}

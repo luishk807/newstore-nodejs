@@ -10,8 +10,13 @@ const { Op } = require('sequelize');
 const { createProductDiscount, updateProductDiscount } = require('../../services/productDiscount.service');
 
 const includes = ['productDiscountProduct'];
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
+
 
 router.delete('/:id', verifyAdmin, (req, res, next) => {
   // delete brands
