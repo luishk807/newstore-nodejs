@@ -7,7 +7,7 @@ const THUMB_WIDTH = 150;
 const logger = global.logger;
 
 const getS3Params = (file, options) => {
-    let myFile = file.originalname.split('.');
+    let myFile = file.originalname ? file.originalname.split('.') : file.split('.');
     const fileType = myFile[myFile.length - 1];
     const extraSuffix = options ? options.suffix ? options.suffix : '' : '';
     const fileName = `${uuid.v4()}${extraSuffix}.${fileType}`;
@@ -36,6 +36,10 @@ const getThumbnailBuffer = async (file) => {
     return null;
 }
 
+const getThumbnailBufferRaw = (buffer) => {
+    return getThumbnailBuffer({ buffer: buffer, originalname: '' });
+}
+
 const uploadAndCreateThumbnail = async (file) => {
     const [data, thumbnail] = await Promise.all([
         upload(file, {}),
@@ -62,9 +66,15 @@ const uploadImages = async (files) => {
     return { images: imgsUploads }
 }
 
+const uploadAsThumbnail = async (file, buffer) => {
+    return upload(file, { suffix: THUMB_SUFFIX, anotherBuffer: buffer });
+}
+
 module.exports = {
     upload,
     uploadAndCreateThumbnail,
     remove,
-    uploadImages
+    uploadImages,
+    getThumbnailBufferRaw,
+    uploadAsThumbnail
 }
