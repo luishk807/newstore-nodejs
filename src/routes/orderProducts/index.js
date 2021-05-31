@@ -9,7 +9,13 @@ const utils = require('../../controllers/orders');
 
 const includes = ['orderStatusProduct', 'orderProductItem', 'orderProductProductDiscount'];
 
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
+
 
 router.delete('/:id', verify, (req, res, next) => {
   // delete order

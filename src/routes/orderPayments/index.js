@@ -1,7 +1,13 @@
 const router = require('express').Router();
 const cors = require('cors');
 const controller = require('../../controllers/orderPayments');
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
+
 
 router.get('/:id', async(req, res, next) => {
     try {

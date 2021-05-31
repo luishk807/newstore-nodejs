@@ -13,6 +13,19 @@ const checkIfEmpty = (data) => {
   return data == 'null' || data == "undefined" || !data;
 }
 
+const returnSlugName = (str, key = null) => {
+  if (str && isNaN(str)) {
+    const slugName_init = str.trim().toLowerCase().normalize('NFKD').replace(/[^\w]+/g, "-").replace(/\-$/, '');
+    let finalSlugName = slugName_init;
+    if (key) {
+      finalSlugName = `${key.trim().toLowerCase()}-${slugName_init}`;
+    }
+    return finalSlugName; 
+  } else {
+    return str;
+  }
+}
+
 const calculateTotal = async(obj) => {
 
   const carts = JSON.parse(obj.cart);
@@ -160,5 +173,6 @@ module.exports = {
   getAdminEmail,
   formatNumber,
   calculateTotal,
-  checkIfEmpty
+  checkIfEmpty,
+  returnSlugName
 }

@@ -11,8 +11,8 @@ const deleteUserAdressById = async(id) => {
 }
 
 const checkValidUser = async(id, user) => {
-  if (user.type !== 1) {
-    const confirm = await controller.getUserAdressesByIdAndUser(id, user.id);
+  if (user.type != 1) {
+    const confirm = await getUserAdressesByIdAndUser(id, user.id);
     if (!confirm) {
       return false;
     }

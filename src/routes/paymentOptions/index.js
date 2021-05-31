@@ -6,8 +6,12 @@ const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
 const config = require('../../config');
 const s3 = require('../../services/storage.service');
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
 
 router.delete('/:id', verify,  async(req, res, next) => {
   // delete delivery

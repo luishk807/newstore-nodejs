@@ -4,7 +4,6 @@ const verify = require('../../middlewares/verifyToken');
 const controller = require('../../controllers/wishlists');
 const parser = require('../../middlewares/multerParser');
 
-
 router.all('*', cors());
 
 router.delete('/:id', verify, async(req, res, next) => {
