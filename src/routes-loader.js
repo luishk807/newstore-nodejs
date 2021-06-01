@@ -1,34 +1,38 @@
 const fs = require('fs');
 const path = require('path');
 
-const routesLoader = (app, directory) => {
+const routesLoader = (app, directory, ignorePaths = []) => {
     if (app && directory) {
-        loadRoutesOnExpressApp(app, directory);
+        loadRoutesOnExpressApp(app, directory, ignorePaths);
     } else {
         logger.error('No express app provided or routes directory');
     }
 }
 
 // Get the routes from the given routes directory, only one level
-const loadRoutesOnExpressApp = (app, directory) => {
+const loadRoutesOnExpressApp = (app, directory, ignorePaths) => {
     const routesRootRealPath = path.join(__dirname, directory);
     logger.info(`Auto loading routes from ${directory}`);
     logger.info('API endpoint => route directory');
-    loadRoutesFromPath(directory, directory, routesRootRealPath, app);
+    loadRoutesFromPath(directory, directory, routesRootRealPath, app, ignorePaths);
 }
 
-const loadRoutesFromPath = (masterDirectory, directory, routesRootRealPath, app) => {
+const loadRoutesFromPath = (masterDirectory, directory, routesRootRealPath, app, ignorePaths) => {
     fs.readdirSync(routesRootRealPath).forEach(f => {
-        const routeRealPath = path.resolve(routesRootRealPath, f);
-        const isDirectory = fs.lstatSync(routeRealPath).isDirectory();
-        const moduleFileRealPath = path.resolve(routesRootRealPath, f, 'index.js');
-        const moduleFileExists = fs.existsSync(moduleFileRealPath);
-        // Assign route if the module file exists on that directory
-        if (isDirectory && moduleFileExists) {
-            assignRoute(masterDirectory, directory, f, app);
-        } else if (isDirectory) { // Go one level deeper
-            const subDir = `${directory}/${f}`;
-            loadRoutesFromPath(masterDirectory, subDir, routeRealPath, app);
+        if (!ignorePaths.includes(f)) {
+            const routeRealPath = path.resolve(routesRootRealPath, f);
+            const isDirectory = fs.lstatSync(routeRealPath).isDirectory();
+            const moduleFileRealPath = path.resolve(routesRootRealPath, f, 'index.js');
+            const moduleFileExists = fs.existsSync(moduleFileRealPath);
+            // Assign route if the module file exists on that directory
+            if (isDirectory && moduleFileExists) {
+                assignRoute(masterDirectory, directory, f, app);
+            } else if (isDirectory) { // Go one level deeper
+                const subDir = `${directory}/${f}`;
+                loadRoutesFromPath(masterDirectory, subDir, routeRealPath, app);
+            }
+        } else {
+            logger.info(`Ignoring [${f}] for routes auto-loading because it belongs to ignorePaths`);
         }
     });
 }
