@@ -10,7 +10,6 @@ const { createProductItems } = require('../services/productItem.service');
 const { createProductDiscount } = require('../services/productDiscount.service');
 const config = require('../config');
 const Vendor = require('../pg/models/Vendors');
-const s3 = require('./storage.service');
 const { safeString, getLowerCaseSafeString } = require('../utils/string.utils');
 const { paginate } = require('../utils');
 const { getDistinctValues, getUniqueValuesByField, existFields, returnSlugName } = require('../utils');
@@ -414,7 +413,7 @@ const createProductItemObject = (data, vendor, source) => {
         'amount6': +data.halfDozen,
         'amount12': +data.dozen,
         'retailPrice': +data.amount,
-        'statusId': 1,
+        'statusId': 2,
         'source': source || IMPORT
     }
 }
