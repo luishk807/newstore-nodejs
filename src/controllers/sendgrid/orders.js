@@ -1,8 +1,11 @@
 const config = require('../../config');
 const ProductItem = require('../../pg/models/ProductItems');
+const Product = require('../../pg/models/Products');
 const Delivery = require('../../pg/models/DeliveryOptions');
-const ProductDiscount = require('../../pg/models/ProductDiscounts');
+const { getAdminEmail } = require('../../utils');
 const sendGrid = require('@sendgrid/mail');
+const { Op } = require('sequelize');
+const { getTemplateText } = require('../../templates/es/order.confirmation');
 const aws_url = process.env.IMAGE_URL;
 const logo = `${aws_url}/avenidaz.png`;
 sendGrid.setApiKey(config.sendGrid.key);
@@ -10,10 +13,14 @@ sendGrid.setApiKey(config.sendGrid.key);
 const productIncludes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 const sendOrderUpdate = async(obj, req) => {
-  const message = `Your order has been updated.`;
-  const subject = `ORDER #${obj.order_num}: order updated`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
+  let status = obj.orderStatuses.name;
+  if (!status) {
+    status = `orden se ha actualizado`;
+  }
+  const subject = `ORDEN #${obj.order_num}: ${status}`;
   const client_email = obj.shipping_email;
-  const mainUrl = `${req.headers.referer}orders/account/${obj.id}`;
+  const client_name = obj.shipping_name;
   let result = false;
 
   // send user
@@ -25,7 +32,12 @@ const sendOrderUpdate = async(obj, req) => {
       <p>
         <img src="${logo}" width="300" />
       </p>
-      <p>Name: ${client_email}</p><p>Message: Your order has been recently updated.</p>
+      <p>${client_name},</p>
+      <p>Estado de orden: ${status}</p>
+      <p>Tu orden se ha actualizado recientemente.</p>
+      <p>Puede verificar el estado de su pedido en cualquier momento, yendo a <a target="_blank" href='${mainUrl}'>Tus Ordenes</a> en su cuenta</p>
+      <p>Si tiene alguna pregunta en relación a su pedido, comuníquese con nosotros a <a href='mailto:${config.email.sales}' target="_blank">ventas@avenidaz.com</a>.</p><br/>
+      <p>Gracias,<br/>AvenidaZ.com</p>
     `,
   }).then(() => {
     result = true;
@@ -42,9 +54,11 @@ const sendOrderCancelRequest = async(obj, req) => {
   const mainUrlAdmin = `${req.headers.referer}admin/orders/${obj.id}`;
   let result = false;
 
+  const toEmail = getAdminEmail('contact');
+
   // send admin
   sendGrid.send({
-    to: config.email.contact, // Change to your recipient
+    to: toEmail, // Change to your recipient
     from: config.email.noReply, // Change to your verified sender
     subject: `${obj.order_number}: ${subject}`,
     html: `
@@ -75,7 +89,10 @@ const sendOrderCancelRequest = async(obj, req) => {
   return result;
 }
 
+/** @deprecated Replaced by sendOrderConfirmationEmail */
 const sendOrderEmail = async(obj, req) => {
+  let toEmail = [];
+  toEmail.push(getAdminEmail('sales'));
   const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
   const newCart = [];
   const subject = `ORDER #${obj.order_num}: Order Received`;
@@ -92,37 +109,44 @@ const sendOrderEmail = async(obj, req) => {
     })
 
     let ProductDiscount = '';
-    if (item.productDiscountId) {
-      const getProductDisc = await ProductItem.findOne({
-        where: {
-          id: item.productDiscountId
-        }
-      })
-      if (getProductDisc) {
-        ProductDiscount = `Discount: ${ProductDiscount.name}`;
+    if (item.productDiscount) {
+        ProductDiscount = `Discount: ${item.productDiscount}`;
+  
+    }
+
+    // const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
+    let imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : null;
+
+    if (!imgUrl) {
+      const getBaseProduct = await Product.findOne({where: {id: product.productId}, include: ['productImages']});
+      
+      if (getBaseProduct) {
+        imgUrl = getBaseProduct.productImages && product.productImages.length ? `${aws_url}/${getBaseProduct.productImages[0].img_url}` : null;
       }
     }
 
-    const imgUrl = product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : `${req.headers.referer}images/no-image.jpg`;
+    if (!imgUrl) {
+      imgUrl = `${req.headers.referer}images/no-image.jpg`;
+    }
 
     temp['imgUrl'] = imgUrl;
     
     cartHtml += `
-    <table>
+    <table style='width: 100%'>
       <tr>
-        <td style='width: 20%'>
+        <td style='width: 20%; vertical-align: top; text-align: left'>
           <img style='width: 100px;' src='${imgUrl}' />
         </td>
-        <td style='width: 50%'>
+        <td style='width: 50%; vertical-align: top; text-align: center'>
           <p><strong>${item.name}</strong></p>
-          <p>Model: ${item.model}</p>
+          <p>Sku: ${item.sku}</p>
           <p>Color: ${item.color}</p>
           <p>Size: ${item.size}</p>
           <p>Qt: ${item.quantity}</p>
           <p>Unit: $${item.unit_total}</p>
           <p>${ProductDiscount}</p>
         </td>
-        <td style='width: 30%'>
+        <td style='width: 30%; vertical-align: top; text-align: right'>
           $${item.total}
         </td>
       </tr>
@@ -130,43 +154,84 @@ const sendOrderEmail = async(obj, req) => {
 
   }
 
-  const totalHtml = `
+  let totalHtml = `
     <hr/>
-    <table>
+    <table style='width: 100%'>
     <tr>
+      <td style='width: 50%'></td>
       <td style='width: 50%'>
-        Subtotal
+        <table style='width: 100%'>
+          <tr>
+            <td style='width: 50%; text-align: left'>
+              Subtotal
+            </td>
+            <td style='width: 50%; text-align: right'>
+              $${obj.entry.subtotal}
+            </td>
+          </tr>
+          <tr>
+            <td style='width: 50%; text-align: left'>
+              ITBMS 7%
+            </td>
+            <td style='width: 50%; text-align: right'>
+              $${obj.entry.tax}
+            </td>
+          </tr>
+          <tr>
+            <td style='width: 50%; text-align: left'>
+              Shipping
+            </td>
+            <td style='width: 50%; text-align: right'>
+              $${obj.entry.delivery}
+            </td>
+          </tr> `;
+  
+          if (obj.entry.coupon > 0) {
+            totalHtml += `
+            <tr>
+              <td style='width: 50%; text-align: left'>
+                Discount with coupon
+              </td>
+              <td style='width: 50%; text-align: right'>
+                - $${obj.entry.coupon}
+              </td>
+            </tr>
+            `;
+          }
+
+          if (obj.entry.totalSaved > 0) {
+            totalHtml += `
+            <tr>
+              <td style='width: 50%; text-align: left'>
+                You Saved
+              </td>
+              <td style='width: 50%; text-align: right'>
+                - $${obj.entry.totalSaved}
+              </td>
+            </tr>
+            `;
+          }
+  totalHtml += `  
+        </table>
       </td>
-      <td style='width: 50%'>
-        $${obj.entry.subtotal}
-      </td>
-    </tr>
-    <tr>
-      <td style='width: 50%'>
-        Shipping
-      </td>
-      <td style='width: 50%'>
-        $${obj.entry.delivery}
-      </td>
-    </tr>
-    <tr>
-      <td style='width: 50%'>
-        Tax
-      </td>
-      <td style='width: 50%'>
-        $${obj.entry.tax}
-      </td>
-    </tr>
-  </table>
+  </table>`;
+  totalHtml += `
   <hr/>
-  <table>
+  <table style='width: 100%'>
     <tr>
-      <td style='width: 50%'>
-        Total
-      </td>
-      <td style='width: 50%'>
-        <strong>$${obj.entry.grandtotal}</strong>
-      </td>
+       <td style='width:50%'></td>
+       <td style='width:50%'>
+          <table style='width:100%'>
+            <tr>
+              <td style='width: 50%; text-align: left'>
+                Total
+              </td>
+              <td style='width: 50%; text-align: right'>
+                <strong>$${obj.entry.grandtotal}</strong>
+              </td>
+            </tr>
+          </table>
+       </td>
     </tr>
   </table>
   `;
@@ -189,7 +254,7 @@ const sendOrderEmail = async(obj, req) => {
     }
   }
 
-  const message = `
+  let message = `
     <p>
       <img src="${logo}" width="300" />
     </p>
@@ -212,29 +277,43 @@ const sendOrderEmail = async(obj, req) => {
     ${totalHtml}
     <p>
       <strong>Customer Information</strong>
-    </p>
-    <p>
-      <strong>Shipping address</strong><br/>
-      ${obj.entry.shipping_name}<br/>
-      ${obj.entry.shipping_address}<br/>
-      ${obj.entry.shipping_district}<br/>
-      ${obj.entry.shipping_corregimiento}<br/>
-      ${obj.entry.shipping_province}<br/>
-      ${obj.entry.shipping_country}<br/><br/>
-      Phone: ${obj.entry.shipping_phone}<br/>
-    </p>
-    ${deliveryHtml}`;
+    </p>`;
+    if (obj.entry.deliveryOptionId == 1) {
+      message = `
+      <p>
+        <strong>Shipping address</strong><br/>
+        ${obj.entry.shipping_name}<br/>
+        Email: ${obj.entry.shipping_email}<br/>
+        Phone: ${obj.entry.shipping_phone}<br/>
+      </p>`;
+    } else {
+      message = `
+      <p>
+        <strong>Shipping address</strong><br/>
+        ${obj.entry.shipping_name}<br/>
+        ${obj.entry.shipping_address}<br/>
+        ${obj.entry.shipping_district}<br/>
+        ${obj.entry.shipping_corregimiento}<br/>
+        ${obj.entry.shipping_province}<br/>
+        ${obj.entry.shipping_country}<br/><br/>
+        Phone: ${obj.entry.shipping_phone}<br/>
+      </p>`;
+    }
 
+    message = `${deliveryHtml}`;
 
+  if (process.env.NODE_ENV === "production") {
+    toEmail.push(obj.clientEmail);
+  }
 
   const msg = {
-    to: 'luishk807@gmail.com', // Change to your recipient
+    to: toEmail, // Change to your recipient
     from: config.email.contact, // Change to your verified sender
     subject: `${subject}`,
     html: message,
   }
+
   
-  let result = null;
   return sendGrid.send(msg).then(() => {
     return true;
   })
@@ -243,7 +322,48 @@ const sendOrderEmail = async(obj, req) => {
   })
 }
 
+const baseProductSearchFunc = async (id) => {
+  return Product.findOne({ where: { id: id }, include: ['productImages'] });
+}
+
+const sendOrderConfirmationEmail = async(obj, { referer }) => {
+  const toEmail = [];
+  toEmail.push(getAdminEmail('sales'));
+  const mainUrl = `${referer}account/orders/${obj.orderId}`;
+  const subject = `ÓRDEN #${obj.order_num} RECIBIDA`;
+  const piIds = obj.cart.map(pi => pi.productItemId);
+  const promises = [];
+  promises.push(ProductItem.findAll({ where: { id: { [Op.in]: piIds } }, includes: productIncludes }));
+  // If there is an delivery id
+  if (obj.entry.deliveryId) {
+    promises.push(Delivery.findOne({ where: { id: obj.entry.deliveryId }, attributes: ['name'] }));
+  }
+  const [productItems, delivery] = await Promise.all(promises);
+
+  const message = await getTemplateText(obj, { logo: logo, mainUrl, productItems, referer, awsImageUrl: aws_url, delivery, productSearchFunc: baseProductSearchFunc });
+
+  if (process.env.NODE_ENV === "production") {
+    toEmail.push(obj.clientEmail);
+  }
+
+  const msg = {
+    to: toEmail, // Change to your recipient
+    from: config.email.contact, // Change to your verified sender
+    subject: `${subject}`,
+    html: message,
+  }
+
+  return sendGrid.send(msg).then(() => {
+    return true;
+  })
+  .catch(() => {
+    return false;
+  })
+}
+
 module.exports = {
   sendOrderEmail,
+  sendOrderConfirmationEmail,
+  sendOrderUpdate,
   sendOrderCancelRequest
 }

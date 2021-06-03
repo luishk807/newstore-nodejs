@@ -9,7 +9,13 @@ const utils = require('../../controllers/orders');
 
 const includes = ['orderStatusProduct', 'orderProductItem', 'orderProductProductDiscount'];
 
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
+
 
 router.delete('/:id', verify, (req, res, next) => {
   // delete order
@@ -47,7 +53,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
       'brand': body.brand,
       'color': body.color,
       'size': body.size,
-      'productDiscountId': body.productDiscount
+      'productDiscount': body.productDiscount
     },
     {
       where: {
@@ -81,7 +87,7 @@ router.post('/', [verify, parser.none()], async(req, res, next) => {
     'brand': body.brand,
     'color': body.color,
     'size': body.size,
-    'productDiscountId': body.productDiscount
+    'productDiscount': body.productDiscount
   }
   OrderProduct.create(entry).then(async(order) => {
     res.status(200).json({
@@ -102,6 +108,27 @@ router.get('/:id', [verify, parser.none()], async(req, res, next) => {
     res.status(200).json(order)
   } else {
     res.status(401).json({status: false, message: 'not authorized'})
+  }
+});
+
+router.get('/:id', [verify, parser.none()], async(req, res, next) => {
+  // get orders
+  let order = null;
+
+  if (req.user.type !== '1') {
+    try {
+      order = await OrderProduct.findOne({ where: {id: req.params.id}, include: includes});
+      res.status(200).json(order)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
+  } else {
+    try {
+      order = await OrderProduct.findOne({ where: {id: req.params.id, userId: req.user.id}, include: includes});
+      res.status(200).json(order)
+    } catch(err) {
+      res.status(500).json({status: false, message: err})
+    }
   }
 });
 
@@ -131,7 +158,6 @@ router.get('/', [verify, parser.none()], async(req, res, next) => {
       res.status(500).json({status: false, message: err})
     }
   } else if (req.query.ids) {
-    console.log("hey hey ", req.query.ids)
     try {
       product = await OrderProduct.findAll({ where: { id: { [Op.in]: req.query.ids}}, include: includes});
       res.status(200).json(product)

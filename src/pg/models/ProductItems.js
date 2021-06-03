@@ -11,6 +11,8 @@ const ProductColor = require('./ProductColors');
 
 const ProductSize = require('./ProductSizes');
 
+const ProductBundle = require('./ProductBundles');
+
 const ProductItem = sequelize.define('product_items', {
   product: {
     type: Sequelize.BIGINT,
@@ -55,6 +57,10 @@ ProductItem.belongsTo(ProductColor, { foreignKey: 'productColorId', as: 'product
 ProductItem.belongsTo(ProductSize, { foreignKey: 'productSizeId', as: 'productItemSize'});
 
 ProductItem.hasMany(ProductItemImages, { as: "productImages"});
+
+ProductItem.hasMany(ProductBundle, { as: "productItemProductBundles"});
+
+ProductBundle.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productBundleProductItem'});
 
 //ProductItem.belongsTo(Product, { foreignKey: 'productId', as: 'productItemsProduct'})
 module.exports = ProductItem;

@@ -11,10 +11,20 @@ const OrderProduct = require('./OrderProducts');
 
 const OrderCancelReason = require('./OrderCancelReasons');
 
+const DeliveryService = require('./DeliveryServices');
+
+const PromotionCode = require('./PromotionCodes');
+
+const DeliveryServiceGroupCost = require('./DeliveryServiceGroupCosts');
+
+const PaymentOption = require('./PaymentOptions');
+
 const DeliveryOption = require('./DeliveryOptions');
 
 const OrderActivity = require('./OrderActivities');
 
+const OrderPayment = require('./OrderPayments');
+ 
 const Order = sequelize.define('orders', {
   user: {
     type: Sequelize.BIGINT,
@@ -61,6 +71,12 @@ const Order = sequelize.define('orders', {
   shipping_corregimiento: {
     type: Sequelize.TEXT
   },
+  shipping_zone: {
+    type: Sequelize.TEXT
+  },
+  shipping_note: {
+    type: Sequelize.TEXT
+  },
   shipping_zip: {
     type: Sequelize.TEXT
   },
@@ -76,10 +92,42 @@ const Order = sequelize.define('orders', {
   delivery: {
     type: Sequelize.DECIMAL
   },
-  deliveryId: {
-    type: Sequelize.BIGINT,
-    field: 'deliveryOptionId'
-  }
+  deliveryOptionId: {
+    type: Sequelize.BIGINT
+  },
+  deliveryOption: {
+    type: Sequelize.TEXT
+  },
+  deliveryService: {
+    type: Sequelize.TEXT
+  },
+  deliveryServiceId: {
+    type: Sequelize.BIGINT
+  },
+  deliveryServiceGroupCostId: {
+    type: Sequelize.BIGINT
+  },
+  paymentOption: {
+    type: Sequelize.TEXT
+  },
+  paymentOptionId: {
+    type: Sequelize.BIGINT
+  },
+  promotionCode: {
+    type: Sequelize.TEXT
+  },
+  promotionCodeId: {
+    type: Sequelize.BIGINT
+  },
+  coupon: {
+    type: Sequelize.DECIMAL
+  },
+  totalSaved: {
+    type: Sequelize.DECIMAL
+  },
+  deliveryServiceFee: {
+    type: Sequelize.DECIMAL
+  },
 });
 
 Order.belongsTo(OrderCancelReason, { foreignKey: 'orderCancelReasonId', as: "orderCancelReasons"})
@@ -90,8 +138,18 @@ Order.belongsTo(DeliveryOption, { foreignKey: 'deliveryOptionId', as: "deliveryO
 
 Order.belongsTo(User, { foreignKey: 'userId', as: 'orderUser' })
 
+Order.belongsTo(DeliveryService, { foreignKey: 'deliveryServiceId', as: 'orderDeliveryService' })
+
+Order.belongsTo(DeliveryServiceGroupCost, { foreignKey: 'deliveryServiceGroupCostId', as: 'orderDeliveryServiceGroupCost' })
+
+Order.belongsTo(PaymentOption, { foreignKey: 'paymentOptionId', as: 'orderPayment' })
+
+Order.belongsTo(PromotionCode, { foreignKey: 'promotionCodeId', as: 'orderPromotion' })
+
 Order.hasMany(OrderProduct, { as: 'orderOrderProduct'})
 
 Order.hasMany(OrderActivity, { as: 'orderOrderActivity'})
+
+Order.hasMany(OrderPayment, { as: 'orderOrderPayment'})
 
 module.exports = Order;

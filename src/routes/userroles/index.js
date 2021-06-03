@@ -1,8 +1,12 @@
 const router = require('express').Router();
 const cors = require('cors');
 const UserRole = require('../../pg/models/UserRoles');
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
 
-router.all('*', cors());
+router.all('*', cors(corsOption));
 
 router.get('/', async(req, res, next) => {
   // get statuses

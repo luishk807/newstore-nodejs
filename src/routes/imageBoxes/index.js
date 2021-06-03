@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
+const controller = require('../../controllers/imageBoxes');
 const ImageBox = require('../../pg/models/ImageBoxes');
 const ImageBoxImages = require('../../pg/models/ImageBoxImages');
 const parser = require('../../middlewares/multerParser');
@@ -12,41 +13,46 @@ const AWS_BUCKET_NAME = config.s3.bucketName;
 const includes = ['productImages', 'imageBoxStatus', 'imageBoxImageBoxType']
 router.all('*', cors());
 
-router.delete('/:id', verify, (req, res, next) => {
+router.delete('/:id', verify, async(req, res, next) => {
   // delete products
-  ImageBox.findAll({ where: {id: req.params.id},include: includes})
-  .then((imageBox) => {
-    const mapFiles = imageBox[0].productImages.map(data => {
-      return data.img_url;
-    })
-    ImageBox.destroy({
-      where: {
-        id: imageBox[0].id
+  if (req.params.id) {
+    const result = await controller.deleteImageBox(req.params.id);
+    if (result.status) {
+      res.status(200).send(result);
+    } else {
+      if (result.notFound) {
+        res.status(404).send(result);
       }
-    }).then((deletedRecord) => {
-      if (deletedRecord) {
-        // console.log(deletedRecord, mapFiles)
-        try {
-          mapFiles.forEach(data => {
-            const params = {
-              Bucket: aw3Bucket,
-              Key: data,
-            }
-            s3.deleteObject(params, (err, data) => {
-              if (err) {
-                res.status(500).send({status: false, message: err})
-              }
-            })
-          })
-          res.status(200).json({ status: true, message: "Image box successfully deleted" });
-        } catch (e) {
-          res.status(400).json({ status: false, message: "Image box delete, but error on deleting image!", error: e.toString(), req: req.body });
-        }
-      }
-    }, (err) => {
-        res.json(err);
-    })
-  })
+      res.status(500).send(result);
+    }
+  }
+});
+
+router.get('/:id', async(req, res, next) => {
+  try {
+    const imageBox = await controller.searchImageBoxById(req.params.id);
+    res.json(imageBox)
+  } catch(err) {
+    res.send(err)
+  }
+});
+
+router.get('/:key/key', async(req, res, next) => {
+  try {
+    const imageBox = await controller.searchImageBoxByKey(req.params.key);
+    res.json(imageBox)
+  } catch(err) {
+    res.send(err)
+  }
+});
+
+router.get('/:key/active/key', async(req, res, next) => {
+  try {
+    const imageBox = await controller.searchActiveImageBoxByKey(req.params.key);
+    res.json(imageBox)
+  } catch(err) {
+    res.send(err)
+  }
 });
 
 router.get('/', async(req, res, next) => {
@@ -104,7 +110,6 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
       Key: fileName
     };
   })
-
   const body = req.body;
   const pid = req.params.id;
   // if user set main slider active , set the rest to not active
@@ -122,7 +127,8 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
         {
           'name': body.name,
           'imageBoxTypeId': body.imageBoxType,
-          'statusId': body.status
+          'statusId': body.status,
+          'key': body.key,
         },{
           where: {
             id: pid
@@ -205,7 +211,8 @@ router.put('/:id', [verify, parser.array('image')], (req, res, next) => {
       {
         'name': body.name,
         'imageBoxTypeId': body.imageBoxType,
-        'statusId': body.status
+        'statusId': body.status,
+        'key': body.key,
       },{
         where: {
           id: pid
@@ -312,6 +319,7 @@ router.post('/', [verify, parser.array('image')], (req, res, next) => {
     {
       'name': body.name,
       'imageBoxTypeId': body.imageBoxType,
+      'key': body.key,
     }
   ).then((imageBox) => {
     let counter = 1;
