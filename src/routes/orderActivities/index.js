@@ -1,19 +1,22 @@
 const router = require('express').Router();
 const cors = require('cors');
-const utils = require('../../controllers/orders');
 const verify = require('../../middlewares/verifyToken');
 const parser = require('../../middlewares/multerParser');
-const OrderActivity = require('../../pg/models/OrderActivities');
-const includes = ['orderActivityStatuses', 'orderActivityUser'];
+const controller = require('../../controllers/orderActivities');
 
-router.all('*', cors());
+const { checkCorsOrigins } = require('../../utils/server');
+const corsOption = {
+  origin: checkCorsOrigins
+}
+
+router.all('*', cors(corsOption));
 
 router.get('/:id', [verify, parser.none()], async(req, res, next) => {
-  const id = req.params.id;
-  const allow = await utils.checkOrderUserId(req, id);
-  if (allow) {
-    const orderActivity = await OrderActivity.findAll({ where: {orderId: id}, include: includes});
-    res.json(orderActivity)
+  try {
+    const resp = await controller.getOrderActivityByOrderId(req.params.id, req.user);
+    res.status(200).json(resp);
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
   }
 });
 

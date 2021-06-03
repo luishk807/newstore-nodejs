@@ -3,7 +3,7 @@ require('dotenv').config();
 const config = {
   express: {
     port: process.env.PORT || 5000,
-    whitelist: ['http://localhost:3000','http://localhost:8080','https://avenidaz.herokuapp.com/', 'https://avenidaz.com', 'http://avenidaz.com', 'http://www.avenidaz.com', 'https://www.avenidaz.com'],
+    whitelist: ['http://localhost:3000','http://localhost:8080','https://avenidaz.herokuapp.com/', 'https://avenidaz.com', 'http://avenidaz.com', 'http://www.avenidaz.com', 'https://www.avenidaz.com', 'https://dev.avenidaz.com'],
   },
   db: {
     user: process.env.PGUSER,
@@ -24,10 +24,13 @@ const config = {
     key: process.env.SENDGRID_API_KEY
   },
   email: {
-    contact: 'info@avenidaz.com',
-    sales: 'ventas@avenidaz.com',
-    noReply: 'no-reply@avenidaz.com',
-  }
+    contact: 'Avenida Z <info@avenidaz.com>',
+    sales: 'Ventas - Avenida Z <ventas@avenidaz.com>',
+    dev: 'luis@avenidaz.com',
+    noReply: 'No-Reply - Avenida Z <no-reply@avenidaz.com>',
+  },
+  defaultLimit: 30,
+  taxTotal: 0.07,
 };
 
 module.exports = config;

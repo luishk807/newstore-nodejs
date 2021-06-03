@@ -1,73 +1,56 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
-const DeliveryOption = require('../../pg/models/DeliveryOptions');
+const controller = require('../../controllers/deliveryOptions');
 const parser = require('../../middlewares/multerParser');
 const uuid = require('uuid');
 const config = require('../../config');
 const s3 = require('../../services/storage.service');
-const includes = ['deliveryOptionStatus'];
 
 router.all('*', cors());
 
-router.delete('/:id', verify,  (req, res, next) => {
+router.delete('/:id', verify,  async(req, res, next) => {
   // delete delivery
-  DeliveryOption.findAll({ where: {id: req.params.id}})
-  .then((delivery) => {
-    DeliveryOption.destroy({
-      where: {
-        id: delivery[0].id
-      }
-    }).then((deletedRecord) => {
-      res.status(200).json({ status: deletedRecord, message: "Delivery option successfully deleted" });
-    }, (err) => {
-      res.status(500).json({status: false, message: err});
-    })
-  })
+  try {
+    await controller.deleteDeliveryOptionById(req.params.id);
+    res.status(200).json({ status: true, message: "Delivery option successfully deleted" });
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
 });
 
-router.put('/:id', [verify, parser.none()], (req, res, next) => {
+router.put('/:id', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
   const bid = req.params.id;
-  
-  DeliveryOption.update(
-    {
-      'name': body.name,
-      'status': body.status,
-      'description': body.description,
-      'total': body.total
-    },
-    {
-      where: {
-        id: bid
-      }
-    }
-  ).then((updated) => {
+  try {
+    const delivery = await controller.saveDeliveryOption(body, bid);
     res.status(200).json({
-      data: updated,
+      data: delivery,
+      status: true,
       message: 'Delivery option Updated'
     });
-  }).catch((err) => {
+  } catch(err) {
     res.status(500).json({status: false, message: err})
-  })
+  }
 });
 
-router.post('/', [verify, parser.none()], (req, res, next) => {
+router.post('/', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
-  DeliveryOption.create({
-    'name': body.name,
-    'description': body.description,
-    'total': body.total
-  }).then((delivery) => {
+  try {
+    const delivery = await controller.createDeliveryOption(body);
     res.status(200).json(delivery);
-  }).catch((err) => {
+  } catch(err) {
     res.status(500).json({status: false, message: err})
-  })
+  }
 })
 
 router.get('/:id', async(req, res, next) => {
-    const delivery = await DeliveryOption.findAll({ where: {id: req.params.id, statusId: 1}, include: includes});
-    res.json(delivery)
+    try {
+      const delivery = await controller.getDeliveryOptionById(req.params.id);
+      res.json(delivery)
+    } catch(err) {
+      res.status(500).json({status: false, message: err});
+    }
 });
 
 router.get('/', async(req, res, next) => {
@@ -75,14 +58,14 @@ router.get('/', async(req, res, next) => {
   let delivery = null;
   if (req.query.id) {
     try {
-      delivery = await DeliveryOption.findOne({ where: {id: req.query.id, statusId: 1}, include: includes});
+      delivery = await controller.getDeliveryOptionById(req.query.id);
       res.status(200).json(delivery)
     } catch(err) {
       res.status(500).json({status: false, message: err})
     }
   } else {
     try {
-      delivery = await DeliveryOption.findAll({where: {statusId: 1}, include: includes});
+      delivery = await controller.getDeliveryOptions();
       res.status(200).json(delivery)
     } catch(err) {
       res.status(500).json({status: false, message: err})

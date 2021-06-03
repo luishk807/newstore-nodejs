@@ -39,6 +39,7 @@ router.put('/:id', [verify, parser.none()], (req, res, next) => {
     }
   ).then((updated) => {
     res.status(200).json({
+      status: true,
       data: updated,
       message: 'Category Updated'
     });
@@ -61,7 +62,7 @@ router.post('/', [verify, parser.none()], (req, res, next) => {
 })
 
 router.get('/:id', async(req, res, next) => {
-    const category = await Category.findAll({ where: {id: req.params.id}});
+    const category = await Category.findOne({ where: {id: req.params.id}});
     res.json(category)
 });
 

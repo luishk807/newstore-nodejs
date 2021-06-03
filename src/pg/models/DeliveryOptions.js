@@ -18,7 +18,13 @@ const DeliveryOption = sequelize.define('delivery_options', {
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'
-  }
+  },
+  default: {
+    type: Sequelize.BOOLEAN
+  },
+  position: {
+    type: Sequelize.INTEGER
+  },
 });
 
 DeliveryOption.belongsTo(Statuses, {foreignKey: 'statusId', as: 'deliveryOptionStatus'});

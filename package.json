@@ -4,23 +4,27 @@
   "description": "back end of avenida z",
   "main": "src/app.js",
   "scripts": {
-    "postinstall": "npx prisma generate",
+    "build": "npx prisma generate",
     "start": "node src/server.js",
     "test": "mocha tests/**/*.js --exit"
   },
   "author": "Luis Ho Ku",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^2.16.1",
+    "@prisma/client": "~2.21.2",
     "@sendgrid/mail": "^7.4.1",
     "aws-sdk": "^2.768.0",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-oauth-server": "^2.0.0",
+    "hashids": "^2.2.8",
     "heroku-ssl-redirect": "^0.1.1",
+    "image-thumbnail": "^1.0.13",
     "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.1",
     "multer": "^1.4.2",
     "papaparse": "^5.3.0",
     "pg": "^8.3.2",
@@ -30,8 +34,7 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "@prisma/cli": "^2.15.0",
     "mocha": "^8.3.0",
-    "prisma": "^2.16.1"
+    "prisma": "~2.21.2"
   }
 }

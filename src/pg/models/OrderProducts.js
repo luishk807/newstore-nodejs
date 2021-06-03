@@ -7,8 +7,6 @@ const OrderStatus = require('./OrderStatuses');
 
 const ProductItem = require('./ProductItems');
 
-const ProductDiscount = require('./ProductDiscounts');
-
 const OrderProduct = sequelize.define('order_products', {
   product: {
     type: Sequelize.BIGINT,
@@ -63,14 +61,23 @@ const OrderProduct = sequelize.define('order_products', {
     type: Sequelize.TEXT,
   },
   productDiscount: {
-    type: Sequelize.BIGINT,
-    field: 'productDiscountId'
+    type: Sequelize.TEXT
+  },
+  savePercentageShow: {
+    type: Sequelize.TEXT
+  },
+  originalPrice: {
+    type: Sequelize.DECIMAL
+  },
+  savePercentage: {
+    type: Sequelize.DECIMAL
+  },
+  savePrice: {
+    type: Sequelize.DECIMAL
   },
 });
 
 OrderProduct.belongsTo(OrderStatus, { foreignKey: 'orderStatusId', as: "orderStatusProduct"})
-
-OrderProduct.belongsTo(ProductDiscount, { foreignKey: 'productDiscountId', as: 'orderProductProductDiscount' } )
 
 OrderProduct.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'orderProductItem' })
 

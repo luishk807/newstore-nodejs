@@ -18,7 +18,6 @@ const Brand = require('./Brands');
 const ProductItem = require('./ProductItems');
 
 const ProductDiscount = require('./ProductDiscounts');
-
 // const ProductQuestionModel = require('./ProductQuestions');
 // const ProductQuestion = ProductQuestionModel.getModel();
 
@@ -37,7 +36,8 @@ const Product = sequelize.define('product', {
   description: { type: Sequelize.TEXT },
   model: { type: Sequelize.TEXT },
   sku: { type: Sequelize.TEXT },
-  source: { type: Sequelize.TEXT }
+  source: { type: Sequelize.TEXT },
+  slug: { type: Sequelize.TEXT }
 },
 {
   schema: 'public',
@@ -53,6 +53,7 @@ UserWishlist.belongsTo(Product, {foreignKey: 'productId', as: 'wishlistProduct'}
 Product.belongsTo(Brand, { foreignKey: 'brand', as: 'productBrand'});
 
 Brand.hasMany(Product, { foreignKey: 'brand', as: 'brandProduct'} )
+
 // Product.hasMany(ProductQuestion, { as: "product_questions" });
 
 Product.hasMany(ProductImages, { as: "productImages"});
@@ -72,6 +73,5 @@ ProductItem.belongsTo(Product, { foreignKey: 'productId', as: 'productItemProduc
 //Product.hasMany(UserWishlist, { foreignKey: 'productId', as: 'productWishlist'})
 
 Product.belongsTo(Statuses, { foreignKey: 'statusId', as: 'productStatus'});
-
 
 module.exports = Product;

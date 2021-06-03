@@ -13,6 +13,12 @@ const SweetBox = sequelize.define('sweet_boxes', {
   name: {
     type: Sequelize.TEXT
   },
+  key: {
+    type: Sequelize.TEXT
+  },
+  maxItems: {
+    type: Sequelize.INTEGER
+  },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'

@@ -1,193 +1,348 @@
 const Order = require('../pg/models/Orders');
+const OrderActivity = require('../pg/models/OrderActivities');
+const OrderProduct = require('../pg/models/OrderProducts');
+const ProductBundle = require('../pg/models/ProductBundles');
+const ProductDiscount = require('../pg/models/ProductDiscounts');
+const User = require('../pg/models/Users');
+const sendgrid = require('../controllers/sendgrid/orders');
+const { calculateTotal, checkIfEmpty } = require('../utils');
 const config = require('../config');
 const s3 = require('./storage.service');
-const { safeString } = require('../utils/string.utils');
-const validationField = '__validation__';
-const requiredfields = [
-    'name',
-    'stock',
-    'amount',
-    'category',
-    'brand',
-    'model',
-    'code',
-    'description'
-];
-const savedFields = requiredfields.concat(['status', 'vendor']);
+const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost', 'orderPromotion'];
+const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
+const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
+const { Op } = require('sequelize');
+const sequelize = require('../pg/sequelize')
+const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
+const logger = global.logger;
 
-/** Returns a boolean indicating if all provided fields exists */
-const existFields = (obj, fields) => {
-    if (obj) {
-        for (let n = 0; n < fields.length; ++n) {
-            if (!obj[fields[n]]) {
-                return false;
+const saveStatusOrder = async(orId, userId, status) => {
+    const orderInfo = await Order.findOne({where: {id: orId}});
+    if (orderInfo) {
+        if (orderInfo.orderStatusId !== status) {
+                const resp = await OrderActivity.create({
+                    orderStatusId: status,
+                    userId: userId ? userId : null,
+                    orderId: orId
+                });
+            return resp
+        } else {
+            return false;
+        }
+    } else {
+        return false
+    }
+}
+
+const getOrder = async(id, user) => {
+    if (!id || !user) {
+        return null;
+    }
+
+    let order = null;
+    if (user.type !== '1') {
+        order = await Order.findOne({ where: {id: id, userId: user.id }, include: includes});
+    } else {
+        order = await Order.findOne({ where: {id: id }, include: includes});
+    }
+
+    return order;
+}
+
+const deleteOrderById = async(id, user) => {
+    const order = await getOrder(id, user);
+
+    if (!order) {
+        return { code: 500, status: false, message: "Order invalido" }
+    }
+
+    const t  = await sequelize.transaction();
+    try {
+        // STOCK_MODE.INCREASE, because we want to increase our product stock again
+        await updateStock(order.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
+        const result = await Order.destroy({ where: { id: order.id } }, { transaction: t });
+        t.commit();
+        return result;
+    } catch (error) {
+        logger.error(`Error updating stock and delting the order: ${id}`, error);
+        t.rollback();
+    }
+}
+
+const updateOrder = async(req) => {
+    const body = req.body;
+    const id = req.params.id;
+    const user = req.user;
+    const order = await getOrder(id, req.user);
+
+    if (Number(body.deliveryServiceFee) > 0) {
+        body.deliveryServiceFee = Number(body.deliveryServiceFee);
+    } else {
+        body.deliveryServiceFee = null;
+    }
+
+    if (order) {
+        if (req.body.orderStatus) {
+            await saveStatusOrder(id, user.id, req.body.orderStatus);
+        }
+        if (order.deliveryServiceFee != req.body.deliveryServiceFee) {
+            if (req.body.deliveryServiceFee > 0) {
+                await saveStatusOrder(id, user.id, 13);
+            } else {
+                await saveStatusOrder(id, user.id, 14);
             }
         }
-        return true;
-    } else {
-        return false;
-    }
-}
 
-/** Creates a new product object with the given data */
-const createProductObject = (data, vendor) => {
-    return {
-        'name': data.name,
-        'stock': +data.stock,
-        'amount': +data.amount,
-        'category': data.category,
-        'brand': data.brand,
-        'model': data.model,
-        'code': data.code,
-        'description': data.description,
-        ...vendor  && { vendor: +vendor.id },
-        ...data['status'] && { statusId: data.status }
-    }
-}
-
-/** Returns a new array of newly created product object models */
-const verifyImportDataFormat = (data, vendor) => {
-    if (Array.isArray(data)) {
-        const products = [];
-        data.forEach((d) => {
-            products.push(createProductObject(d, vendor));
-        });
-        return products;
-    }
-    return null;
-}
-
-/** Assigns the reference id from the given searchItems data array to the given data */
-const assignReferenceId = (data, dataField, searchItems) => {
-    if (!data[validationField]) { data[validationField] = []; }
-    if (Array.isArray(searchItems)) {
-        const item = searchItems.find(si => safeString(si.name).trim().toLowerCase() === safeString(data[dataField]).trim().toLowerCase());
-        if (item) { // Replaces the string value with the correct model id
-            data[dataField] = +item.id; // Assuming id is a number
-            data[validationField].push({ field: dataField, valid: true });
-            return;
+        const result = await Order.update(body,
+        {
+            where: {
+            id: id
+            }
         }
-    }
-    data[validationField].push({ field: dataField, valid: false, message: `Could not assign reference id for ${dataField}` });
-}
-
-/**
- * Checks the validation field and returns false if there were any errors in validation
- * @returns bool 
- */
-const isAllValid = (data) => { // single data
-    const validation = data[validationField];
-    if (Array.isArray(validation)) {
-        const errors = validation.filter(v => !v.valid);
-        if (errors.length === 0) {
+        );
+        if (result[0]) {
+            await sendgrid.sendOrderUpdate(order, req);
             return true;
+        } else {
+            return false;
         }
+
+    } else {
+        return { code: 401, status: false, message: 'not authorized'}
+    }
+}
+
+const cancelOrder = async(req) => {
+    const user = req.user;
+    const id = req.params.id;
+    const cancel = req.params.cancel;
+    const orderInfo = await getOrder(id, user);
+    const allowedCancelStatus = [1,2];
+
+    if (!orderInfo) {
+        return { code: 500, status: false, message: "Order invalido" }
+    }
+    // save status
+    if (!allowedCancelStatus.includes(Number(orderInfo.orderStatus))) {
+        return {status: false, code: 500, message: "invalid cancel status"};
+    } else {
+        await saveStatusOrder(id, user.id, 7);
+        const resp = await Order.update({
+            orderCancelReasonId: cancel,
+            orderStatusId: 7
+        }, { where: { id: id } });
+        
+        if (resp) {
+            try {
+                await Promise.all([
+                    updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE }),
+                    sendgrid.sendOrderCancelRequest(orderInfo, req)
+                ]);
+                return true;
+            } catch (error) {
+                logger.error(`Error on canceling order: ${id}`, error)
+            }
+        } else {
+            return false
+        }
+    }
+
+}
+
+const getOrderByOrderNumberEmail = async(orderNumber, email) => {
+    return await Order.findOne({ where: {order_number: orderNumber, shipping_email: email}, include: includes_non_user, order: orderBy});
+}
+
+const getOrderByUser = async(loggedInUser, userId) => {
+    if (loggedInUser.type == '1') {
+        return await Order.findAll({ where: {userId: userId}, include: includes, order: orderBy });
+    } else {
+        return await Order.findAll({ where: {userId: userId, userId: loggedInUser.id}, include: includes, order: orderBy });
+    }
+}
+
+const getMyOrders = async(user) => {
+    return await Order.findAll({ where: {userId: user.id}, include: includes, order: orderBy });
+}
+
+const getOrderById = async(id, user) => {
+    return await getOrder(id, user);
+}
+
+const getAllOrder = async(user) => {
+    if (user.type == '1') {
+        return await Order.findAll({include: includes, order: orderBy});
+    } else {
+        return {status: false, code: 401, message: 'not authorized'}
+    }
+}
+
+const createOrder = async(req) => {
+    const body = req.body;
+    const userId = req.user ? req.user.id : null;
+    const carts = JSON.parse(body.cart);
+    const entryUser = parseInt(body.userid);
+    let email =body.shipping_email;;
+    const getTotal = await calculateTotal(body);
+
+    let entry = {
+      'subtotal': getTotal.subtotal,
+      'grandtotal': getTotal.grandTotal,
+      'tax': getTotal.taxes,
+      'totalSaved': getTotal.saved,
+      'delivery': getTotal.delivery,
+      'coupon': getTotal.coupon,
+      'shipping_name': checkIfEmpty(body.shipping_name) ? null : body.shipping_name,
+      'shipping_address': checkIfEmpty(body.shipping_address) ? null : body.shipping_address,
+      'shipping_email': checkIfEmpty(body.shipping_email) ? null : body.shipping_email,
+      'shipping_city': checkIfEmpty(body.shipping_city) ? null : body.shipping_city,
+      'shipping_country': checkIfEmpty(body.shipping_country) ? null : body.shipping_country,
+      'shipping_phone': checkIfEmpty(body.shipping_phone) ? null : body.shipping_phone,
+      'shipping_province': checkIfEmpty(body.shipping_province) ? null : body.shipping_province,
+      'shipping_township': checkIfEmpty(body.shipping_township) ? null : body.shipping_township,
+      'shipping_corregimiento': checkIfEmpty(body.shipping_corregimiento) ? null : body.shipping_corregimiento,
+      'shipping_zip': checkIfEmpty(body.shipping_zip) ? null : body.shipping_zip,
+      'shipping_zone': checkIfEmpty(body.shipping_zone) ? null : body.shipping_zone,
+      'shipping_district': checkIfEmpty(body.shipping_district) ? null : body.shipping_district,
+      'shipping_note': checkIfEmpty(body.shipping_note) ? null : body.shipping_note,
+    }
+    
+    if (!!!isNaN(body.deliveryOptionId)) {
+      entry['deliveryOptionId'] = body.deliveryOptionId;
+      entry['deliveryOption'] = body.deliveryOption;
+    }
+    if (!!!isNaN(body.deliveryServiceId)) {
+      entry['deliveryServiceGroupCostId'] = body.deliveryServiceId;
+      entry['deliveryService'] = body.deliveryService;
+    }
+    if (!!!isNaN(body.paymentOptionId)) {
+      entry['paymentOptionId'] = body.paymentOptionId;
+      entry['paymentOption'] = body.paymentOption;
+    }
+    if (!!!isNaN(body.promotionCodeId) && getTotal.coupon) {
+        entry['promotionCodeId'] = body.promotionCodeId;
+        entry['promotionCode'] = body.promotionCode;
+      }
+    if (!!!isNaN(entryUser)) {
+      entry['userId'] = body.userid;
+      const findUser = await User.findOne({where: { id: body.userid}});
+      if (findUser) {
+          email = findUser.email;
+      }
+    }
+
+    const t  = await sequelize.transaction();
+
+    try {
+        const orderCreated = await Order.create(entry, { transaction: t });
+
+        if (orderCreated) {
+            let cartArry = [];
+            await OrderActivity.create({
+                orderStatusId: 1,
+                orderId: orderCreated.id
+            });
+            const time = Date.now().toString() // '1492341545873'
+            const order_num = `${time}${orderCreated.id}`;
+            await Order.update(
+                { 'order_number': order_num },
+                { where: { id: orderCreated.id }, transaction: t }
+            );
+            
+            let orderObj = {
+                entry: entry,
+                orderId: orderCreated.id,
+                order_num: order_num,
+                cart: [],
+                clientEmail: email
+            }
+            if (Object.keys(carts).length) {
+                for(const cart in carts) {
+                    let item = {
+                        orderId: orderCreated.id,
+                        productItemId: carts[cart].id,
+                        unit_total: carts[cart].retailPrice,
+                        name: carts[cart].productItemProduct.name,
+                        description: carts[cart].productItemProduct.description,
+                        model: carts[cart].model,
+                        color: carts[cart].productItemColor.name,
+                        sku: carts[cart].sku,
+                        product: carts[cart].product,
+                        size: carts[cart].productItemSize.name,
+                        code: carts[cart].sku,
+                        productDiscount: null,
+                        originalPrice: carts[cart].originalPrice,
+                        savePercentageShow: carts[cart].save_percentag_show,
+                        savePercentage: carts[cart].save_percentage,
+                        savePrice: carts[cart].save_price,
+                        category: carts[cart].productItemProduct.category,
+                        quantity: null,
+                        total: parseInt(carts[cart].quantity) * parseFloat(carts[cart].retailPrice),
+                        brand: carts[cart].productItemProduct.brand,
+                    }
+                    if (carts[cart].discount) {
+                        const getDiscount = await ProductDiscount.findOne({where: { id: carts[cart].discount.id }});
+                        if (getDiscount && carts[cart].quantity >= getDiscount.minQuantity) {
+                            item.productDiscount = carts[cart].discount.name
+                            item.quantity = carts[cart].quantity
+                        } else {
+                            await deleteOrderById(orderCreated.id);
+                            return {status: false, code: 500, message: 'error with discount'}
+                        }
+                    }
+                    else if (carts[cart].bundle) {
+                        const getBundle = await ProductBundle.findOne({where: { id: carts[cart].bundle.id, productItemId: carts[cart].id}});
+                        if (getBundle) {
+                            item.productDiscount = carts[cart].bundle.name;
+                            item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
+                        } else {
+                            await deleteOrderById(orderCreated.id);
+                            return {status: false, code: 500, message: 'error with bundle'}
+                        }
+                    } else {
+                        item.quantity = carts[cart].quantity;
+                    }
+                    cartArry.push(item);
+                }
+                orderObj.cart = cartArry;
+                const orderProducts = await OrderProduct.bulkCreate(cartArry, { transaction: t, returning: true });
+                // Update stocks on product items, and creates history of stock movement
+                const updateResult = await updateStock(orderProducts, { transaction: t });
+                if (!updateResult) {
+                    logger.error('Error updating stock');
+                    throw new Error('Error updating stocks')
+                }
+                // Commit the entire transaction
+                await t.commit();
+                await sendgrid.sendOrderConfirmationEmail(orderObj, { referer: req.headers.referer });
+                return orderObj;
+            } else { // There will always be items in cart, will it ever reach this else?
+                // Commit the entire transaction
+                await t.commit();
+                await sendgrid.sendOrderConfirmationEmail(orderObj, { referer: req.headers.referer });
+                return orderObj;
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        logger.error('Error creating order, will rollback order', error);
+        await t.rollback();
     }
     return false;
 }
 
-/** Returns a new array of valid data based on validationField */
-const checkValidationsFromData = (data) => {
-    const retval = { valid: [], invalid: [] };
-    if (Array.isArray(data)) {
-        data.forEach(d => {
-            if (isAllValid(d)) {
-                retval.valid.push(d);
-            } else {
-                retval.invalid.push(d);
-            }
-        });
-    }
-    return retval;
-}
-
-/** Filter out the datas that does not contain the required fields */
-const filterForRequiredFields = (dataArray) => {
-    const retval = [];
-    dataArray.forEach(d => {
-        if (existFields(d, requiredfields)) {
-            retval.push(d);
-        }
-    });
-    return retval;
-}
-
-const importProducts = async (datas, userId) => {
-    // Get reference data from database
-    const [vendor, brands, categories] = await Promise.all([
-        Vendor.findOne({ where: { userId: userId }}),
-        Brand.findAll({}),
-        Category.findAll({})
-    ]);
-    
-    const data = filterForRequiredFields(datas);
-    
-    // Get reference ids for brands
-    data.forEach(d => assignReferenceId(d, 'brand', brands));
-    // Get reference ids for categories
-    data.forEach(d => assignReferenceId(d, 'category', categories));
-    
-    const validatedData = checkValidationsFromData(data);// validatedData.invalid will contain data that did not get the 
-    // If entire data set is valid
-    if (validatedData.invalid.length === 0) {
-        // Just gets the valid data
-        const checkedData = verifyImportDataFormat(validatedData.valid, vendor);
-        if (checkedData !== null) {
-            /**
-             * For Sequelize#bulkCreate to work on PostgreSQL we need to specifiy the fields option, so we restrict the fields to the one's we want without having id field in it.
-             * So basically, the query that it generates when using bulkCreate will generate an error because the id is being set to auto generated.
-             * For example the query below, if ran directly on PostgreSQL, it fails asking you to use OVERRIDING SYSTEM VALUE, but there is no way for you to put it.
-             * INSERT INTO "products" ("id","name","amount","categoryId","brandId","stock","description","model","code","createdAt","updatedAt") 
-             * VALUES 
-             * (DEFAULT,'pp laptop',100,1,16,1,'Laptop from great PP brand','pp0001','12345678','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00'),
-             * (DEFAULT,'Apple',0.5,1,16,3,'2 apple from the mountains where bigfoot lives','cfa001','12345677','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00')
-             * RETURNING "id","name","amount","categoryId","brandId","vendorId","statusId","image","stock","description","model","code","createdAt","updatedAt";
-             * 
-             * If you change the above query to the one below, by adding OVERRIDING SYSTEM VALUE before VALUES, then it works, but there is no way to do it in Sequelize.
-             * INSERT INTO "products" ("id","name","amount","categoryId","brandId","stock","description","model","code","createdAt","updatedAt") 
-             * OVERRIDING SYSTEM VALUE
-             * VALUES 
-             * (DEFAULT,'pp laptop',100,1,16,1,'Laptop from great PP brand','pp0001','12345678','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00'),
-             * (DEFAULT,'Apple',0.5,1,16,3,'2 apple from the mountains where bigfoot lives','cfa001','12345677','2020-11-29 01:40:04.918 +00:00','2020-11-29 01:40:04.918 +00:00')
-             * RETURNING "id","name","amount","categoryId","brandId","vendorId","statusId","image","stock","description","model","code","createdAt","updatedAt";
-             * 
-             * So the only way to make it work for tables that have auto generated ids is to restrict the bulkCreate to specific fields.
-             */
-            const results = await Product.bulkCreate(checkedData, {
-                fields: savedFields,
-                returning: true
-            });
-            return results;
-        }
-    }
-    return Promise.reject({ error: 'Products data could not be formatted or invalid', validation: validatedData });
-}
-
-const deleteProduct = async (id) => {
-    const product = await Product.findOne({
-        where: { id: id },
-        include: ['productImages','productVendor', 'productBrand', 'categories', 'productStatus', 'rates']
-    });
-    if (product) {
-        const mapFiles = product.productImages.map(data => data.img_url);
-        try {
-            mapFiles.forEach(data => {
-                s3.deleteObject({ Bucket: config.s3.bucketName, Key: data }, (err, data) => {
-                    if (err) {
-                        // res.status(500).send({status: false, message: err})
-                    }
-                })
-            })
-            await Product.destroy({ where: { id: product.id } });
-            return { status: true, message: "Product successfully deleted" };
-        } catch (e) {
-            return { status: false, message: "Product delete, but error on deleting image!", error: e.toString() };
-        }
-    }
-    return { status: false, message: 'Product not found for deletion', notFound: true };
-}
 
 module.exports = {
-    importProducts,
-    deleteProduct
+    deleteOrderById,
+    saveStatusOrder,
+    updateOrder,
+    getOrder,
+    cancelOrder,
+    createOrder,
+    getOrderByOrderNumberEmail,
+    getOrderByUser,
+    getAllOrder,
+    getOrderById,
+    getMyOrders,
 }

@@ -34,30 +34,35 @@ router.get('/', async(req, res, next) => {
   }
 });
 
-router.post('/', [verify, parser.none()], (req, res, next) => {
+router.post('/:id', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
+  const id = req.params.id;
   if (body.items) {
-    const items = body.items.split(',');
-    const productAdd = items.map((item) => {
-      return {
-        product: item.replace(/['"]+/g, ''),
-        sweetBoxId: body.id
-      }
-    })
-    SweetBoxProduct.destroy({
+    const items = JSON.parse(body.items);
+    const productAdd = [];
+
+    for(const prodIds of items) {
+      productAdd.push({
+        product: prodIds.replace(/['"]+/g, ''),
+        sweetBoxId: id
+      });
+    }
+
+    await SweetBoxProduct.destroy({
         where: {
-          sweetBoxId: body.id
+          sweetBoxId: id
         }
-    }).then((updated) => {
-      SweetBoxProduct.bulkCreate(productAdd).then(() => {
-        res.status(200).json({
-          status: updated,
-          message: message
-        });
-      }).catch((err) => {
-        res.send({status: false, message: err})
-      })
-    })
+    });
+
+    const respAdd = await SweetBoxProduct.bulkCreate(productAdd);
+    if (respAdd) {
+      res.status(200).json({
+        status: true,
+        message: 'Items saved'
+      });
+    } else {
+      res.send({status: false, message: respAdd})
+    }
   } else {
     res.status(400).json({
       status: false,
