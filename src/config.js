@@ -13,7 +13,9 @@ const config = {
       'https://www.avenidaz.com', 
       'https://dev.avenidaz.com',
       'https://prueba.avenidaz.com',
-      'http://prueba.avenidaz.com'
+      'http://prueba.avenidaz.com',
+      'https://beta.avenidaz.com',
+      'http://beta.avenidaz.com'
     ]
   },
   db: {
