@@ -3,7 +3,18 @@ require('dotenv').config();
 const config = {
   express: {
     port: process.env.PORT || 5000,
-    whitelist: ['http://localhost:3000','http://localhost:8080','https://avenidaz.herokuapp.com/', 'https://avenidaz.com', 'http://avenidaz.com', 'http://www.avenidaz.com', 'https://www.avenidaz.com', 'https://dev.avenidaz.com'],
+    whitelist: [
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'https://avenidaz.herokuapp.com/', 
+      'https://avenidaz.com', 
+      'http://avenidaz.com', 
+      'http://www.avenidaz.com', 
+      'https://www.avenidaz.com', 
+      'https://dev.avenidaz.com',
+      'https://prueba.avenidaz.com',
+      'http://prueba.avenidaz.com'
+    ]
   },
   db: {
     user: process.env.PGUSER,
