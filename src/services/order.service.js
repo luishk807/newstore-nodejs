@@ -85,12 +85,8 @@ const updateOrder = async(req) => {
         if (req.body.orderStatus) {
             await saveStatusOrder(id, user.id, req.body.orderStatus);
         }
-        if (order.deliveryServiceFee != req.body.deliveryServiceFee) {
-            if (req.body.deliveryServiceFee > 0) {
-                await saveStatusOrder(id, user.id, 13);
-            } else {
-                await saveStatusOrder(id, user.id, 14);
-            }
+        if (order.deliveryServiceFee != req.body.deliveryServiceFee && req.body.deliveryServiceFee > 0) {
+            await saveStatusOrder(id, user.id, 13);
         }
 
         const result = await Order.update(body,
@@ -101,7 +97,8 @@ const updateOrder = async(req) => {
         }
         );
         if (result[0]) {
-            await sendgrid.sendOrderUpdate(order, req);
+            const updatedOrder = await getOrder(id, req.user);
+            await sendgrid.sendOrderUpdate(updatedOrder, req);
             return true;
         } else {
             return false;
