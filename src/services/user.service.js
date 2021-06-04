@@ -85,7 +85,7 @@ const update = async(body, id, file, isAdmin = false) => {
     const partBodySaved = JSON.parse(body.saved)
   
       // delete current image
-    if (partBodySaved[0] || req.file) {
+    if (partBodySaved[0] || file) {
       const paramsDelete = {
         Bucket: aw3Bucket,
         Key: partBodySaved[0],
@@ -100,14 +100,14 @@ const update = async(body, id, file, isAdmin = false) => {
         }
       })
     }
-    if (req.file) {
-      let myFile = req.file.originalname.split('.');
+    if (file) {
+      let myFile = file.originalname.split('.');
       const fileType = myFile[myFile.length - 1];
       const fileName = `${uuid.v4()}.${fileType}`;
       const params = {
         Bucket: aw3Bucket,
         Key: fileName,
-        Body: req.file.buffer,
+        Body: file.buffer,
       }
     
       s3.upload(params, (err, data) => {})

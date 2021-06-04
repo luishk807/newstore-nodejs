@@ -15,7 +15,7 @@ const getOrderActivityByOrderId = async (orderId, user) => {
   if (!order) {
     return { code: 500, status: false, message: "Orden invalido" }
   }
-  return await OrderActivity.findAll({ where: {orderId: orderId}, include: includes});
+  return await OrderActivity.findAll({ where: {orderId: orderId}, order:[['createdAt', 'ASC']], include: includes});
 }
 
 module.exports = {
