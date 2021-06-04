@@ -82,7 +82,7 @@ const getAllUsers = async(req) => {
 const update = async(body, id, file, isAdmin = false) => {
     let dataInsert = null;
   
-    const partBodySaved = JSON.parse(body.saved)
+    const partBodySaved = body.saved ? JSON.parse(body.saved) : [];
   
       // delete current image
     if (partBodySaved[0] || file) {
