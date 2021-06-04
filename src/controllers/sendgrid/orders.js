@@ -13,12 +13,12 @@ sendGrid.setApiKey(config.sendGrid.key);
 const productIncludes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 const sendOrderUpdate = async(obj, req) => {
-  const mainUrl = `${req.headers.referer}account/orders/${obj.orderId}`;
+  const mainUrl = `${req.headers.referer}account/orders/${obj.id}`;
   let status = obj.orderStatuses.name;
   if (!status) {
     status = `orden se ha actualizado`;
   }
-  const subject = `ORDEN #${obj.order_num}: ${status}`;
+  const subject = `ORDEN #${obj.order_number}: ${status}`;
   const client_email = obj.shipping_email;
   const client_name = obj.shipping_name;
   let result = false;

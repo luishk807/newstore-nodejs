@@ -75,7 +75,6 @@ router.get('/:order_number/:email', [parser.none()], async(req, res, next) => {
       const resp = await controller.getOrderByOrderNumberEmail(req.params.order_number, req.params.email);
       res.status(200).json(resp)
     } catch(err) {
-      console.log("heyyyy", err)
       res.status(500).json({status: false, message: err});
     }
 });
