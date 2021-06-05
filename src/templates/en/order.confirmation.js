@@ -87,7 +87,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         <p>We have recieved your purchase order.  Please follow the instructions depending on the payment method you want to choose:</p>
         <ul>
         <li><strong>YAPPY</strong><br/>
-        Open Banco General application and search in the Yappy directory for our business name <strong>@avenidaZ</strong>.  Complete the payment information and in the comment section add your order number (very important).
+        Open Banco General application and search in the Yappy directory for our business name <strong>@avenidaZ</strong>.  Complete the payment information and in the comment section add the last five(5) digits of your order number (very important).
         </li>
         <li><strong>Wire Transfer or Deposit at the Bank</strong><br/>
         Make the transfer to: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Account # 0395011351638</strong>.  Send your proof of payment through email or chat.
