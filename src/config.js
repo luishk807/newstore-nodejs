@@ -42,6 +42,12 @@ const config = {
     dev: 'luis@avenidaz.com',
     noReply: 'No-Reply - Avenida Z <no-reply@avenidaz.com>',
   },
+  phone: {
+    main: '6770-2400'
+  },
+  social: {
+    whatssapp: 'https://wa.me/50767702400'
+  },
   defaultLimit: 30,
   taxTotal: 0.07,
 };
