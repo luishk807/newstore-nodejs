@@ -35,8 +35,8 @@ const sendOrderUpdate = async(obj, req) => {
       <p>${client_name},</p>
       <p>Estado de orden: ${status}</p>
       <p>Tu orden se ha actualizado recientemente.</p>
-      <p>Puede verificar el estado de su pedido en cualquier momento, yendo a <a target="_blank" href='${mainUrl}'>Tus Ordenes</a> en su cuenta</p>
-      <p>Si tiene alguna pregunta en relación a su pedido, comuníquese con nosotros a <a href='mailto:${config.email.sales}' target="_blank">ventas@avenidaz.com</a>.</p><br/>
+      <p>Puede verificar el estado de su pedido en cualquier momento, ingresando a <a target="_blank" href='${mainUrl}'>Tus Ordenes</a> en su cuenta</p>
+      <p>Si tiene alguna pregunta en relación a su pedido, comuníquese con nosotros a <a href='mailto:${config.email.sales}' target="_blank">ventas@avenidaz.com</a> o al WhatsApp <a href='${config.social.whatssapp}'>${config.phone.main}</a>.</p><br/>
       <p>Gracias,<br/>AvenidaZ.com</p>
     `,
   }).then(() => {
