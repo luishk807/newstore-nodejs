@@ -89,7 +89,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         <p>Hemos recibido su orden de compra. Debajo se encuentran las opciones disponibles e instrucciones para realizar su pago:</p>
         <ul>
         <li><strong>YAPPY</strong><br/>
-        Ingrese a la aplicación de Banco General y busque en el Directorio de Yappy nuestro comercio por <strong>@avenidaZ</strong>.  Complete la información de pago e ingrese en la sección de comentario el número de su orden.
+        Ingrese a la aplicación de Banco General y busque en el Directorio de Yappy nuestro comercio por <strong>@avenidaZ</strong>.  Complete la información de pago e ingrese en la sección de comentario los últimos 5 números de su orden.
         </li>
         <li><strong>Transferencia Bancaria o Depósito en Taquilla</strong><br/>
         Realizar su pago a nombre de: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Cuenta # 0395011351638</strong>.  Enviar su comprobante de pago por esta misma vía.
