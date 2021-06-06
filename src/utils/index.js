@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const config = require('../config');
 const PromotionCode = require('../pg/models/PromotionCodes');
 const LIMIT = config.defaultLimit;
@@ -11,6 +12,21 @@ const cleanData = (data) => {
 
 const checkIfEmpty = (data) => {
   return data == 'null' || data == "undefined" || !data;
+}
+
+const getTokenData = (authToken) => {
+  const token = authToken && authToken.split(' ')[1];
+  if (!token) {
+    return null;
+  }
+  
+  try {
+    const verified = jwt.verify(token, config.authentication.authToken);
+    return verified ? verified : null
+
+  } catch(err) {
+    return null;
+  }
 }
 
 const returnSlugName = (str, key = null) => {
@@ -171,6 +187,7 @@ module.exports = {
   existFields,
   paginate,
   getAdminEmail,
+  getTokenData,
   formatNumber,
   calculateTotal,
   checkIfEmpty,

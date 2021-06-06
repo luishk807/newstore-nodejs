@@ -170,6 +170,7 @@ const create = async (user, file, isAdmin = false) => {
             userRole = 2;
         }
 
+        
         const dataEntry = {
             last_name: user.last_name,
             first_name: user.first_name,

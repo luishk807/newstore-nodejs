@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const cors = require('cors');
+const config = require('../../config');
 const verify = require('../../middlewares/verifyToken');
 const WorkRole = require('../../pg/models/WorkRoles');
 const Category = require('../../pg/models/Categories');
@@ -95,7 +96,7 @@ router.get('/user', async(req, res, next) => {
 });
 
 router.get('/admin', [verify], async(req, res, next) => {
-  if (req.user.type !== '1') {
+  if (!config.adminRoles.includes(+req.user.type)) {
     res.status(401).json({status: false, message: 'not authorized'})
   } else {
     let data = {}
