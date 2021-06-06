@@ -13,6 +13,7 @@ const s3 = require('../../services/storage.service');
 const controller = require('../../controllers/users');
 const includes = ['useStatus','userRoles'];
 const { checkCorsOrigins } = require('../../utils/server');
+const { getTokenData } = require('../../utils');
 const corsOption = {
   origin: checkCorsOrigins
 }
@@ -71,8 +72,13 @@ router.put('/:id',[verify, parser.single('image')], async(req, res, next) => {
 router.post('/', [parser.single('image')], async(req, res, next) => {
   const body = req.body;
 
+  const userData = getTokenData(req.headers['authorization']);
+
+  const userRole = userData ? Number(userData.type) : -1;
+
   try {
-    const user = await controller.create(body, req.file)
+    const user = await controller.create(body, req.file, config.adminRoles.includes(userRole));
+    
     if (user) {
       res.status(200).json({status: true, message: "User succesfully created"});
     } else {
