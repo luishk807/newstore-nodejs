@@ -48,6 +48,7 @@ const config = {
   social: {
     whatssapp: 'https://wa.me/50767702400'
   },
+  adminRoles: [1,3],
   defaultLimit: 30,
   taxTotal: 0.07,
 };

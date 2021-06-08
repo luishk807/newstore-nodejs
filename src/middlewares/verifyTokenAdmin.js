@@ -1,24 +1,19 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const { getTokenData } = require('../utils');
 
 module.exports = function(req, res, next) {
-  const authToken = req.headers['authorization'];
-  const token = authToken && authToken.split(' ')[1];
-  if (!token) {
-    return res.status("401").json({status: false, message:'access denied'})
-  }
-
-  try {
-    const verified = jwt.verify(token, config.authentication.authToken);
-    if (verified && verified.type !== '1') {
-      return res.status(401).json({status: false, message:'access denied'});
-    } else {
-      req.user = verified;
+  const token = getTokenData(req.headers['authorization']);
+ 
+  if (token) {
+    if (token && config.adminRoles.includes(+token.type)) {
+      req.user = token;
       next()
+    } else {
+      return res.status(401).json({status: false, message:'access denied'});
     }
 
-
-  } catch(err) {
+  } else {
     return res.status(401).json({status: false, message:'invalid token'});
   }
 }
