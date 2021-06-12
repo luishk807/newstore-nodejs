@@ -1,4 +1,5 @@
 const { formatNumber, checkIfEmpty } = require('../../utils');
+const config = require('../../config');
 
 const getSingleImageUrl = async (product, { referer, awsUrl, productSearchFunc }) => {
     let imgUrl = product && product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : null;
@@ -92,7 +93,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         Ingrese a la aplicación de Banco General y busque en el Directorio de Yappy nuestro comercio por <strong>@avenidaZ</strong>.  Complete la información de pago e ingrese en la sección de comentario los últimos 5 números de su orden.
         </li>
         <li><strong>Transferencia Bancaria o Depósito en Taquilla</strong><br/>
-        Realizar su pago a nombre de: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Cuenta # 0395011351638</strong>.  Enviar su comprobante de pago por esta misma vía.
+        Realizar su pago a nombre de: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Cuenta # ${config.bankAccount.main}</strong>.  Enviar su comprobante de pago por esta misma vía.
         </li>
         </ul>
         <p>
@@ -101,7 +102,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         <p>
         Una vez realizado su pago, procesaremos su orden y entrega según la opción que fue seleccionado.
         <p>
-        <p>Para mayor información contáctanos al 6770-2440.</p>
+        <p>Para mayor información contáctanos al ${config.phone.main}.</p>
         <p>¡Gracias por Preferirnos!</p>
         <p><strong>Avenida Z</strong></p>
         <p><a target="_blank" href='${mainUrl}'>Ver su orden</a></p>

@@ -45,6 +45,9 @@ const config = {
   phone: {
     main: '6770-2400'
   },
+  bankAccount: {
+    main: '0395011351638'
+  },
   social: {
     whatssapp: 'https://wa.me/50767702400'
   },

@@ -1,4 +1,5 @@
 const { formatNumber } = require('../../utils');
+const config = require('../../config');
 
 const getSingleImageUrl = async (product, { referer, awsUrl, productSearchFunc }) => {
     let imgUrl = product && product.productImages && product.productImages.length ? `${aws_url}/${product.productImages[0].img_url}` : null;
@@ -90,7 +91,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         Open Banco General application and search in the Yappy directory for our business name <strong>@avenidaZ</strong>.  Complete the payment information and in the comment section add the last five(5) digits of your order number (very important).
         </li>
         <li><strong>Wire Transfer or Deposit at the Bank</strong><br/>
-        Make the transfer to: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Account # 0395011351638</strong>.  Send your proof of payment through email or chat.
+        Make the transfer to: <strong>Grupo Generación Zeta S.A. => Banco General => Cuenta Corriente => Account # ${config.bankAccount.main}</strong>.  Send your proof of payment through email or chat.
         </li>
         </ul>
         <p>
@@ -99,7 +100,7 @@ const getTemplateText = async (obj, { mainUrl, productItems, referer, awsImageUr
         <p>
         Once the payment has been made, we will proceed to process the order and shipment based on the selected choice.
         <p>
-        <p>For more information, please contact us at +507 6770-2440.</p>
+        <p>For more information, please contact us at +507 ${config.phone.main}.</p>
         <p>Thank you for choosing us!</p>
         <p><strong>Avenida Z</strong></p>
         <p><a target="_blank" href='${mainUrl}'>View your order</a></p>
