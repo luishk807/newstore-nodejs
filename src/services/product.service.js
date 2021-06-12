@@ -773,7 +773,7 @@ const getAllProducts = async (filter) => {
         ]
     } else {
         orderBy = [
-            ['createdAt', 'DESC']
+            ['createdAt', 'ASC']
         ]
     }
 
