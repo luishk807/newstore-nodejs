@@ -62,6 +62,7 @@ router.get('/user', async(req, res, next) => {
     const district = await District.findAll();
     const orderCancelReason = await OrderCancelReason.findAll();
     const orderStatus = await OrderStatus.findAll({where: { 
+      statusId: 1,
       onlyAdmin: {
         [Op.not]: true
       }
