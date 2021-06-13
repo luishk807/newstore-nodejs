@@ -132,8 +132,7 @@ const cancelOrder = async(req) => {
         if (resp) {
             try {
                 await Promise.all([
-                    updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE }),
-                    sendgrid.sendOrderCancelRequest(orderInfo, req)
+                    updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE })
                 ]);
                 return true;
             } catch (error) {
