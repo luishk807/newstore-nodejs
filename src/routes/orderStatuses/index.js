@@ -23,6 +23,7 @@ router.get('/', async(req, res, next) => {
   } else {
     try {
       st = await OrderStatus.findAll({where: { 
+          statusId: 1,
           onlyAdmin: {
             [Op.not]: true
           }
