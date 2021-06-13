@@ -13,35 +13,40 @@ sendGrid.setApiKey(config.sendGrid.key);
 const productIncludes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 
 const sendOrderUpdate = async(obj, req) => {
-  const mainUrl = `${req.headers.referer}account/orders/${obj.id}`;
-  let status = obj.orderStatuses.name;
-  if (!status) {
-    status = `orden se ha actualizado`;
-  }
-  const subject = `ORDEN #${obj.order_number}: ${status}`;
-  const client_email = obj.shipping_email;
-  const client_name = obj.shipping_name;
   let result = false;
-
-  // send user
-  sendGrid.send({
-    to: client_email, // Change to your recipient
-    from: config.email.noReply, // Change to your verified sender
-    subject: `${subject}`,
-    html: `
-      <p>
-        <img src="${logo}" width="300" />
-      </p>
-      <p>${client_name},</p>
-      <p>Estado de orden: ${status}</p>
-      <p>Tu orden se ha actualizado recientemente.</p>
-      <p>Puede verificar el estado de su pedido en cualquier momento, ingresando a <a target="_blank" href='${mainUrl}'>Tus Ordenes</a> en su cuenta</p>
-      <p>Si tiene alguna pregunta en relación a su pedido, comuníquese con nosotros a <a href='mailto:${config.email.sales}' target="_blank">ventas@avenidaz.com</a> o al WhatsApp <a href='${config.social.whatssapp}'>${config.phone.main}</a>.</p><br/>
-      <p>Gracias,<br/>AvenidaZ.com</p>
-    `,
-  }).then(() => {
+  if (config.allowStatusEmail.includes(Number(obj.orderStatus))) {
+    const mainUrl = `${req.headers.referer}account/orders/${obj.id}`;
+    let status = obj.orderStatuses.name;
+    if (!status) {
+      status = `orden se ha actualizado`;
+    }
+    const subject = `ORDEN #${obj.order_number}: ${status}`;
+    const client_email = obj.shipping_email;
+    const client_name = obj.shipping_name;
+  
+  
+    // send user
+    sendGrid.send({
+      to: client_email, // Change to your recipient
+      from: config.email.noReply, // Change to your verified sender
+      subject: `${subject}`,
+      html: `
+        <p>
+          <img src="${logo}" width="300" />
+        </p>
+        <p>${client_name},</p>
+        <p>Estado de orden: ${status}</p>
+        <p>Tu orden se ha actualizado recientemente.</p>
+        <p>Puede verificar el estado de su pedido en cualquier momento, ingresando a <a target="_blank" href='${mainUrl}'>Tus Ordenes</a> en su cuenta</p>
+        <p>Si tiene alguna pregunta en relación a su pedido, comuníquese con nosotros a <a href='mailto:${config.email.sales}' target="_blank">ventas@avenidaz.com</a> o al WhatsApp <a href='${config.social.whatssapp}'>${config.phone.main}</a>.</p><br/>
+        <p>Gracias,<br/>AvenidaZ.com</p>
+      `,
+    }).then(() => {
+      result = true;
+    });
+  } else {
     result = true;
-  });
+  }
 
   return result;
 }

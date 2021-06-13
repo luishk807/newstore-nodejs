@@ -28,7 +28,7 @@ const authenticate = async (email, password, onlyAdmin = false) => {
                 return credentialsNotMatchRetVal;
             }
 
-            if (onlyAdmin && user.dataValues.userRole != 1) {
+            if (onlyAdmin && !config.adminRoles.includes(+user.dataValues.userRole)) {
                 return { code: 401, status: false, message: "Only Admins allowed"};
             }
 

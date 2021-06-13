@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const cors = require('cors');
+const config = require('../../config');
 const verify = require('../../middlewares/verifyToken');
 const WorkRole = require('../../pg/models/WorkRoles');
 const Category = require('../../pg/models/Categories');
@@ -61,6 +62,7 @@ router.get('/user', async(req, res, next) => {
     const district = await District.findAll();
     const orderCancelReason = await OrderCancelReason.findAll();
     const orderStatus = await OrderStatus.findAll({where: { 
+      statusId: 1,
       onlyAdmin: {
         [Op.not]: true
       }
@@ -95,7 +97,7 @@ router.get('/user', async(req, res, next) => {
 });
 
 router.get('/admin', [verify], async(req, res, next) => {
-  if (req.user.type !== '1') {
+  if (!config.adminRoles.includes(+req.user.type)) {
     res.status(401).json({status: false, message: 'not authorized'})
   } else {
     let data = {}
@@ -127,7 +129,7 @@ router.get('/admin', [verify], async(req, res, next) => {
       const corregimiento = await Corregimiento.findAll();
       const district = await District.findAll();
       const orderCancelReason = await OrderCancelReason.findAll();
-      const orderStatus = await OrderStatus.findAll();
+      const orderStatus = await OrderStatus.findAll({where: {statusId: 1}});
       const deliveryService = await DeliveryService.findAll();
       data['user'] = user;
       data['sweetBoxType'] = sweetboxtype;

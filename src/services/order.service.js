@@ -40,7 +40,7 @@ const getOrder = async(id, user) => {
     }
 
     let order = null;
-    if (user.type !== '1') {
+    if (!config.adminRoles.includes(+user.type)) {
         order = await Order.findOne({ where: {id: id, userId: user.id }, include: includes});
     } else {
         order = await Order.findOne({ where: {id: id }, include: includes});
@@ -132,8 +132,7 @@ const cancelOrder = async(req) => {
         if (resp) {
             try {
                 await Promise.all([
-                    updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE }),
-                    sendgrid.sendOrderCancelRequest(orderInfo, req)
+                    updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE })
                 ]);
                 return true;
             } catch (error) {
@@ -151,7 +150,7 @@ const getOrderByOrderNumberEmail = async(orderNumber, email) => {
 }
 
 const getOrderByUser = async(loggedInUser, userId) => {
-    if (loggedInUser.type == '1') {
+    if (config.adminRoles.includes(+loggedInUser.type)) {
         return await Order.findAll({ where: {userId: userId}, include: includes, order: orderBy });
     } else {
         return await Order.findAll({ where: {userId: userId, userId: loggedInUser.id}, include: includes, order: orderBy });
@@ -167,7 +166,7 @@ const getOrderById = async(id, user) => {
 }
 
 const getAllOrder = async(user) => {
-    if (user.type == '1') {
+    if (config.adminRoles.includes(+user.type)) {
         return await Order.findAll({include: includes, order: orderBy});
     } else {
         return {status: false, code: 401, message: 'not authorized'}
@@ -235,10 +234,7 @@ const createOrder = async(req) => {
 
         if (orderCreated) {
             let cartArry = [];
-            await OrderActivity.create({
-                orderStatusId: 1,
-                orderId: orderCreated.id
-            });
+
             const time = Date.now().toString() // '1492341545873'
             const order_num = `${time}${orderCreated.id}`;
             await Order.update(
@@ -253,6 +249,12 @@ const createOrder = async(req) => {
                 cart: [],
                 clientEmail: email
             }
+
+            await OrderActivity.create({
+                orderStatusId: 1,
+                orderId: orderCreated.id
+            }, { transaction: t });
+            
             if (Object.keys(carts).length) {
                 for(const cart in carts) {
                     let item = {
