@@ -39,8 +39,8 @@ router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
   const body = req.body;
   const pid = req.params.id;
   const updated = await ProductItems.update({
-    'productColor': Number(body.productColor),
-    'productSize': Number(body.productSize),
+    'productColor': +body.productColor,
+    'productSize': +body.productSize,
     'stock': body.stock,
     'model': body.model,
     'billingCost': body.billingCost,
@@ -54,7 +54,8 @@ router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
     'sku': body.sku,
     'exp_date': body.exp_date,
     'retailPrice': body.retailPrice,
-    'vendorId': Number(body.vendor),
+    'vendorId': +body.vendor,
+    'status': +body.status
   }, { where: { id: pid } });
   
   let message = "Product Item Updated";

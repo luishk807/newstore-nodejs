@@ -16,7 +16,8 @@ const config = {
       'http://prueba.avenidaz.com',
       'https://beta.avenidaz.com',
       'http://beta.avenidaz.com',
-      'feature507.avenidaz.com',
+      'http://feature507.avenidaz.com',
+      'https://feature507.avenidaz.com'
     ]
   },
   db: {
@@ -43,8 +44,14 @@ const config = {
     dev: 'luis@avenidaz.com',
     noReply: 'No-Reply - Avenida Z <no-reply@avenidaz.com>',
   },
+  allowStatusEmail: [
+    1, 3, 4, 9, 10, 11, 12, 13, 14
+  ],
   phone: {
     main: '6770-2400'
+  },
+  bankAccount: {
+    main: '0395011351638'
   },
   social: {
     whatssapp: 'https://wa.me/50767702400'
