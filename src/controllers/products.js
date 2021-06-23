@@ -7,6 +7,7 @@ module.exports = {
     searchProductByType: productService.searchProductByType,
     searchProductByIds: productService.searchProductByIds,
     searchProductById: productService.searchProductById,
+    searchProductByIdFullDetail: productService.searchProductByIdFullDetail,
     searchProductBySlug: productService.searchProductBySlug,
     searchProductBySlugs: productService.searchProductBySlugs,
     getAllProducts: productService.getAllProducts,

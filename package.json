@@ -12,12 +12,12 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "~2.21.2",
-    "@sendgrid/mail": "^7.4.1",
-    "aws-sdk": "^2.768.0",
+    "@sendgrid/mail": "^7.4.4",
+    "aws-sdk": "^2.927.0",
     "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "express-oauth-server": "^2.0.0",
     "hashids": "^2.2.8",
@@ -26,15 +26,15 @@
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
     "multer": "^1.4.2",
-    "papaparse": "^5.3.0",
-    "pg": "^8.3.2",
-    "pgtools": "^0.3.0",
-    "sequelize": "^6.3.4",
-    "uuid": "^8.3.1",
+    "papaparse": "^5.3.1",
+    "pg": "^8.6.0",
+    "pgtools": "^0.3.2",
+    "sequelize": "^6.6.2",
+    "uuid": "^8.3.2",
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "mocha": "^8.3.0",
+    "mocha": "^8.4.0",
     "prisma": "~2.21.2"
   }
 }
