@@ -27,6 +27,7 @@ const requiredfields = [
 ];
 const LIMIT = config.defaultLimit;
 const MAIN_INCLUDES = ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productSizes', 'productColors', 'productProductItems', 'categories', 'subCategoryProduct'];
+const MAIN_INCLUDES_MEDIUM = ['productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories'];
 const MAIN_INCLUDES_LIGHT = ['productStatus', 'productImages', 'productProductItems'];
 const IMPORT = 'IMPORT';
 /** Only these fields will be used to save on the database */
@@ -735,6 +736,17 @@ const searchProductById = async (id, isFullDetail = false) => {
     return product;
 }
 
+const searchProductByIdFullDetail = async (id) => {
+    const includes = MAIN_INCLUDES;
+
+    const where = {
+        id: id
+    }
+
+    const product = await Product.findOne({ where, include: includes});
+    return product;
+}
+
 const searchProductBySlug = async (id, isFullDetail = false) => {
   const includes = isFullDetail ? ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct'] : MAIN_INCLUDES_LIGHT;
   const where = {
@@ -748,7 +760,7 @@ const searchProductBySlug = async (id, isFullDetail = false) => {
 const getAllProducts = async (filter) => {
     const {page, isFullDetail} = filter;
 
-    const includes = isFullDetail ? MAIN_INCLUDES : MAIN_INCLUDES_LIGHT;
+    const includes = isFullDetail ? MAIN_INCLUDES_MEDIUM : MAIN_INCLUDES_LIGHT;
 
     let query = {
         include: includes
@@ -760,14 +772,8 @@ const getAllProducts = async (filter) => {
         orderBy = [
             ['updatedAt', 'DESC'],
             ['createdAt', 'DESC'],
-            ['productColors', 'updatedAt', 'DESC'],
-            ['productColors', 'createdAt', 'DESC'],
             ['productProductItems', 'updatedAt', 'DESC'],
             ['productProductItems', 'createdAt', 'DESC'],
-            ['productProductDiscount', 'updatedAt', 'DESC'],
-            ['productProductDiscount', 'createdAt', 'DESC'],
-            ['productSizes', 'updatedAt', 'DESC'],
-            ['productSizes', 'createdAt', 'DESC'],
             ['productImages', 'updatedAt', 'DESC'],
             ['productImages', 'createdAt', 'DESC'],
         ]
@@ -800,6 +806,7 @@ module.exports = {
     searchProductById,
     getAllProducts,
     createManualProduct,
+    searchProductByIdFullDetail,
     updateProduct,
     searchProductBySlug,
     searchProductBySlugs

@@ -282,8 +282,8 @@ const createOrder = async(req) => {
                     if (carts[cart].discount) {
                         const getDiscount = await ProductDiscount.findOne({where: { id: carts[cart].discount.id }});
                         if (getDiscount && carts[cart].quantity >= getDiscount.minQuantity) {
-                            item.productDiscount = carts[cart].discount.name
-                            item.quantity = carts[cart].quantity
+                            item.productDiscount = carts[cart].discount.name;
+                            item.quantity = carts[cart].quantity;
                         } else {
                             await deleteOrderById(orderCreated.id);
                             return {status: false, code: 500, message: 'error with discount'}
