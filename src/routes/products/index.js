@@ -137,6 +137,15 @@ router.get('/:id', async(req, res, next) => {
     }
 });
 
+router.get('/full-detail/:id', verifyAdmin, async(req, res, next) => {
+  try {
+    const product = await controller.searchProductByIdFullDetail(req.params.id);
+    res.json(product)
+  } catch(err) {
+    res.send(err)
+  }
+});
+
 router.get('/k/:id', async(req, res, next) => {
   try {
     const product = await controller.searchProductBySlug(req.params.id, req.query.isFullDetail);
@@ -147,7 +156,7 @@ router.get('/k/:id', async(req, res, next) => {
 });
 
 router.get('/', async(req, res, next) => {
-  // // get products
+  // get products
   try {
     const product = await controller.getAllProducts(req.query);
     res.json(product)
