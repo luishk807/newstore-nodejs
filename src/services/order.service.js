@@ -293,7 +293,7 @@ const createOrder = async(req) => {
                         const getBundle = await ProductBundle.findOne({where: { id: carts[cart].bundle.id, productItemId: carts[cart].id}});
                         if (getBundle) {
                             item.productDiscount = carts[cart].bundle.name;
-                            item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
+                            item.quantity = carts[cart].quantity 
                         } else {
                             await deleteOrderById(orderCreated.id);
                             return {status: false, code: 500, message: 'error with bundle'}
