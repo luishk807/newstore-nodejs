@@ -35,6 +35,15 @@ const config = {
     secretAccessKey: process.env.AWS_SECRET,
     bucketName: process.env.AWS_BUCKET_NAME
   },
+  stGeorgeBank: {
+    ACCESS_KEY: process.env.STGEORGE_ACCESS_KEY,
+    MID: process.env.STGEORGE_MID,
+    PROFILE_ID: process.env.STGEORGE_PROFILE_ID,
+    SECRET_KEY: process.env.STGEORGE_SECREY_KEY,
+    CUSTOMER_RESPONSE_ENDPOINT: process.env.STGEORGE_RETURN_URL,
+    ORG_ID_LIVE: process.env.STGEORGE_ORG_ID_LIVE, 
+    ORG_ID_TEST: process.env.STGEORGE_ORG_ID_TEST, 
+  },
   sendGrid: {
     key: process.env.SENDGRID_API_KEY
   },
