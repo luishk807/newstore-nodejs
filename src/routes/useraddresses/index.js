@@ -61,6 +61,15 @@ router.get('/addresses/user', [verify, parser.none()], async(req, res, next) => 
   }
 });
 
+router.get('/addresses/user/:id', [verifyAdmin, parser.none()], async(req, res, next) => {
+  try {
+    const address = await controller.getUserAdressByUserId(req.params.id);
+    res.status(200).json(address)
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
 router.get('/all/addresses', [verifyAdmin, parser.none()], async(req, res, next) => {
   try {
     const address = await controller.getUserAdresses();

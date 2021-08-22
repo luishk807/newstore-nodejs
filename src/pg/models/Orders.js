@@ -56,6 +56,9 @@ const Order = sequelize.define('orders', {
   shipping_address: {
     type: Sequelize.TEXT
   },
+  shipping_addressB: {
+    type: Sequelize.TEXT
+  },
   shipping_city: {
     type: Sequelize.TEXT
   },
@@ -127,7 +130,7 @@ const Order = sequelize.define('orders', {
   },
   deliveryServiceFee: {
     type: Sequelize.DECIMAL
-  },
+  }
 });
 
 Order.belongsTo(OrderCancelReason, { foreignKey: 'orderCancelReasonId', as: "orderCancelReasons"})

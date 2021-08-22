@@ -752,6 +752,19 @@ const searchProductByIdFullDetail = async (id) => {
     return product;
 }
 
+const searchProductByIdsFullDetail = async (ids) => {
+    const includes = MAIN_INCLUDES;
+
+    const where = {
+        id: {
+            [Op.in]: ids
+        }
+    }
+
+    const product = await Product.findAll({ where, include: includes});
+    return product;
+}
+
 const searchProductBySlug = async (id, isFullDetail = false) => {
   const includes = isFullDetail ? ['productProductDiscount','productBrand', 'productStatus', 'productImages', 'productProductItems', 'categories', 'subCategoryProduct'] : MAIN_INCLUDES_LIGHT;
   const where = {
@@ -812,6 +825,7 @@ module.exports = {
     getAllProducts,
     createManualProduct,
     searchProductByIdFullDetail,
+    searchProductByIdsFullDetail,
     updateProduct,
     searchProductBySlug,
     searchProductBySlugs
