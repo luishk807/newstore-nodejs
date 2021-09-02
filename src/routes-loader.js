@@ -17,7 +17,8 @@ const loadRoutesOnExpressApp = (app, directory, ignorePaths) => {
     loadRoutesFromPath(directory, directory, routesRootRealPath, app, ignorePaths);
 }
 
-const loadRoutesFromPath = (masterDirectory, directory, routesRootRealPath, app, ignorePaths) => {
+const loadRoutesFromPath = (masterDirectory, directory, routesRootRealPath, app, ignorePaths = []) => {
+    logger.info(`Loading from master directory: ${masterDirectory}, directory: ${directory}, routesRootRealPath: ${routesRootRealPath}, ignorePaths: ${ignorePaths}`);
     fs.readdirSync(routesRootRealPath).forEach(f => {
         if (!ignorePaths.includes(f)) {
             const routeRealPath = path.resolve(routesRootRealPath, f);

@@ -7,12 +7,15 @@ const uuid = require('uuid');
 const aw3Bucket = `${config.s3.bucketName}/users`;
 const includes = ['useStatus','userRoles', 'userAddresses'];
 const { Op } = require('sequelize');
+const { callHook } = require('../utils/hooks');
+const HOOKNAMES = require('../constants/hooknames')
 
 const deleteById = async (id) => {
     const user = await User.findOne({ where: { id: id } });
     if (user) {
         const userImage = user.img;
         const deletedUser = await User.destroy({ where: { id: user.id } });
+        callHook(HOOKNAMES.USER, 'delete', { id: user.id });
         if (deletedUser) {
             const result = await deleteFromStorage(userImage);
             if (result.status) {
@@ -147,6 +150,7 @@ const update = async(body, id, file, isAdmin = false) => {
         });
       })
     }
+    callHook(HOOKNAMES.USER, 'update', { id, data: dataInsert });
     return User.update(
       dataInsert,
       {
@@ -199,7 +203,9 @@ const create = async (user, file, isAdmin = false) => {
         }
 
         try {
-            return await User.create(dataEntry);
+            const user = await User.create(dataEntry);
+            callHook(HOOKNAMES.USER, 'create', user.get({ plain: true }));
+            return user;
         } catch (err) {
             logger.error("Error creating user", err);
             // Deleting the previously uploaded/stored file because of user creation failure

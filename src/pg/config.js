@@ -7,15 +7,13 @@ const PGPASSWORD = config.db.password;
 const PGPORT = config.db.port;
 const PGHOST = config.db.host;
 const PGDATABASE = config.db.database;
-
-// const client = new Client();
-// client.connect();
+const logger = global.logger;
 
 const sequelize = new Sequelize(PGDATABASE, PGUSER, PGPASSWORD, {
   host: PGHOST,
   port: PGPORT,
   dialect: 'postgres',
-  logging: msg => logger.debug(msg)
+  logging: msg => { if (logger) { logger.debug(msg) } else { console.log(msg) } }
 });
 
 //var connectionString = `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGHOST}/${PGDATABASE}`;
