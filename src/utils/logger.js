@@ -11,7 +11,12 @@ const customLevels = {
 const logger = winston.createLogger({
     level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
     levels: customLevels.levels,
-    format: winston.format.json(),
+    format: winston.format.combine(
+        winston.format.timestamp({
+            format: 'YYYY-MM-DD HH:mm:ss'
+        }),
+        winston.format.json()
+    ),
     transports: [
         new winston.transports.File({ filename: 'error.log', level: 'error' }),
         new winston.transports.File({ filename: 'logs.log' }),

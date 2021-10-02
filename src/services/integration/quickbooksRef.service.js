@@ -2,7 +2,8 @@ const QuickbooksRef = require('../../pg/models/integration/QuickbooksRef');
 /** Constant types use for defining the type of reference */
 const QUICKBOOKS_TYPE = Object.freeze({
     CUSTOMER: 'CUSTOMER',
-    INVOICE: 'INVOICE'
+    INVOICE: 'INVOICE',
+    // PURCHASE_ORDER: 'PURCHASE_ORDER'
 });
 
 /**
