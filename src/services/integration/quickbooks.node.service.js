@@ -3,7 +3,10 @@ const { getQuickbooksAccessToken, revokeQuickbooksToken } = require('../integrat
 const { IntegrationService } = require('./integration.service');
 const QuickBooks = require('node-quickbooks');
 const { getGlobalLogger } = require('../../utils/logger.utils');
-const log  = getGlobalLogger();
+const logger  = getGlobalLogger();
+const ERROR_CONSTANTS = {
+    AUTHENTICATION: 'AUTHENTICATION'
+}
 
 class QuickbooksNodeService extends IntegrationService {
     #integrationObject = null;
@@ -33,15 +36,28 @@ class QuickbooksNodeService extends IntegrationService {
         }
     }
 
+    /** Should refresh the token, if possible */
+    async refreshAuthentication() {
+        await this.init();
+    }
+
+    async errorCheck(error) {
+        if (error.type && error.type === ERROR_CONSTANTS.AUTHENTICATION) {
+            logger.warn('Error check from Quickbooks integration indicates AUTHENTICATION issues, will proceed to refresh authentication');
+            await this.refreshAuthentication();
+        }
+    }
+
     async getCustomerById(id) {
         const that = this;
         return new Promise(function (resolve, reject) {
             that.#qbo.findCustomers([
                 { field: 'Id', value: id }
             ], (e, customers) => {
-                console.log('error', e);
                 if (e) {
-                    reject(null);
+                    logger.error('Error finding Customers', e);
+                    that.errorCheck(e);
+                    reject(e);
                 } else {
                     console.log('customers query result', customers);
                     resolve({ Customer: customers[0] })
@@ -55,6 +71,8 @@ class QuickbooksNodeService extends IntegrationService {
         return new Promise(function (resolve, reject) {
             that.#qbo.createCustomer(customer, (e, persistentCustomer) => {
                 if (e) {
+                    logger.error('Error creating Customer', e);
+                    that.errorCheck(e);
                     reject(e);
                 } else {
                     resolve({ Customer: persistentCustomer });
@@ -64,9 +82,12 @@ class QuickbooksNodeService extends IntegrationService {
     }
 
     async updateCustomer(customer) {
+        const that = this;
         return new Promise(function (resolve, reject) {
-            this.#qbo.createCustomer(customer, (e, persistentCustomer) => {
+            that.#qbo.updateCustomer(customer, (e, persistentCustomer) => {
                 if (e) {
+                    logger.error('Error updating Customer', e);
+                    that.errorCheck(e);
                     reject(e);
                 } else {
                     resolve({ Customer: persistentCustomer });
@@ -101,6 +122,54 @@ class QuickbooksNodeService extends IntegrationService {
         //         log.error('Error from create item post', error)
         //         throw error;
         //     })
+    }
+
+    async getPurchaseOrder(id) {
+        const that = this;
+        return new Promise(function (resolve, reject) {
+            that.#qbo.getPurchaseOrder(id, (e, purchaseOrder) => {
+                if (e) {
+                    logger.error('Error getting PurchaseOrder', e);
+                    that.errorCheck(e);
+                    reject(e);
+                } else {
+                    logger.debug('PurchaseOrder query result', purchaseOrder);
+                    resolve({ PurchaseOrder: purchaseOrder })
+                }
+            })
+        });
+    }
+
+    async getItem(id) {
+        const that = this;
+        return new Promise(function (resolve, reject) {
+            that.#qbo.getItem(id, (e, item) => {
+                if (e) {
+                    logger.error('Error getting Item', e);
+                    that.errorCheck(e);
+                    reject(e);
+                } else {
+                    logger.debug('Item query result', item);
+                    resolve({ Item: item })
+                }
+            })
+        });
+    }
+
+    async getBill(id) {
+        const that = this;
+        return new Promise(function (resolve, reject) {
+            that.#qbo.getBill(id, (e, bill) => {
+                if (e) {
+                    logger.error('Error getting Bill', e);
+                    that.errorCheck(e);
+                    reject(e);
+                } else {
+                    logger.debug('Bill query result', bill);
+                    resolve({ Bill: bill })
+                }
+            })
+        });
     }
 
     disconnect() {

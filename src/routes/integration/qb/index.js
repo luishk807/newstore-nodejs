@@ -7,6 +7,8 @@ const verifyAdmin = require('../../../middlewares/verifyTokenAdmin');
 const { integrations } = require('../../../config');
 const hmacSHA256 = require('crypto-js/hmac-sha256');
 const base64 = require('crypto-js/enc-base64');
+const queue = require('../../../services/queues/queue.service');
+const TOPICS = require('../../../constants/queueTopics');
 const corsOption = {
     origin: checkCorsOrigins
 }
@@ -83,16 +85,19 @@ router.post('/webhooks', (req, res) => {
         const events = req.body.eventNotifications;
 
         for(let i=0; i < events.length; i++) {
-            var entities = events[i].dataChangeEvent.entities;
-            var realmID = events[i].realmId;
-            for(var j=0; j < entities.length; j++) {
-                var notification = {
+            const entities = events[i].dataChangeEvent.entities;
+            const realmID = events[i].realmId;
+            for(let j=0; j < entities.length; j++) {
+                const notification = {
                     'realmId': realmID,
                     'name': entities[i].name,
                     'id': entities[i].id,
                     'operation': entities[i].operation,
                     'lastUpdated': entities[i].lastUpdated
                 }
+                // Later implement queueing multiples at the same time
+                // Queue events for asynchronous processing
+                queue.queue(TOPICS.QUICKBOOKS_WEBHOOK, notification);
             }
         }
     }

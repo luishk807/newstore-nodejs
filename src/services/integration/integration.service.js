@@ -7,6 +7,10 @@ class IntegrationService {
     async init(integrationObject = null) {
     }
 
+    async refreshAuthentication() {
+        throw Error('Not implemented');
+    }
+
     async getCustomerById(id) {
         throw Error('Not implemented');
     }
@@ -24,6 +28,14 @@ class IntegrationService {
     }
 
     async createItem(item) {
+        throw Error('Not implemented');
+    }
+
+    async getPurchaseOrder(id) {
+        throw Error('Not implemented');
+    }
+
+    async getBill(id) {
         throw Error('Not implemented');
     }
 
