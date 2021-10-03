@@ -134,7 +134,7 @@ const getQuickbooksAccessToken = async (integrationObject) => {
         log.info('Quickbooks integration ACCESS TOKEN is expired');
         if (integration) {
             try {
-                log.info('Proceeding with automatica access toekn refresh');
+                log.info('Proceeding with automatic access token refresh');
                 const refreshAuth = await refreshToken(JSON.parse(integration.accessJson), integration.realmId);
                 if (refreshAuth.json) { // Check it exists
                     try {

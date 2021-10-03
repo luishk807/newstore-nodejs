@@ -35,6 +35,9 @@ class QuickbooksQueueProcessor {
                 logger.error('Catching error from queue process function');
                 logger.error(error);
                 job.done(error);
+                // Republish for retry?
+                logger.warn(`Republishing ${job.data.name} due to job fail`);
+                queueService.publish(TOPICS.QUICKBOOKS_WEBHOOK, job.data, { retryLimit: 2, retryDelay: 60 });
             }
         } else {
             job.error('No process function specified for job');

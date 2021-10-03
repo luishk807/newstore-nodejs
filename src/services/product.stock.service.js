@@ -78,13 +78,19 @@ const incrementStocks = async (productItemArray, { transaction = null }) => {
         }
         try {
             const results = [];
+            const stockHistoryArray = [];
             // Go through each of the items and increas the stock
             for (let n=0; n<productItemArray.length; ++n) {
                 const pi = productItemArray[n];
                 // id, stock, sku
                 const result = await ProductItem.increment('stock', { by: pi.qty , where: { id: pi.id, sku: pi.sku }, transaction: t });
                 results.push(result);
+                stockHistoryArray.push({
+                    productItem: pi.id,
+                    quantity: pi.qty
+                });
             }
+            await addStockHistory(stockHistoryArray, { transaction: t, stockMode: STOCK_MODE.DECREASE });
             t.commit();
             return results;
         } catch (error) {

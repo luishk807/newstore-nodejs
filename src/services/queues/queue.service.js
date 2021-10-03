@@ -34,23 +34,25 @@ class QueuePgBossService {
     }
 
     /**
-     * Queue a message/data to the given queue name/topic
+     * Alias for publish. Queue a message/data to the given queue name/topic
      * @param {string} name 
      * @param {*} data 
+     * @param {*} options
      * @returns Promise
      */
-    queue(name, data) {
-        return boss.publish(name, data);
+    queue(name, data, options = {}) {
+        return this.publish(name, data, options);
     }
 
     /**
      * Queue a message/data to the given queue name/topic
      * @param {string} name 
      * @param {*} data 
+     * @param {*} options
      * @returns Promise
      */
-    publish(name, data) {
-        return boss.publish(name, data);
+    publish(name, data, options = {}) {
+        return boss.publish(name, data, options);
     }
 
     /**

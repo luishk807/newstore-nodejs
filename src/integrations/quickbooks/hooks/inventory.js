@@ -1,4 +1,4 @@
-const QuickbooksService = require('../../../services/integration/quickbooks.service');
+const QuickbooksService = require('../../../services/integration/quickbooks.node.service');
 const quickbooksConfig = require('../../../configs/quickbooks')
 const ITEM_TYPE = {
     INVENTORY: 'Inventory',
