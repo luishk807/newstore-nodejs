@@ -95,7 +95,6 @@ const convertQuickbooksPurchaseOrder = async (purchaseOrder, itemSearchFunction)
         const itemRef = lineDetail.ItemRef;
         
         logger.info(`Getting item details from reference value ${itemRef.value}`);
-        // const item = await this.#quickbooksService.getItem(itemRef.value);
         const item = await itemSearchFunction(itemRef.value);
         logger.debug('Item retrieved from QS', item);
 

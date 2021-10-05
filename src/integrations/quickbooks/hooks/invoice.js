@@ -1,4 +1,4 @@
-const QuickbooksService = require('../../../services/integration/quickbooks.service');
+const QuickbooksService = require('../../../services/integration/quickbooks.node.service');
 const { getCustomerRef, saveInvoiceRef } = require('../../../services/integration/quickbooksRef.service');
 const { integrationExists, INTEGRATIONS } = require('../../../services/integration.service');
 const log = global.logger;

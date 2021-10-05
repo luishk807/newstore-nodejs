@@ -1,4 +1,3 @@
-// const QuickbooksService = require('../../../services/integration/quickbooks.service');
 const QuickbooksService = require('../../../services/integration/quickbooks.node.service');
 const { getCustomerRef, saveCustomerRef } = require('../../../services/integration/quickbooksRef.service');
 const { convertUserToCustomer } = require('../../../services/integration/helpers/customer');

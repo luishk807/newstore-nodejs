@@ -21,6 +21,7 @@ class QuickbooksNodeService extends IntegrationService {
         this.#integrationObject = await getQuickbooksAccessToken(integrationObject);
         if (this.#integrationObject) {
             const accessJson = JSON.parse(this.#integrationObject.accessJson);
+            logger.info(`Setting up ${this.name} settings`);
             this.#qbo = new QuickBooks(config.integrations.quickbooks.clientId,
                 config.integrations.quickbooks.clientSecret,
                 accessJson.access_token,
@@ -31,6 +32,13 @@ class QuickbooksNodeService extends IntegrationService {
                 config.integrations.quickbooks.apiMinorVersion, // set minorversion, or null for the latest version
                 '2.0', //oAuth version
                 accessJson.refresh_token);
+            // Wrapping the test function so it does not crash the entire Quickbooks Service
+            try {
+                // There is the error check inside, so it will retry getting a new access token if errors out
+                logger.info('Test function', await this.#testQuickbooksFunction());
+            } catch (error) {
+                logger.warn(error);
+            }
         } else {
             throw Error('Quickbooks is currently disconnected or tokens are expired, please re-authenticate');
         }
@@ -39,6 +47,25 @@ class QuickbooksNodeService extends IntegrationService {
     /** Should refresh the token, if possible */
     async refreshAuthentication() {
         await this.init();
+    }
+
+    /**
+     * Quickbooks test request function, it can be any query call just for
+     * the sake of checking the access
+     */
+    #testQuickbooksFunction() {
+        const that = this;
+        return new Promise(function (resolve, reject) {
+            that.#qbo.findAccounts({ Name: "WHYf848cdd9-a69a-42ec-bdd1-8b49a48536f3WHY" }, function (error, result) {
+                if (error) {
+                    logger.error(error);
+                    that.errorCheck(error)
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }); 
+        });
     }
 
     async errorCheck(error) {
@@ -59,7 +86,6 @@ class QuickbooksNodeService extends IntegrationService {
                     that.errorCheck(e);
                     reject(e);
                 } else {
-                    console.log('customers query result', customers);
                     resolve({ Customer: customers[0] })
                 }
             })

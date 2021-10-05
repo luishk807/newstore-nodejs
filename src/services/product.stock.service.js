@@ -65,11 +65,16 @@ const addStockHistory = (stockArray, { transaction, stockMode = STOCK_MODE.DECRE
     stockArray.forEach(p => {
         movements.push(createStockHistoryObject(p, stockMode));
     });
-    const fields = ['product_id', 'product_item_id', 'orders_id', 'order_products_id', 'createdAt', 'quantity'];
+    const fields = ['product_id', 'product_item_id', 'orders_id', 'order_products_id', 'createdAt', 'quantity', 'reference'];
     return ProductStockHistory.bulkCreate(movements, { transaction, fields });
 }
 
-/** Increment stock on given product items array */
+/**
+ * Increment stock on given product items array, this function seems
+ * to be the best way to update stock quantity, since it increments by the
+ * given amount to what is on the database, instead of calculating in code and then updating
+ * with the result value, less prone to errors or racing issues
+ */
 const incrementStocks = async (productItemArray, { transaction = null }) => {
     if (productItemArray.length && productItemArray.length > 0) {
         let t = transaction;
@@ -78,13 +83,20 @@ const incrementStocks = async (productItemArray, { transaction = null }) => {
         }
         try {
             const results = [];
+            const stockHistoryArray = [];
             // Go through each of the items and increas the stock
             for (let n=0; n<productItemArray.length; ++n) {
                 const pi = productItemArray[n];
                 // id, stock, sku
                 const result = await ProductItem.increment('stock', { by: pi.qty , where: { id: pi.id, sku: pi.sku }, transaction: t });
                 results.push(result);
+                stockHistoryArray.push({
+                    productItem: pi.id,
+                    quantity: pi.qty,
+                    reference: pi.reference
+                });
             }
+            await addStockHistory(stockHistoryArray, { transaction: t, stockMode: STOCK_MODE.DECREASE });
             t.commit();
             return results;
         } catch (error) {
