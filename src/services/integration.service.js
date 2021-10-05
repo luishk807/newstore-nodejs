@@ -2,11 +2,12 @@ const Integration = require('../pg/models/integration/Integration');
 const { STATUS } = require('../constants/integration');
 const { isAccessTokenExpired, isRefreshTokenExpired, refreshToken, revokeToken } = require('../integrations/quickbooks/auth');
 const { removeProperty } = require('../utils/object');
+const { getGlobalLogger } = require('../utils/logger.utils');
 const INTEGRATIONS = Object.freeze({
     QUICKBOOKS: 'quickbooks'
 });
 // Gets the global logger or a skeleton (for unit test purposes)
-const log = global.logger || { info: () => {}, debug: () => {}, error: () => {} };
+const log = getGlobalLogger();
 
 /** Saves/updates the integration object to database */
 const saveIntegration = async (integration) => {
@@ -125,12 +126,15 @@ const getQuickbooksAccessToken = async (integrationObject) => {
     const integrationStatus = await getQuickbooksIntegrationStatus(integration, true, false);
     // Disconnected or refresh token expired, it needs reauthentication
     if (integrationStatus.status === STATUS.DISCONNECTED || integrationStatus.status === STATUS.REFRESH_TOKEN_EXPIRED) {
+        log.info('Quickbooks integration status is disconnect or refresh token expired, will require REAUTHENTICATION');
         return null;
     }
     // Access token expired only, just refresh
     if (integrationStatus.status === STATUS.ACCESS_TOKEN_EXPIRED) {
+        log.info('Quickbooks integration ACCESS TOKEN is expired');
         if (integration) {
             try {
+                log.info('Proceeding with automatic access token refresh');
                 const refreshAuth = await refreshToken(JSON.parse(integration.accessJson), integration.realmId);
                 if (refreshAuth.json) { // Check it exists
                     try {
@@ -152,6 +156,7 @@ const getQuickbooksAccessToken = async (integrationObject) => {
     }
     
     if (integrationStatus.status === STATUS.CONNECTED) {
+        log.info('Quickbooks integration is still CONNECTED');
         return integrationStatus.integration;
     }
     return null;

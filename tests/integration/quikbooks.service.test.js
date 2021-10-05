@@ -1,4 +1,4 @@
-const QuickbooksService = require('../../src/services/integration/quickbooks.service');
+const QuickbooksService = require('../../src/services/integration/quickbooks.node.service');
 
 const assert = require('assert');
 const qbService = new QuickbooksService();
@@ -31,35 +31,6 @@ describe('QuickbooksService', function() {
                 // Just to check that the value got assigned
                 assert.strictEqual(qbService.realmId, fakeIntegrationObject.realmId);
                 done();
-            })
-            .catch(error => {
-                console.log(error);
-                done()
-            });
-    });
-
-    it('should return a refreshed token from Quickbooks server', function(done) {
-        // Giving a current date for accessUpdated and refreshTokenUpdated will tell you that you are not expired
-        // on access token nor refresh token
-        // const integrationObject = {
-        //     ...fakeIntegrationObject,
-        //     accessJson: realAccessJson,
-        //     accessUpdated: new Date(new Date().setDate(new Date().getDate() - 1)),
-        //     refreshTokenUpdated: new Date(new Date().setDate(new Date().getDate() - 10))
-        // }
-        // console.log('integrationObject', integrationObject);
-        qbService.init(/*integrationObject*/)
-            .then(() => {
-                qbService.__getAccessToken().then(token => {
-                    console.log('__getAccessToken', token)
-                    assert.ok(token)
-                    done();
-                })
-                .catch(error => {
-                    console.log(error);
-                    done();
-                })
-                
             })
             .catch(error => {
                 console.log(error);

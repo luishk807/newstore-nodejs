@@ -72,6 +72,15 @@ const config = {
       webhookToken: process.env.QB_WH_TOKEN
     }
   },
+  queues: {
+    pgBoss: {
+      dbHost: process.env.QUEUE_PGBOSS_DB_HOST,
+      dbPort: process.env.QUEUE_PGBOSS_DB_PORT,
+      dbName: process.env.QUEUE_PGBOSS_DB_NAME,
+      dbUser: process.env.QUEUE_PGBOSS_DB_USER,
+      dbPwd: process.env.QUEUE_PGBOSS_DB_PWD
+    }
+  },
   configs: configs
 };
 
