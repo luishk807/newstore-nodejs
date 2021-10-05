@@ -9,6 +9,7 @@ const ProductStockHistory = sequelize.define('product_stock_history', {
     order_products_id: { type: Sequelize.BIGINT },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     quantity: { type: Sequelize.INTEGER },
+    reference: { type: Sequelize.TEXT }
 }, {
     schema: 'public',
     freezeTableName: true,

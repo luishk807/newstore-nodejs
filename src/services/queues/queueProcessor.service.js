@@ -295,7 +295,8 @@ class QuickbooksQueueProcessor {
                                             stockUpdateProductItems.push({
                                                 id: pi.id,
                                                 sku: pi.sku,
-                                                qty: +poi.qty
+                                                qty: +poi.qty,
+                                                reference: 'PurchaseOrder:' + localPurchaseOrder.id
                                             });
                                         }
                                     }
