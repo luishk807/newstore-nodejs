@@ -37,9 +37,5 @@ async function handleShutdown() {
   process.exit(0);
 }
 
-process.on('SIGINT', async () => {
-  handleShutdown();
-});
-process.on('SIGTERM', () => {
-  handleShutdown();
-});
+process.on('SIGINT', handleShutdown);
+process.on('SIGTERM', handleShutdown);

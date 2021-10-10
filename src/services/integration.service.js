@@ -60,14 +60,22 @@ const deleteIntegration = async (id) => {
     return false;
 }
 
+const returnPlainObject = (value) => {
+    if (value) {
+        return value.get({ plain: true });
+    }
+}
+
 /** Gets the integration object from database based on id */
 const getIntegration = async (id) => {
-    return (await Integration.findOne({ where: { id: id }})).get({ plain: true });
+    const integration = await Integration.findOne({ where: { id: id }});
+    return returnPlainObject(integration);
 }
 
 /** Returns only id to check that it exists */
 const integrationExists = async (id) => {
-    return (await Integration.findOne({ attributes: ['id'], where: { id: id }})).get({ plain: true });
+    const integration = await Integration.findOne({ attributes: ['id'], where: { id: id }});
+    return returnPlainObject(integration);
 }
 
 /** Indicates if the refresh token is different */
@@ -89,21 +97,23 @@ const getQuickbooksIntegrationStatus = async (integration, returnIntegrationObje
     if (!integration) {
         integration = await getIntegration(INTEGRATIONS.QUICKBOOKS);
     }
-    const accessObject = JSON.parse(integration.accessJson);
-    const tokenExpired = isAccessTokenExpired(accessObject, integration.accessUpdated);
-    const refreshTokenExpiredResult = isRefreshTokenExpired(accessObject, integration.refreshTokenUpdated);
-    if (refreshTokenExpiredResult.expired) { // Needs to reauthenticate
-        status.status = STATUS.REFRESH_TOKEN_EXPIRED;
-    } else if (tokenExpired && !refreshTokenExpiredResult.expired) {
-        status.status = STATUS.ACCESS_TOKEN_EXPIRED;
-    } else {
-        status.status = STATUS.CONNECTED; // Connected
-    }
-    status.refreshToken = refreshTokenExpiredResult;
-    status.accessToken = { expired: tokenExpired };
-    if (removeAccessTokens) {
-        // Filter out sensitive fields
-        removeProperty(integration, ['accessJson']);
+    if (integration) {
+        const accessObject = JSON.parse(integration.accessJson);
+        const tokenExpired = isAccessTokenExpired(accessObject, integration.accessUpdated);
+        const refreshTokenExpiredResult = isRefreshTokenExpired(accessObject, integration.refreshTokenUpdated);
+        if (refreshTokenExpiredResult.expired) { // Needs to reauthenticate
+            status.status = STATUS.REFRESH_TOKEN_EXPIRED;
+        } else if (tokenExpired && !refreshTokenExpiredResult.expired) {
+            status.status = STATUS.ACCESS_TOKEN_EXPIRED;
+        } else {
+            status.status = STATUS.CONNECTED; // Connected
+        }
+        status.refreshToken = refreshTokenExpiredResult;
+        status.accessToken = { expired: tokenExpired };
+        if (removeAccessTokens) {
+            // Filter out sensitive fields
+            removeProperty(integration, ['accessJson']);
+        }
     }
     return { ...status,
         ...returnIntegrationObject && { integration: integration }
@@ -123,41 +133,43 @@ const getQuickbooksAccessToken = async (integrationObject) => {
     if (!integration) {
         integration = await getIntegration(INTEGRATIONS.QUICKBOOKS);
     }
-    const integrationStatus = await getQuickbooksIntegrationStatus(integration, true, false);
-    // Disconnected or refresh token expired, it needs reauthentication
-    if (integrationStatus.status === STATUS.DISCONNECTED || integrationStatus.status === STATUS.REFRESH_TOKEN_EXPIRED) {
-        log.info('Quickbooks integration status is disconnect or refresh token expired, will require REAUTHENTICATION');
-        return null;
-    }
-    // Access token expired only, just refresh
-    if (integrationStatus.status === STATUS.ACCESS_TOKEN_EXPIRED) {
-        log.info('Quickbooks integration ACCESS TOKEN is expired');
-        if (integration) {
-            try {
-                log.info('Proceeding with automatic access token refresh');
-                const refreshAuth = await refreshToken(JSON.parse(integration.accessJson), integration.realmId);
-                if (refreshAuth.json) { // Check it exists
-                    try {
-                        const result = await saveIntegration({ id: INTEGRATIONS.QUICKBOOKS, accessJson: refreshAuth.json });
-                        return result;
-                    } catch (error) {
-                        log.error('Error saving refreshed access token data to database', error);
-                    }
-                } else {
-                    log.error('Quickbooks refreshToken did not return authentication response with json field');
-                }
-            } catch (error) {
-                log.error('Error refreshing access token, probably the current integration data is no longer valid and requires a re-authentication');
-                return null;
-            }
-        } else {
-            log.error('Cannot refresh token without integration data');
+    if (integration) {
+        const integrationStatus = await getQuickbooksIntegrationStatus(integration, true, false);
+        // Disconnected or refresh token expired, it needs reauthentication
+        if (integrationStatus.status === STATUS.DISCONNECTED || integrationStatus.status === STATUS.REFRESH_TOKEN_EXPIRED) {
+            log.info('Quickbooks integration status is disconnect or refresh token expired, will require REAUTHENTICATION');
+            return null;
         }
-    }
-    
-    if (integrationStatus.status === STATUS.CONNECTED) {
-        log.info('Quickbooks integration is still CONNECTED');
-        return integrationStatus.integration;
+        // Access token expired only, just refresh
+        if (integrationStatus.status === STATUS.ACCESS_TOKEN_EXPIRED) {
+            log.info('Quickbooks integration ACCESS TOKEN is expired');
+            if (integration) {
+                try {
+                    log.info('Proceeding with automatic access token refresh');
+                    const refreshAuth = await refreshToken(JSON.parse(integration.accessJson), integration.realmId);
+                    if (refreshAuth.json) { // Check it exists
+                        try {
+                            const result = await saveIntegration({ id: INTEGRATIONS.QUICKBOOKS, accessJson: refreshAuth.json });
+                            return result;
+                        } catch (error) {
+                            log.error('Error saving refreshed access token data to database', error);
+                        }
+                    } else {
+                        log.error('Quickbooks refreshToken did not return authentication response with json field');
+                    }
+                } catch (error) {
+                    log.error('Error refreshing access token, probably the current integration data is no longer valid and requires a re-authentication');
+                    return null;
+                }
+            } else {
+                log.error('Cannot refresh token without integration data');
+            }
+        }
+        
+        if (integrationStatus.status === STATUS.CONNECTED) {
+            log.info('Quickbooks integration is still CONNECTED');
+            return integrationStatus.integration;
+        }
     }
     return null;
 }
