@@ -1,5 +1,6 @@
 const queueService = require('./queue.service');
 const QuickbooksService = require('../integration/quickbooks.node.service');
+const { integrationExists, INTEGRATIONS } = require('../integration.service');
 const { getGlobalLogger } = require('../../utils/logger.utils');
 const logger = getGlobalLogger();
 const TOPICS = require('../../constants/queueTopics');
@@ -16,10 +17,15 @@ class QuickbooksQueueProcessor {
 
     constructor() {}
 
-    init() {
+    async init() {
         logger.info('Initializing Quickbooks Queue Processor');
-        this.#quickbooksService = new QuickbooksService();
-        this.#quickbooksService.init();
+        const exists = await integrationExists(INTEGRATIONS.QUICKBOOKS);
+        if (exists) {
+            this.#quickbooksService = new QuickbooksService();
+            await this.#quickbooksService.init();
+        } else {
+            logger.warn('Quickbooks integration entry does not exist in database');
+        }
         logger.info(`Subscribing to topic: ${TOPICS.QUICKBOOKS_WEBHOOK}`);
         // Important to bind the object, or the queue won't know who 'this' is
         queueService.subscribe(TOPICS.QUICKBOOKS_WEBHOOK, this.#processEvent.bind(this));
