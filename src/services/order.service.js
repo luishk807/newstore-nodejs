@@ -316,13 +316,13 @@ const createOrder = async(req) => {
                 }
                 // Commit the entire transaction
                 await t.commit();
-                callHook(HOOKNAMES.ORDER, 'create', orderObj);
+                //callHook(HOOKNAMES.ORDER, 'create', orderObj);
                 await sendgrid.sendOrderConfirmationEmail(orderObj, { referer: req.headers.referer });
                 return orderObj;
             } else { // There will always be items in cart, will it ever reach this else?
                 // Commit the entire transaction
                 await t.commit();
-                callHook(HOOKNAMES.ORDER, 'create', orderObj);
+                //callHook(HOOKNAMES.ORDER, 'create', orderObj);
                 await sendgrid.sendOrderConfirmationEmail(orderObj, { referer: req.headers.referer });
                 return orderObj;
             }
