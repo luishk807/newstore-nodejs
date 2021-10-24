@@ -8,14 +8,25 @@ const aw3Bucket = `${config.s3.bucketName}/users`;
 const includes = ['useStatus','userRoles', 'userAddresses'];
 const { Op } = require('sequelize');
 const { callHook } = require('../utils/hooks');
-const HOOKNAMES = require('../constants/hooknames')
+const HOOKNAMES = require('../constants/hooknames');
+const { getGlobalLogger } = require('../utils/logger.utils');
+const logger  = getGlobalLogger();
+
+const sendToHook = async (eventName, params) => {
+    try {
+        logger.info(`Calling hooks for ${HOOKNAMES.USER}:${eventName}`);
+        callHook(HOOKNAMES.USER, eventName, params);
+    } catch (error) {
+        logger.error(error);
+    }
+}
 
 const deleteById = async (id) => {
     const user = await User.findOne({ where: { id: id } });
     if (user) {
         const userImage = user.img;
         const deletedUser = await User.destroy({ where: { id: user.id } });
-        callHook(HOOKNAMES.USER, 'delete', { id: user.id });
+        sendToHook('delete', { id: user.id });
         if (deletedUser) {
             const result = await deleteFromStorage(userImage);
             if (result.status) {
@@ -150,7 +161,7 @@ const update = async(body, id, file, isAdmin = false) => {
         });
       })
     }
-    callHook(HOOKNAMES.USER, 'update', { id, data: dataInsert });
+    sendToHook('update', { id, data: dataInsert });
     return User.update(
       dataInsert,
       {
@@ -204,7 +215,7 @@ const create = async (user, file, isAdmin = false) => {
 
         try {
             const user = await User.create(dataEntry);
-            callHook(HOOKNAMES.USER, 'create', user.get({ plain: true }));
+            sendToHook('create', user.get({ plain: true }));
             return user;
         } catch (err) {
             logger.error("Error creating user", err);
