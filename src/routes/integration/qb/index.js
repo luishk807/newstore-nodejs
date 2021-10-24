@@ -97,7 +97,7 @@ router.post('/webhooks', (req, res) => {
                 }
                 // Later implement queueing multiples at the same time
                 // Queue events for asynchronous processing
-                queue.queue(TOPICS.QUICKBOOKS_WEBHOOK, notification, { retryLimit: 3, retryDelay: 60 });
+                queue.queue(TOPICS.QUICKBOOKS_WEBHOOK, notification, { retryLimit: 3, retryDelay: 60, expireInHours: 48 });
             }
         }
     }

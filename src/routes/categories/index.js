@@ -1,87 +1,89 @@
 const router = require('express').Router();
 const cors = require('cors');
-const verify = require('../../middlewares/verifyToken');
+const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const parser = require('../../middlewares/multerParser');
-const Category = require('../../pg/models/Categories');
+const controller = require('../../controllers/categories');
 
 router.all('*', cors());
 
-router.delete('/:id', verify, (req, res, next) => {
-  // delete brands
-  Category.findAll({ where: {id: req.params.id}})
-  .then((brand) => {
-    Category.destroy({
-      where: {
-        id: brand[0].id
-      }
-    }).then((deletedRecord) => {
-      res.status(200).json({ status: deletedRecord, message: "Category successfully deleted" });
-    }, (err) => {
-      res.status(500).json({status: false, message: err});
-    })
-  })
-});
-
-router.put('/:id', [verify, parser.none()], (req, res, next) => {
-  const body = req.body;
-  const bid = req.params.id;
-  
-  Category.update(
-    {
-      'name': body.name,
-      'status': body.status,
-      'icon': body.icon,
-    },
-    {
-      where: {
-        id: bid
-      }
+router.delete('/:id', verifyAdmin, async(req, res, next) => {
+  // delete item
+  try {
+    const resp = await controller.deleteCategoryById(req.params.id);
+    
+    if (resp) {
+      res.status(200).json({ status: true, message: "Category successfully deleted" });
+    } else {
+      res.status(500).json({status: false, message: "Unable to delete Category, please try again later"});
     }
-  ).then((updated) => {
-    res.status(200).json({
-      status: true,
-      data: updated,
-      message: 'Category Updated'
-    });
-  }).catch((err) => {
-    res.status(500).json({status: false, message: err})
-  })
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
 });
 
-router.post('/', [verify, parser.none()], (req, res, next) => {
-  const body = req.body;
+router.put('/:id', [verifyAdmin, parser.none()], async(req, res, next) => {
+  try {
+    const resp = await controller.saveCategory(req);
+    if (resp) {
+      res.status(200).json({ status: true, message: "Category successfully updated" });
+    } else {
+      res.status(500).json({status: false, message: "Unable to update Category, please try again later"});
+    }
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
 
-  Category.create({
-    'name': body.name,
-    'icon': body.icon
-  }).then((product) => {
-    res.status(200).json(product);
-  }).catch((err) => {
-    res.status(500).json({status: false, message: err})
-  })
+router.put('/:id/priority', [verifyAdmin, parser.none()], async(req, res, next) => {
+  try {
+    const resp = await controller.setPriority(req.params.id);
+    if (resp) {
+      res.status(200).json({ status: true, message: "Category priority updated" });
+    } else {
+      res.status(500).json({status: false, message: "Unable to update Category, please try again later"});
+    }
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
+router.post('/', [verifyAdmin, parser.none()], async(req, res, next) => {
+  try {
+    const resp = await controller.createCategory(req.body);
+    if (resp) {
+      res.status(200).json({ status: true, data: resp, message: "Category Created" });
+    } else {
+      res.status(500).json({status: false, message: "Unable to create category, please try again later"});
+    }
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
 })
 
 router.get('/:id', async(req, res, next) => {
-    const category = await Category.findOne({ where: {id: req.params.id}});
-    res.json(category)
+    try {
+      const categ = await controller.getCategoryById(req.params.id);
+      res.status(200).json(categ)
+    } catch(err) {
+      res.status(500).json({status: false, message: err});
+    }
 });
 
 router.get('/', async(req, res, next) => {
   // get products
-  let category = null;
   if (req.query.id) {
     try {
-      category = await Category.findOne({ where: {id: req.query.id}});
-      res.status(200).json(category)
+      const categ = await controller.getCategoryById(req.query.id);
+      res.status(200).json(categ)
     } catch(err) {
-      res.status(500).json({status: false, message: err})
+      res.status(500).json({status: false, message: err});
     }
   } else {
     try {
-      category = await Category.findAll();
-      res.status(200).json(category)
+      const categ = await controller.getAllCategories();
+      res.status(200).json(categ)
     } catch(err) {
-      res.status(500).json({status: false, message: err})
+      res.status(500).json({status: false, message: err});
     }
   }
 });
