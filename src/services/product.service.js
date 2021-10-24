@@ -644,7 +644,7 @@ const searchProductByType = async (type, search, page = null, isFullDetail = fal
             where,
             include: includes,
             offset: offset,
-            orderBy: orderBy,
+            order: orderBy,
             limit: LIMIT
         })
 
