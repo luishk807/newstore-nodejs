@@ -140,6 +140,16 @@ const getProductItemById = async (id) => {
     return null;
 }
 
+const getProductItemsBySkus = async (skus) => {
+    if (skus.length > 0) {
+        const where = {
+            sku: { [Op.in]: skus }
+        }
+        const items = await ProductItem.findAll({ where: where });
+        return items;
+    }
+    return [];
+}
 
 const getProductItemByIds = async (ids, page = null) => {
     const where = {
@@ -199,5 +209,6 @@ module.exports = {
     getProductItemById,
     getProductItemByIds,
     getProductItems,
-    searchProductItemByName
+    searchProductItemByName,
+    getProductItemsBySkus
 }

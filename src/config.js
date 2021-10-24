@@ -1,4 +1,5 @@
 require('dotenv').config();
+const configs = require('./configs');
 
 const config = {
   express: {
@@ -59,6 +60,28 @@ const config = {
   adminRoles: [1,3],
   defaultLimit: 30,
   taxTotal: 0.07,
+  integrations: {
+    quickbooks: {
+      clientId: process.env.QB_CLIENT_ID,
+      clientSecret: process.env.QB_SECRET,
+      environment: process.env.QB_ENVIRONMENT,
+      redirectUri: process.env.QB_REDIRECT_URI,
+      apiVersion: process.env.QB_API_VERSION,
+      apiMinorVersion: process.env.QB_API_MINOR,
+      baseUrl: (process.env.QB_ENVIRONMENT === 'production') ? 'https://quickbooks.api.intuit.com' : 'https://sandbox-quickbooks.api.intuit.com',
+      webhookToken: process.env.QB_WH_TOKEN
+    }
+  },
+  queues: {
+    pgBoss: {
+      dbHost: process.env.QUEUE_PGBOSS_DB_HOST,
+      dbPort: process.env.QUEUE_PGBOSS_DB_PORT,
+      dbName: process.env.QUEUE_PGBOSS_DB_NAME,
+      dbUser: process.env.QUEUE_PGBOSS_DB_USER,
+      dbPwd: process.env.QUEUE_PGBOSS_DB_PWD
+    }
+  },
+  configs: configs
 };
 
 module.exports = config;

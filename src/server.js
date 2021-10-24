@@ -4,6 +4,7 @@ global.logger = logger;
 
 const config = require('./config');
 const app = require('./app.js');
+const { stopQueueService, stopQueueProcessor } = require('./queue');
 
 // Administration tasks
 // const TaskRunner = require('./tasks/index');
@@ -29,3 +30,12 @@ BigInt.prototype.toJSON = function() {
 app.listen(config.express.port, function () {
   console.log(`AvenidaZ server listening on port ${config.express.port}!`);
 });
+
+async function handleShutdown() {
+  await stopQueueProcessor();
+  await stopQueueService();
+  process.exit(0);
+}
+
+process.on('SIGINT', handleShutdown);
+process.on('SIGTERM', handleShutdown);

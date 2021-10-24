@@ -627,6 +627,10 @@ const searchProductByType = async (type, search, page = null, isFullDetail = fal
         [type]: search
     }
     
+    let orderBy = [
+        ['name', 'ASC']
+    ]
+
     const parPage = Number(page);
     
     if (parPage) {
@@ -640,6 +644,7 @@ const searchProductByType = async (type, search, page = null, isFullDetail = fal
             where,
             include: includes,
             offset: offset,
+            order: orderBy,
             limit: LIMIT
         })
 
@@ -652,7 +657,7 @@ const searchProductByType = async (type, search, page = null, isFullDetail = fal
 
         return results;
     } else {
-        const product = await Product.findAll({ where, include: includes});
+        const product = await Product.findAll({ where, order: orderBy, include: includes});
         return product;
     }
 }

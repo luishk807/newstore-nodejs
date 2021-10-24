@@ -5,6 +5,8 @@ const sequelize = pgconfig.getSequelize();
 
 const Product = require('./Products');
 
+const Statuses = require('./Statuses');
+
 const Category = sequelize.define('category', {
   name: {
     type: Sequelize.TEXT
@@ -15,7 +17,13 @@ const Category = sequelize.define('category', {
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'
-  }
+  },
+  priority: {
+    type: Sequelize.BOOLEAN
+  },
+  key: {
+    type: Sequelize.TEXT
+  },
 });
 
 Product.belongsTo(Category, {
@@ -23,5 +31,7 @@ Product.belongsTo(Category, {
   as: "categories",
   onDelete: 'SET NULL',
 });
+
+Category.belongsTo(Statuses, { foreignKey: 'statusId', as: 'categoryStatus'});
 
 module.exports = Category;

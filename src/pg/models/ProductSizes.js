@@ -5,8 +5,6 @@ const sequelize = pgconfig.getSequelize();
 
 const Statuses = require('./Statuses');
 
- const Product = require('./Products');
-
 const ProductSize = sequelize.define('product_sizes', {
   product: {
     type: Sequelize.BIGINT,

@@ -14,6 +14,8 @@ const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
 const { Op } = require('sequelize');
 const sequelize = require('../pg/sequelize')
 const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
+const { callHook } = require('../utils/hooks');
+const HOOKNAMES = require('../constants/hooknames');
 const logger = global.logger;
 
 const saveStatusOrder = async(orId, userId, status) => {
@@ -134,6 +136,7 @@ const cancelOrder = async(req) => {
                 await Promise.all([
                     updateStock(orderInfo.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE })
                 ]);
+                callHook(HOOKNAMES.ORDER, 'delete', { id });
                 return true;
             } catch (error) {
                 logger.error(`Error on canceling order: ${id}`, error)
@@ -313,11 +316,13 @@ const createOrder = async(req) => {
                 }
                 // Commit the entire transaction
                 await t.commit();
+                //callHook(HOOKNAMES.ORDER, 'create', orderObj);
                 await sendgrid.sendOrderConfirmationEmail(orderObj, { referer: req.headers.referer });
                 return orderObj;
             } else { // There will always be items in cart, will it ever reach this else?
                 // Commit the entire transaction
                 await t.commit();
+                //callHook(HOOKNAMES.ORDER, 'create', orderObj);
                 await sendgrid.sendOrderConfirmationEmail(orderObj, { referer: req.headers.referer });
                 return orderObj;
             }
