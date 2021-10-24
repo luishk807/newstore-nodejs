@@ -24,7 +24,6 @@ const createCategoryObject = (name, statusId) => {
 
 const createCategory = async(value) => {
     const slugName = returnSlugName(value.name);
-    console.log("hey", slugName)
     if (value) {
         const dataEntry = {
             'name': value.name,
