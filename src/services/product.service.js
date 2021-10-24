@@ -657,7 +657,7 @@ const searchProductByType = async (type, search, page = null, isFullDetail = fal
 
         return results;
     } else {
-        const product = await Product.findAll({ where, orderBy: orderBy, include: includes});
+        const product = await Product.findAll({ where, order: orderBy, include: includes});
         return product;
     }
 }
