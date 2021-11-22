@@ -146,6 +146,15 @@ router.get('/full-detail/:id', verifyAdmin, async(req, res, next) => {
   }
 });
 
+router.get('/bulk/full-detail', verifyAdmin, async(req, res, next) => {
+  try {
+    const product = await controller.searchProductByIdsFullDetail(req.query.ids);
+    res.status(200).json(product)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
 router.get('/k/:id', async(req, res, next) => {
   try {
     const product = await controller.searchProductBySlug(req.params.id, req.query.isFullDetail);
