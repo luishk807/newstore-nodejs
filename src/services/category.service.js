@@ -28,6 +28,7 @@ const createCategory = async(value) => {
         const dataEntry = {
             'name': value.name,
             'icon': value.icon,
+            'altUrl': value.altUrl,
             'key': slugName
         }
     
@@ -44,6 +45,7 @@ const saveCategory = async(value) => {
     return Category.update({
         'name': body.name,
         'status': body.status,
+        'altUrl': body.altUrl,
         'icon': body.icon,
     },
     {
