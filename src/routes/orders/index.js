@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
+const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const parser = require('../../middlewares/multerParser');
 const controller = require('../../controllers/orders');
 const { checkCorsOrigins } = require('../../utils/server');
@@ -28,6 +29,20 @@ router.delete('/:id', verify, async(req, res, next) => {
 router.put('/:id', [verify, parser.none()], async(req, res, next) => {
   try {
     const resp = await controller.updateOrder(req);
+    if (resp) {
+      res.status(200).json({ status: true, message: "Order successfully updated" });
+    } else {
+      res.status(500).json({status: false, message: "Unable to update order, please try again later"});
+    }
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
+
+router.put('/admin/:id', [verifyAdmin, parser.none()], async(req, res, next) => {
+  try {
+    const resp = await controller.updateAdminOrder(req);
     if (resp) {
       res.status(200).json({ status: true, message: "Order successfully updated" });
     } else {
@@ -114,6 +129,15 @@ router.get('/:user/by-user', [verify, parser.none()], async(req, res, next) => {
 router.get('/admin/orders/all', [verify, parser.none()], async(req, res, next) => {
   try {
     const order = await controller.getAllOrder(req.user);
+    res.status(200).json(order)
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
+router.get('/admin/orders/pages/all', [verify, parser.none()], async(req, res, next) => {
+  try {
+    const order = await controller.getAllOrderWithFilter(req.user, req.query);
     res.status(200).json(order)
   } catch(err) {
     res.status(500).json({status: false, message: err});

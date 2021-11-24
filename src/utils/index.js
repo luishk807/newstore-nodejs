@@ -43,7 +43,6 @@ const returnSlugName = (str, key = null) => {
 }
 
 const calculateTotal = async(obj) => {
-
   const carts = JSON.parse(obj.cart);
   const TAX = parseFloat(config.taxTotal);
   const today = new Date();

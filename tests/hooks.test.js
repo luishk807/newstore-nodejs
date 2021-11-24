@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { createHook, listenHook, callHook } = require('../src/utils/hooks');
+const { createHook, listenHook, callHook, removeFromHook } = require('../src/utils/hooks');
 
 describe('Hooks', function() {
 
@@ -72,7 +72,7 @@ describe('Hooks', function() {
         callHook(hookName, 'testAfter', 3, 9);
     });
 
-    it('should handle the error event', function(done) {
+    it('should handle the error event on async handlers', function(done) {
         const hookName = 'TestHook';
         createHook(hookName, ['testThrow']);
         const asyncFunction = async function() {
@@ -87,6 +87,50 @@ describe('Hooks', function() {
         listenHook(hookName, 'testThrow', asyncFunction);
 
         callHook(hookName, 'testThrow', true);
+    });
+
+    it('should handle the error event on synchronous handlers', function(done) {
+        const hookName = 'TestHook';
+        createHook(hookName, ['testThrow']);
+        const syncFunction = function() {
+            throw Error('Test throw in synchronous Function');
+        }
+        const errorHandler = function(error) {
+            assert.ok(error);
+            done();
+        }
+        // Handle the error hook
+        listenHook(hookName, 'error', errorHandler);
+        listenHook(hookName, 'testThrow', syncFunction);
+
+        callHook(hookName, 'testThrow', true);
+    });
+
+    it('should be able to remove the listener from hook > event', function(done) {
+        let callCount = 0;
+        const hookName = 'TestTrackedListenerHook';
+        const eventName = 'testTracking';
+        createHook(hookName, [eventName]);
+        const handler = function(arg) {
+            callCount++;
+            console.log(arg);
+        }
+        listenHook(hookName, eventName, handler);
+        callHook(hookName, eventName, 'toasty!');
+        // Remove the listener from hook
+        removeFromHook(hookName, eventName, handler);
+        // Call hook again
+        callHook(hookName, eventName, 'toasty 2x!');
+        // Assert that the hook was only called once
+        assert.equal(callCount, 1);
+        done();
+    });
+
+    it('should throw exception if hook with given name does not exist', function() {
+        const hookName = new Date().toISOString();
+        assert.throws(() => {
+            callHook(hookName, 'eventName', 'toasty!')
+        });
     });
 
 });

@@ -13,7 +13,7 @@ function createHooks() {
     // Creating hooks that will be used for invoices
     // createHook(HOOKNAMES.ORDER, ['create', 'update', 'delete']);
     // Creating hooks that will be used for stock updates
-    createHook(HOOKNAMES.INVENTORY, ['create', 'update', 'delete']);
+    // createHook(HOOKNAMES.INVENTORY, ['create', 'update', 'delete']);
 }
 
 function listenUserHooks() {
