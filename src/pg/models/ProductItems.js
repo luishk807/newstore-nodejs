@@ -47,6 +47,7 @@ const ProductItem = sequelize.define('product_items', {
   unitPrice: { type: Sequelize.DECIMAL },
   exp_date: { type: Sequelize.DATE },
   retailPrice: { type: Sequelize.DECIMAL },
+  prevRetailPrice: { type: Sequelize.DECIMAL },
   source: { type: Sequelize.STRING}
 });
 

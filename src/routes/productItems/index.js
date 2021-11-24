@@ -54,6 +54,7 @@ router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
     'sku': body.sku,
     'exp_date': body.exp_date,
     'retailPrice': body.retailPrice,
+    'prevRetailPrice': body.prevRetailPrice,
     'vendorId': +body.vendor,
     'status': +body.status
   }, { where: { id: pid } });
@@ -129,7 +130,6 @@ router.post('/', [verify, parser.array('image')], async (req, res, next) => {
   }
 
   const body = req.body;
-
   ProductItems.create({
       'productId': Number(body.productId),
       'productColor': Number(body.productColor),
@@ -147,6 +147,7 @@ router.post('/', [verify, parser.array('image')], async (req, res, next) => {
       'sku': body.sku,
       'exp_date': body.exp_date,
       'retailPrice': body.retailPrice,
+      'prevRetailPrice': body.prevRetailPrice,
       'vendorId': Number(body.vendor),
   }).then((productItem) => {
     let counter = 1;
