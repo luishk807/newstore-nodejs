@@ -53,7 +53,13 @@ const searchImageBoxByKey = async(key) => {
 }
 
 const searchActiveImageBoxByKey = async(key) => {
-  return await ImageBox.findOne({ where: { key: key, status: 1}, include: includes});
+  return await ImageBox.findOne({ 
+    where: { key: key, status: 1}, 
+    include: includes, 
+    order: [
+      ['productImages','position', 'ASC']
+    ]
+  });
 }
 
 module.exports = {
