@@ -5,11 +5,13 @@ module.exports = {
   getOrder: order.getOrder,
   deleteOrderById: order.deleteOrderById,
   updateOrder: order.updateOrder,
+  updateAdminOrder: order.updateAdminOrder,
   cancelOrder: order.cancelOrder,
   getOrderByOrderNumberEmail: order.getOrderByOrderNumberEmail,
   getOrderByUser: order.getOrderByUser,
   getAllOrder: order.getAllOrder,
   createOrder: order.createOrder,
   getOrderById: order.getOrderById,
-  getMyOrders: order.getMyOrders
+  getMyOrders: order.getMyOrders,
+  getAllOrderWithFilter: order.getAllOrderWithFilter
 }

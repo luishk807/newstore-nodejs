@@ -14,6 +14,9 @@ const Category = sequelize.define('category', {
   icon: {
     type: Sequelize.TEXT
   },
+  altUrl: {
+    type: Sequelize.TEXT
+  },
   status: {
     type: Sequelize.BIGINT,
     field: 'statusId'
