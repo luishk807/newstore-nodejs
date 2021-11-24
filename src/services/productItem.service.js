@@ -20,6 +20,7 @@ const createProductItems = async (items) => {
         'amount6',
         'amount12',
         'retailPrice',
+        'prevRetailPrice',
         'statusId',
         'source'
     ]
