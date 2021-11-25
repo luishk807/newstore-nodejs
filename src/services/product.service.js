@@ -798,9 +798,8 @@ const getAllProducts = async (filter) => {
         ]
     } else {
         orderBy = [
-            ['productProductItems', 'prevRetailPrice', 'DESC NULLS LAST'],
             ['createdAt', 'ASC'],
-
+            ['productProductItems', 'prevRetailPrice', 'DESC NULLS LAST'],
         ]
     }
 
