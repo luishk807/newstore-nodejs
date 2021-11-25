@@ -794,10 +794,11 @@ const getAllProducts = async (filter) => {
             ['productProductItems', 'createdAt', 'DESC'],
             ['productImages', 'updatedAt', 'DESC'],
             ['productImages', 'createdAt', 'DESC'],
+            ['productProductItems', 'prevRetailPrice', 'ASC NULLS LAST'],
         ]
     } else {
         orderBy = [
-            ['createdAt', 'ASC']
+            ['productProductItems', 'prevRetailPrice', 'ASC NULLS LAST']
         ]
     }
 
