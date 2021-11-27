@@ -339,6 +339,10 @@ const getOrderByOrderNumberEmail = async(orderNumber, email) => {
     return await Order.findOne({ where: {order_number: orderNumber, shipping_email: email}, include: includes_non_user, order: orderBy});
 }
 
+const getOrderByOrderNumber = async(orderNumber) => {
+    return await Order.findOne({ where: {order_number: orderNumber}, include: includes, order: orderBy});
+}
+
 const getOrderByUser = async(loggedInUser, userId) => {
     if (config.adminRoles.includes(+loggedInUser.type)) {
         return await Order.findAll({ where: {userId: userId}, include: includes, order: orderBy });
@@ -614,6 +618,7 @@ module.exports = {
     cancelOrder,
     createOrder,
     getOrderByOrderNumberEmail,
+    getOrderByOrderNumber,
     getOrderByUser,
     getAllOrder,
     getOrderById,

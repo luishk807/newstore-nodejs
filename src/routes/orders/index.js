@@ -94,6 +94,21 @@ router.get('/:order_number/:email', [parser.none()], async(req, res, next) => {
     }
 });
 
+router.get('/admin-order/:order_number/admin', [verifyAdmin, parser.none()], async(req, res, next) => {
+  const body = req.params;
+
+  if (!body || !body.order_number) {
+    res.status(500).json({status: false, message: "Unable to find order"});
+  }
+  
+  try {
+    const resp = await controller.getOrderByOrderNumber(req.params.order_number);
+    res.status(200).json(resp)
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
 router.get('/:id', [verify, parser.none()], async(req, res, next) => {
   // let order = null;
   const body = req.params;
@@ -110,6 +125,8 @@ router.get('/:id', [verify, parser.none()], async(req, res, next) => {
   }
 
 });
+
+
 
 router.get('/:user/by-user', [verify, parser.none()], async(req, res, next) => {
   const body = req.params;
