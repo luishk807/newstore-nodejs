@@ -364,18 +364,57 @@ const getAllOrder = async(user) => {
 }
 
 const getAllOrderWithFilter = async(user, filter) => {
-    const {page} = filter;
-    
+    const page = filter.page;
+
+    const sortBy = filter.sortBy ? filter.sortBy : null;
+
+    let orderBy = null;
+
+    if (sortBy) {
+        switch(sortBy) {
+            case 'date_new': {
+                orderBy = [
+                    ['createdAt', 'DESC'],
+                ]
+                break;
+            }
+            case 'date_old': {
+                orderBy = [
+                    ['createdAt', 'ASC'],
+                ]
+                break;
+            }
+            case 'status_high': {
+                orderBy = [
+                    [sequelize.literal(`"orders"."orderStatusId" DESC`)],
+                    ['createdAt', 'DESC'],
+                ]
+                break;
+            }
+            case 'status_low': {
+                orderBy = [
+                    [sequelize.literal(`"orders"."orderStatusId" ASC`)],
+                    ['createdAt', 'DESC'],
+                ]
+                break;
+            }
+            default: {
+                orderBy = [
+                    [sequelize.literal(`case when "orders"."orderStatusId" = ${Number(sortBy)} then 1 end`)],
+                    ['createdAt', 'DESC'],
+                ]
+            }
+        }
+    } else {
+        orderBy = [
+            ['updatedAt', 'DESC'],
+            ['createdAt', 'DESC'],
+        ]
+    }
+
     let query = {
         include: includes
     }
-    
-    let orderBy = null;
-
-    orderBy = [
-        ['updatedAt', 'DESC'],
-        ['createdAt', 'DESC'],
-    ]
 
     if (page) {
         query = {
