@@ -14,6 +14,10 @@ const checkIfEmpty = (data) => {
   return data == 'null' || data == "undefined" || !data;
 }
 
+const validNumber = (data) => {
+  return data == 'null' || data == "undefined" || data != '' ? +data : null;
+}
+
 const getTokenData = (authToken) => {
   const token = authToken && authToken.split(' ')[1];
   if (!token) {
@@ -190,5 +194,6 @@ module.exports = {
   formatNumber,
   calculateTotal,
   checkIfEmpty,
-  returnSlugName
+  returnSlugName,
+  validNumber
 }
