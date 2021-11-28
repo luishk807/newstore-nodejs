@@ -10,6 +10,7 @@ const controller = require('../../controllers/productItems');
 const s3 = require('../../services/storage.service');
 const includes = ['productItemsStatus','productItemProduct', 'productImages', 'productItemColor', 'productItemSize'];
 const imgStorageSvc = require('../../services/imageStorage.service');
+const { validNumber } = require('../../utils');
 
 router.all('*', cors());
 
@@ -39,22 +40,22 @@ router.put('/:id', [verify, parser.array('image')], async (req, res, next) => {
   const body = req.body;
   const pid = req.params.id;
   const updated = await ProductItems.update({
-    'productColor': +body.productColor,
-    'productSize': +body.productSize,
-    'stock': body.stock,
+    'productColor': validNumber(body.productColor),
+    'productSize': validNumber(body.productSize),
+    'stock': validNumber(body.stock),
     'model': body.model,
-    'billingCost': body.billingCost,
-    'unitCost': body.unitCost,
+    'billingCost': validNumber(body.billingCost),
+    'unitCost': validNumber(body.unitCost),
     'profitPercentage': body.profitPercentage,
     'flete': body.flete,
     'fleteTotal': body.fleteTotal,
     'finalUnitPrice': body.finalUnitPrice,
-    'unitPrice': body.unitPrice,
+    'unitPrice': validNumber(body.unitPrice),
     'code': body.code,
     'sku': body.sku,
     'exp_date': body.exp_date,
-    'retailPrice': body.retailPrice,
-    'prevRetailPrice': body.prevRetailPrice,
+    'retailPrice': validNumber(body.retailPrice),
+    'prevRetailPrice': validNumber(body.prevRetailPrice),
     'vendorId': +body.vendor,
     'status': +body.status
   }, { where: { id: pid } });
@@ -131,24 +132,24 @@ router.post('/', [verify, parser.array('image')], async (req, res, next) => {
 
   const body = req.body;
   ProductItems.create({
-      'productId': Number(body.productId),
-      'productColor': Number(body.productColor),
-      'productSize': Number(body.productSize),
-      'stock': body.stock,
+      'productId': +body.productId,
+      'productColor': +body.productColor,
+      'productSize': +body.productSize,
+      'stock': validNumber(body.stock),
       'model': body.model,
-      'billingCost': body.billingCost,
-      'unitCost': body.unitCost,
+      'billingCost': validNumber(body.billingCost),
+      'unitCost': validNumber(body.unitCost),
       'profitPercentage': body.profitPercentage,
       'flete': body.flete,
       'fleteTotal': body.fleteTotal,
       'finalUnitPrice': body.finalUnitPrice,
-      'unitPrice': body.unitPrice,
+      'unitPrice': validNumber(body.unitPrice),
       'code': body.code,
       'sku': body.sku,
       'exp_date': body.exp_date,
-      'retailPrice': body.retailPrice,
-      'prevRetailPrice': body.prevRetailPrice,
-      'vendorId': Number(body.vendor),
+      'retailPrice': validNumber(body.retailPrice),
+      'prevRetailPrice': validNumber(body.prevRetailPrice),
+      'vendorId': +body.vendor,
   }).then((productItem) => {
     let counter = 1;
     const newImages = imagesUploaded.map((data) => {

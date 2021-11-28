@@ -8,6 +8,7 @@ module.exports = {
   updateAdminOrder: order.updateAdminOrder,
   cancelOrder: order.cancelOrder,
   getOrderByOrderNumberEmail: order.getOrderByOrderNumberEmail,
+  getOrderByOrderNumber: order.getOrderByOrderNumber,
   getOrderByUser: order.getOrderByUser,
   getAllOrder: order.getAllOrder,
   createOrder: order.createOrder,
