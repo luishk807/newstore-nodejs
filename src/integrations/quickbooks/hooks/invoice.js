@@ -112,26 +112,26 @@ function convertOrderToInvoice(order, customerRefId) {
 }
 
 async function createInvoice(order, user) {
-    const exists = await integrationExists(INTEGRATIONS.QUICKBOOKS);
-    if (exists) {
-        const customerRef = await getCustomerRef(user.id);
-        if (customerRef) {
-            const service = new QuickbooksService();
-            const qbCustomerRef = customerRef.external_id;
-            const invoice = convertOrderToInvoice(order, qbCustomerRef);
-            try {
-                await service.init();
-                const newInvoice = await service.createInvoice(invoice);
-                const invoiceRef = await saveInvoiceRef(orderId, newInvoice.Invoice.Id);
-                log.info('Quickbooks Invoice created', { invoice: newInvoice, invoiceRef });
-            } catch (error) {
-                log.error('Error creating invoice in Quickbooks', error);
-            }
-        } else {
-            log.error(`Cannot create an invoice without a valid customer from Quickbooks, no customer reference found for ${user.id}`);
-        }
+    // const exists = await integrationExists(INTEGRATIONS.QUICKBOOKS);
+    // if (exists) {
+    //     const customerRef = await getCustomerRef(user.id);
+    //     if (customerRef) {
+    //         const service = new QuickbooksService();
+    //         const qbCustomerRef = customerRef.external_id;
+    //         const invoice = convertOrderToInvoice(order, qbCustomerRef);
+    //         try {
+    //             await service.init();
+    //             const newInvoice = await service.createInvoice(invoice);
+    //             const invoiceRef = await saveInvoiceRef(orderId, newInvoice.Invoice.Id);
+    //             log.info('Quickbooks Invoice created', { invoice: newInvoice, invoiceRef });
+    //         } catch (error) {
+    //             log.error('Error creating invoice in Quickbooks', error);
+    //         }
+    //     } else {
+    //         log.error(`Cannot create an invoice without a valid customer from Quickbooks, no customer reference found for ${user.id}`);
+    //     }
         
-    }
+    // }
 }
 
 async function updateInvoice(order) {
