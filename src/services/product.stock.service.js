@@ -16,9 +16,13 @@ const getStockAmount = (stockQty, quantity, stockMode = STOCK_MODE.DECREASE) => 
     }
 }
 
-/** Updates the stock based on the given products from order */
+/**
+ * Updates the stock based on the given products from order
+ * This will deduct or increase, so if it is an existing order, it is going to mess up with the stock
+ */
 const updateStock = async (orderProductsArray, { transaction, stockMode = STOCK_MODE.DECREASE }) => {
     const pids = orderProductsArray.map(op => +op.productItem);
+    // This cannot read uncommited changes
     const productItemsToUpdate = await ProductItem.findAll({ where: { id: { [Op.in]: pids } } });
 
     const stocksToUpdate = [];

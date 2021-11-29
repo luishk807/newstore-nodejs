@@ -187,7 +187,7 @@ const updateAdminOrder = async(req) => {
       entry['paymentOption'] = body.paymentOption;
     }
   
-    
+    let originalOrderProducts = [];
     const t  = await sequelize.transaction();
 
     try {
@@ -205,6 +205,21 @@ const updateAdminOrder = async(req) => {
                 order_num: order.order_num,
                 cart: [],
                 clientEmail: email
+            }
+
+            // Get original order products (items in order)
+            originalOrderProducts = await OrderProduct.findAll({ where: { orderId: id }});
+            // Revert the stock by setting mode to increase, this has to be done before updating the stock at the end, because new entries
+            // for OrderProduct are created
+            const isolatedTransaction  = await sequelize.transaction(); // Use another transaction
+            const revertStockResult = await updateStock(originalOrderProducts, { transaction: isolatedTransaction, stockMode: STOCK_MODE.INCREASE });
+            if (!revertStockResult) {
+                const message = 'Error reverting stock before updating stock during order edit';
+                logger.error(message);
+                await isolatedTransaction.rollback();
+                throw new Error(message);
+            } else {
+                await isolatedTransaction.commit();
             }
 
             await OrderProduct.destroy({
@@ -293,6 +308,18 @@ const updateAdminOrder = async(req) => {
     } catch (error) {
         logger.error('Error saving order, will rollback order', error);
         await t.rollback();
+        // Have to rollback from original revert of stock which was from a different transaction, manually
+        const isolatedTransaction  = await sequelize.transaction();
+        // Decrease back the stock from the original order products
+        const revertStockResult = await updateStock(originalOrderProducts, { transaction: isolatedTransaction });
+        if (!revertStockResult) {
+            const message = 'Error reverting stock to its original state after trying updating stock during order edit';
+            logger.error(message, originalOrderProducts);
+            await isolatedTransaction.rollback();
+            throw new Error(message);
+        } else {
+            await isolatedTransaction.commit();
+        }
     }
     return false;
 }
@@ -368,12 +395,48 @@ const getAllOrder = async(user) => {
 }
 
 const getAllOrderWithFilter = async(user, filter) => {
+    let query = {
+        include: includes
+    }
+
     const page = filter.page;
 
     const sortBy = filter.sortBy ? filter.sortBy : null;
 
+    const searchValue = filter.searchValue ? filter.searchValue : null;
+
+    const searchBy = filter.searchBy ? filter.searchBy : null;
+
     let orderBy = null;
 
+    // check if column exists
+    if (searchBy && searchValue) {
+        const check  = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name='orders' and column_name='${searchBy}'`, { raw: true});
+        if (check && check[0].length) {
+            switch(searchBy) {
+                case 'shipping_name':
+                case 'shipping_phone': {
+                    query = {
+                        ...query,
+                        where: {
+                           [`${searchBy}`]: {
+                                [Op.iLike]: `%${searchValue}%`
+                            }
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    query = {
+                        ...query,
+                        where: {
+                           [`${searchBy}`]: `${searchValue}`
+                        }
+                    }
+                }
+            }
+        }
+    }
     if (sortBy) {
         switch(sortBy) {
             case 'date_new': {
@@ -414,10 +477,6 @@ const getAllOrderWithFilter = async(user, filter) => {
             ['updatedAt', 'DESC'],
             ['createdAt', 'DESC'],
         ]
-    }
-
-    let query = {
-        include: includes
     }
 
     if (page) {
