@@ -1,7 +1,7 @@
 const { createHook, listenHook } = require('./utils/hooks');
 const HOOKNAMES = require('./constants/hooknames');
 const { createCustomer, updateCustomer, deleteCustomer } = require('./integrations/quickbooks/hooks/user');
-// const { createInvoice, updateInvoice, deleteInvoice } = require('./integrations/quickbooks/hooks/invoice');
+const { createInvoice, updateInvoice, deleteInvoice } = require('./integrations/quickbooks/hooks/invoice');
 // const { createInventory, updateInventory, deleteInventory } = require('./integrations/quickbooks/hooks/inventory');
 
 /**
@@ -11,7 +11,7 @@ function createHooks() {
     // Creating hooks that will be used by user creation for the given events
     createHook(HOOKNAMES.USER, ['create', 'update', 'delete']);
     // Creating hooks that will be used for invoices
-    // createHook(HOOKNAMES.ORDER, ['create', 'update', 'delete']);
+    createHook(HOOKNAMES.ORDER, ['create', 'update', 'delete']);
     // Creating hooks that will be used for stock updates
     // createHook(HOOKNAMES.INVENTORY, ['create', 'update', 'delete']);
 }
@@ -23,11 +23,11 @@ function listenUserHooks() {
     listenHook(HOOKNAMES.USER, 'delete', deleteCustomer);
 }
 
-// function listenOrderHooks() {
-//     listenHook(HOOKNAMES.ORDER, 'create', createInvoice);
-//     listenHook(HOOKNAMES.ORDER, 'update', updateInvoice);
-//     listenHook(HOOKNAMES.ORDER, 'delete', deleteInvoice);
-// }
+function listenOrderHooks() {
+    listenHook(HOOKNAMES.ORDER, 'create', createInvoice);
+    listenHook(HOOKNAMES.ORDER, 'update', updateInvoice);
+    listenHook(HOOKNAMES.ORDER, 'delete', deleteInvoice);
+}
 
 // function listenInventoryHooks() {
 //     listenHook(HOOKNAMES.INVENTORY, 'create', createInventory);
@@ -42,7 +42,7 @@ function configureHooks() {
     createHooks();
     listenUserHooks();
     // listenInventoryHooks();
-    // listenOrderHooks();
+    listenOrderHooks();
 }
 
 module.exports = configureHooks;
