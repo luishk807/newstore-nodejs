@@ -94,7 +94,7 @@ router.get('/:order_number/:email', [parser.none()], async(req, res, next) => {
     }
 });
 
-router.get('/admin-order/:order_number/admin', [verifyAdmin, parser.none()], async(req, res, next) => {
+router.get('/admin-order/:order_number', [verifyAdmin, parser.none()], async(req, res, next) => {
   const body = req.params;
 
   if (!body || !body.order_number) {

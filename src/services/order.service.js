@@ -395,12 +395,48 @@ const getAllOrder = async(user) => {
 }
 
 const getAllOrderWithFilter = async(user, filter) => {
+    let query = {
+        include: includes
+    }
+
     const page = filter.page;
 
     const sortBy = filter.sortBy ? filter.sortBy : null;
 
+    const searchValue = filter.searchValue ? filter.searchValue : null;
+
+    const searchBy = filter.searchBy ? filter.searchBy : null;
+
     let orderBy = null;
 
+    // check if column exists
+    if (searchBy && searchValue) {
+        const check  = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name='orders' and column_name='${searchBy}'`, { raw: true});
+        if (check && check[0].length) {
+            switch(searchBy) {
+                case 'shipping_name':
+                case 'shipping_phone': {
+                    query = {
+                        ...query,
+                        where: {
+                           [`${searchBy}`]: {
+                                [Op.iLike]: `%${searchValue}%`
+                            }
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    query = {
+                        ...query,
+                        where: {
+                           [`${searchBy}`]: `${searchValue}`
+                        }
+                    }
+                }
+            }
+        }
+    }
     if (sortBy) {
         switch(sortBy) {
             case 'date_new': {
@@ -441,10 +477,6 @@ const getAllOrderWithFilter = async(user, filter) => {
             ['updatedAt', 'DESC'],
             ['createdAt', 'DESC'],
         ]
-    }
-
-    let query = {
-        include: includes
     }
 
     if (page) {
