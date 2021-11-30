@@ -264,7 +264,8 @@ const updateAdminOrder = async(req) => {
                             item.productDiscount = carts[cart].discount.name;
                             item.quantity = carts[cart].quantity;
                         } else {
-                            await deleteOrderById(orderUpdate.id);
+                            logger.error('Error saving order, will rollback order', error);
+                            await t.rollback();
                             return {status: false, code: 500, message: 'error with discount'}
                         }
                     }
@@ -274,7 +275,8 @@ const updateAdminOrder = async(req) => {
                             item.productDiscount = carts[cart].bundle.name;
                             item.quantity = carts[cart].quantity * carts[cart].bundle.quantity;
                         } else {
-                            await deleteOrderById(orderUpdate.id);
+                            logger.error('Error saving order, will rollback order', error);
+                            await t.rollback();
                             return {status: false, code: 500, message: 'error with bundle'}
                         }
                     } else {
