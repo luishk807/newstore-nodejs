@@ -48,6 +48,27 @@ const saveStatusOrder = async(orId, userId, status) => {
     }
 }
 
+const saveStatusOrderByOrderNumber = async(orId, userId, status) => {
+    const orderInfo = await Order.findAll({where: {order_number: orId}});
+    if (orderInfo) {
+        const dataSave = orderInfo.filter(item => +item.orderStatusId !== +status).map(item => {
+            return {
+                orderId: +item.id,
+                orderStatusId: +status,
+                userId: userId ? +userId : null,
+            }
+        })
+
+        if (dataSave && dataSave.length) {
+            return await OrderActivity.bulkCreate(dataSave);
+        } else {
+            return false;
+        }
+    } else {
+        return false
+    }
+}
+
 const getOrder = async(id, user) => {
     if (!id || !user) {
         return null;
@@ -80,6 +101,35 @@ const deleteOrderById = async(id, user) => {
     } catch (error) {
         logger.error(`Error updating stock and delting the order: ${id}`, error);
         t.rollback();
+    }
+}
+
+const saveOrderStatusOnBulkOrderNumber = async(req) => {
+    const user = req.user;
+    const ids = req.body.ids.split(',').map(item => String(item));
+    
+    if (ids) {
+        if (req.body.status) {
+            await saveStatusOrderByOrderNumber(ids, user.id, req.body.status);
+        }
+
+        const result = await Order.update({
+            orderStatusId: +req.body.status
+        },
+        {
+            where: {
+                order_number: ids
+            }
+        }
+        );
+        if (result[0]) {
+            return true;
+        } else {
+            return false;
+        }
+
+    } else {
+        return { code: 401, status: false, message: 'not authorized'}
     }
 }
 
@@ -678,6 +728,7 @@ module.exports = {
     getOrder,
     cancelOrder,
     createOrder,
+    saveOrderStatusOnBulkOrderNumber,
     getOrderByOrderNumberEmail,
     getOrderByOrderNumber,
     getOrderByUser,

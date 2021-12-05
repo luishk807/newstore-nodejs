@@ -66,6 +66,19 @@ router.put('/:id/:cancel', [verify, parser.none()],  async(req, res, next) => {
   }
 });
 
+router.put('/admin-status/bulk/update', [verifyAdmin, parser.none()], async(req, res, next) => {
+  if (!req.body.ids || !req.body.status) {
+    res.status(400).json({status: false, message: "No data available"});
+  }
+  
+  try {
+    const resp = await controller.saveOrderStatusOnBulkOrderNumber(req);
+    res.status(200).json(resp)
+  } catch(err) {
+    res.status(400).json({status: false, message: err});
+  }
+});
+
 router.post('/', [parser.none()], async(req, res, next) => {
   try {
     const resp = await controller.createOrder(req);
