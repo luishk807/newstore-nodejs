@@ -198,10 +198,25 @@ const updateOrder = async(req) => {
             }
         }
         );
+
         if (result[0]) {
             const updatedOrder = await getOrder(id, req.user);
-            await sendgrid.sendOrderUpdate(updatedOrder, req);
-            return true;
+
+            if (resp) {
+                try {
+                    await Promise.all([
+                        updateStock(updatedOrder.orderOrderProduct, { stockMode: STOCK_MODE.INCREASE })
+                    ]);
+                    sendToHook('delete', { id });
+                    await sendgrid.sendOrderUpdate(updatedOrder, req);
+                    return true;
+                } catch (error) {
+                    logger.error(`Error on canceling order: ${id}`, error)
+                    return false
+                }
+            } else {
+                return false
+            }
         } else {
             return false;
         }
@@ -429,10 +444,10 @@ const cancelOrder = async(req) => {
     if (!allowedCancelStatus.includes(Number(orderInfo.orderStatus))) {
         return {status: false, code: 500, message: "invalid cancel status"};
     } else {
-        await saveStatusOrder(id, user.id, 7);
+        await saveStatusOrder(id, user.id, 9);
         const resp = await Order.update({
             orderCancelReasonId: cancel,
-            orderStatusId: 7
+            orderStatusId: 9
         }, { where: { id: id } });
         
         if (resp) {
