@@ -13,7 +13,7 @@ const s3 = require('./storage.service');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost', 'orderPromotion'];
 const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const sequelize = require('../pg/sequelize')
 const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
 const { callHook } = require('../utils/hooks');
@@ -459,6 +459,8 @@ const getAllOrderWithFilter = async(user, filter) => {
 
     const searchBy = filter.searchBy ? filter.searchBy : null;
 
+    const showCompleted = filter.showCompleted ? filter.showCompleted === 'true' : null;
+
     let orderBy = null;
 
     // check if column exists
@@ -490,6 +492,19 @@ const getAllOrderWithFilter = async(user, filter) => {
             }
         }
     }
+
+    if (!showCompleted) {
+        query = {
+            ...query,
+            where: {
+                ...where,
+                orderStatusId: {
+                    [Op.notIn]: [5]
+                }
+            }
+        };
+    }
+
     if (sortBy) {
         switch(sortBy) {
             case 'date_new': {
@@ -546,7 +561,6 @@ const getAllOrderWithFilter = async(user, filter) => {
             order: orderBy,
         }
     }
-
 
     if (config.adminRoles.includes(+user.type)) {
         if (page) {
