@@ -13,7 +13,7 @@ const s3 = require('./storage.service');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost', 'orderPromotion'];
 const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const sequelize = require('../pg/sequelize')
 const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
 const { callHook } = require('../utils/hooks');
@@ -48,6 +48,27 @@ const saveStatusOrder = async(orId, userId, status) => {
     }
 }
 
+const saveStatusOrderByOrderNumber = async(orId, userId, status) => {
+    const orderInfo = await Order.findAll({where: {order_number: orId}});
+    if (orderInfo) {
+        const dataSave = orderInfo.filter(item => +item.orderStatusId !== +status).map(item => {
+            return {
+                orderId: +item.id,
+                orderStatusId: +status,
+                userId: userId ? +userId : null,
+            }
+        })
+
+        if (dataSave && dataSave.length) {
+            return await OrderActivity.bulkCreate(dataSave);
+        } else {
+            return false;
+        }
+    } else {
+        return false
+    }
+}
+
 const getOrder = async(id, user) => {
     if (!id || !user) {
         return null;
@@ -69,8 +90,7 @@ const deleteOrderById = async(id, user) => {
     if (!order) {
         return { code: 500, status: false, message: "Order invalido" }
     }
-
-    const t  = await sequelize.transaction();
+   const t  = await sequelize.transaction();
     try {
         // STOCK_MODE.INCREASE, because we want to increase our product stock again
         await updateStock(order.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
@@ -80,6 +100,74 @@ const deleteOrderById = async(id, user) => {
     } catch (error) {
         logger.error(`Error updating stock and delting the order: ${id}`, error);
         t.rollback();
+    }
+}
+
+const deleteOrderStatusOnBulkOrderNumber = async(req) => {
+    let ids = null;
+
+    const getIds = req.params.ids.split(',');
+
+    if (getIds) {
+        ids = req.params.ids.split(',').map(item => String(item));
+    } else {
+        ids = req.params.ids
+    }
+
+    const user = req.user;
+
+    if (ids) {
+        const orders = await Order.findAll({where: {order_number: ids}})
+
+        for(const orderKey in orders) {
+            const currOrder = orders[orderKey];
+            const getCurrOrder = await getOrder(currOrder.id, user);
+
+            if (getCurrOrder) {
+                const t  = await sequelize.transaction();
+                try {
+                    // STOCK_MODE.INCREASE, because we want to increase our product stock again
+                    await updateStock(getCurrOrder.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
+                    const result = await Order.destroy({ where: { id: getCurrOrder.id } }, { transaction: t });
+                    t.commit();
+                    return result;
+                } catch (error) {
+                    logger.error(`Error updating stock and delting the order: ${getCurrOrder.id}`, error);
+                    t.rollback();
+                }   
+            }
+        }
+    } else {
+        return { code: 401, status: false, message: 'not authorized'}
+    }
+}
+
+const saveOrderStatusOnBulkOrderNumber = async(req) => {
+    const user = req.user;
+    const ids = req.body.ids.split(',').map(item => String(item));
+    
+    if (ids) {
+        if (req.body.status) {
+            await saveStatusOrderByOrderNumber(ids, user.id, req.body.status);
+        }
+
+        const result = await Order.update({
+            orderStatusId: +req.body.status
+        },
+        {
+            where: {
+                order_number: ids
+            }
+        }
+        );
+        if (result[0]) {
+            return true;
+        } else {
+            return false;
+        }
+
+    } else {
+        return { code: 401, status: false, message: 'not authorized'}
     }
 }
 
@@ -409,6 +497,8 @@ const getAllOrderWithFilter = async(user, filter) => {
 
     const searchBy = filter.searchBy ? filter.searchBy : null;
 
+    const showCompleted = filter.showCompleted ? filter.showCompleted === 'true' : null;
+
     let orderBy = null;
 
     // check if column exists
@@ -417,6 +507,7 @@ const getAllOrderWithFilter = async(user, filter) => {
         if (check && check[0].length) {
             switch(searchBy) {
                 case 'shipping_name':
+                case 'order_number':
                 case 'shipping_phone': {
                     query = {
                         ...query,
@@ -439,6 +530,19 @@ const getAllOrderWithFilter = async(user, filter) => {
             }
         }
     }
+
+    if (!showCompleted) {
+        query = {
+            ...query,
+            where: {
+                ...where,
+                orderStatusId: {
+                    [Op.notIn]: [5]
+                }
+            }
+        };
+    }
+
     if (sortBy) {
         switch(sortBy) {
             case 'date_new': {
@@ -495,7 +599,6 @@ const getAllOrderWithFilter = async(user, filter) => {
             order: orderBy,
         }
     }
-
 
     if (config.adminRoles.includes(+user.type)) {
         if (page) {
@@ -672,12 +775,14 @@ const createOrder = async(req) => {
 
 module.exports = {
     deleteOrderById,
+    deleteOrderStatusOnBulkOrderNumber,
     saveStatusOrder,
     updateOrder,
     updateAdminOrder,
     getOrder,
     cancelOrder,
     createOrder,
+    saveOrderStatusOnBulkOrderNumber,
     getOrderByOrderNumberEmail,
     getOrderByOrderNumber,
     getOrderByUser,
