@@ -4,6 +4,7 @@ module.exports = {
   saveStatusOrder: order.saveStatusOrder,
   getOrder: order.getOrder,
   deleteOrderById: order.deleteOrderById,
+  deleteOrderStatusOnBulkOrderNumber: order.deleteOrderStatusOnBulkOrderNumber,
   updateOrder: order.updateOrder,
   updateAdminOrder: order.updateAdminOrder,
   cancelOrder: order.cancelOrder,

@@ -26,7 +26,31 @@ router.delete('/:id', verify, async(req, res, next) => {
   }
 });
 
+router.delete('/admin-delete/bulk/delete/:ids', [verifyAdmin, parser.none()], async(req, res, next) => {
+  if (!req.params.ids) {
+    res.status(400).json({status: false, message: "No data available"});
+  }
+  
+  try {
+    const resp = await controller.deleteOrderStatusOnBulkOrderNumber(req);
+    res.status(200).json(resp)
+  } catch(err) {
+    res.status(400).json({status: false, message: err});
+  }
+});
+
 router.put('/:id', [verify, parser.none()], async(req, res, next) => {
+  if (!req.body.ids || !req.body.status) {
+    res.status(400).json({status: false, message: "No data available"});
+  }
+  
+  try {
+    const resp = await controller.saveOrderStatusOnBulkOrderNumber(req);
+    res.status(200).json(resp)
+  } catch(err) {
+    res.status(400).json({status: false, message: err});
+  }
+
   try {
     const resp = await controller.updateOrder(req);
     if (resp) {

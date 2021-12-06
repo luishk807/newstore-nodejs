@@ -90,8 +90,7 @@ const deleteOrderById = async(id, user) => {
     if (!order) {
         return { code: 500, status: false, message: "Order invalido" }
     }
-
-    const t  = await sequelize.transaction();
+   const t  = await sequelize.transaction();
     try {
         // STOCK_MODE.INCREASE, because we want to increase our product stock again
         await updateStock(order.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
@@ -101,6 +100,45 @@ const deleteOrderById = async(id, user) => {
     } catch (error) {
         logger.error(`Error updating stock and delting the order: ${id}`, error);
         t.rollback();
+    }
+}
+
+const deleteOrderStatusOnBulkOrderNumber = async(req) => {
+    let ids = null;
+
+    const getIds = req.params.ids.split(',');
+
+    if (getIds) {
+        ids = req.params.ids.split(',').map(item => String(item));
+    } else {
+        ids = req.params.ids
+    }
+
+    const user = req.user;
+
+    if (ids) {
+        const orders = await Order.findAll({where: {order_number: ids}})
+
+        for(const orderKey in orders) {
+            const currOrder = orders[orderKey];
+            const getCurrOrder = await getOrder(currOrder.id, user);
+
+            if (getCurrOrder) {
+                const t  = await sequelize.transaction();
+                try {
+                    // STOCK_MODE.INCREASE, because we want to increase our product stock again
+                    await updateStock(getCurrOrder.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
+                    const result = await Order.destroy({ where: { id: getCurrOrder.id } }, { transaction: t });
+                    t.commit();
+                    return result;
+                } catch (error) {
+                    logger.error(`Error updating stock and delting the order: ${getCurrOrder.id}`, error);
+                    t.rollback();
+                }   
+            }
+        }
+    } else {
+        return { code: 401, status: false, message: 'not authorized'}
     }
 }
 
@@ -737,6 +775,7 @@ const createOrder = async(req) => {
 
 module.exports = {
     deleteOrderById,
+    deleteOrderStatusOnBulkOrderNumber,
     saveStatusOrder,
     updateOrder,
     updateAdminOrder,
