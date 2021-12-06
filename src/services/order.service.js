@@ -467,6 +467,7 @@ const getAllOrderWithFilter = async(user, filter) => {
         if (check && check[0].length) {
             switch(searchBy) {
                 case 'shipping_name':
+                case 'order_number':
                 case 'shipping_phone': {
                     query = {
                         ...query,
