@@ -18,6 +18,7 @@ const sequelize = require('../pg/sequelize')
 const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
 const { callHook } = require('../utils/hooks');
 const HOOKNAMES = require('../constants/hooknames');
+const { IGNORE_ORDER_STATUS } = require('../constants');
 const logger = global.logger;
 const LIMIT = config.defaultLimit;
 
@@ -537,7 +538,7 @@ const getAllOrderWithFilter = async(user, filter) => {
             where: {
                 ...where,
                 orderStatusId: {
-                    [Op.notIn]: [5]
+                    [Op.notIn]: IGNORE_ORDER_STATUS
                 }
             }
         };
