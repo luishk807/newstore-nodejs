@@ -18,6 +18,7 @@ const sequelize = require('../pg/sequelize')
 const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
 const { callHook } = require('../utils/hooks');
 const HOOKNAMES = require('../constants/hooknames');
+const { IGNORE_ORDER_STATUS } = require('../constants');
 const logger = global.logger;
 const LIMIT = config.defaultLimit;
 
@@ -429,10 +430,10 @@ const cancelOrder = async(req) => {
     if (!allowedCancelStatus.includes(Number(orderInfo.orderStatus))) {
         return {status: false, code: 500, message: "invalid cancel status"};
     } else {
-        await saveStatusOrder(id, user.id, 7);
+        await saveStatusOrder(id, user.id, 9);
         const resp = await Order.update({
             orderCancelReasonId: cancel,
-            orderStatusId: 7
+            orderStatusId: 9
         }, { where: { id: id } });
         
         if (resp) {
@@ -537,7 +538,7 @@ const getAllOrderWithFilter = async(user, filter) => {
             where: {
                 ...where,
                 orderStatusId: {
-                    [Op.notIn]: [5]
+                    [Op.notIn]: IGNORE_ORDER_STATUS
                 }
             }
         };
