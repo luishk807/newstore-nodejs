@@ -430,10 +430,10 @@ const cancelOrder = async(req) => {
     if (!allowedCancelStatus.includes(Number(orderInfo.orderStatus))) {
         return {status: false, code: 500, message: "invalid cancel status"};
     } else {
-        await saveStatusOrder(id, user.id, 9);
+        await saveStatusOrder(id, user.id, 7);
         const resp = await Order.update({
             orderCancelReasonId: cancel,
-            orderStatusId: 9
+            orderStatusId: 7
         }, { where: { id: id } });
         
         if (resp) {
