@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const PromotionCode = require('../pg/models/PromotionCodes');
+const { getStringBooleanValue } = require('./string.utils');
 const LIMIT = config.defaultLimit;
 
 const cleanData = (data) => {
@@ -97,7 +98,15 @@ const calculateTotal = async(obj) => {
 
   let newSubtotal = validCoupon ? subtotal - couponTotal : subtotal;
 
-  taxes = newSubtotal * TAX;
+  const calculateTaxes = () => {
+    return newSubtotal * TAX;
+  }
+  // If the field is not defined, then calculate tax as usual
+  if (typeof obj.taxable === 'undefined') {
+    taxes = calculateTaxes();
+  } else { // If defined, then check the value and calculate or not based on it
+    taxes = getStringBooleanValue(obj.taxable) ? calculateTaxes() : 0.0 ;
+  }
 
   grandTotal = taxes + newSubtotal + delivery;
 
