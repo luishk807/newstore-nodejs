@@ -19,6 +19,7 @@ const { updateStock, STOCK_MODE } = require('../services/product.stock.service')
 const { callHook } = require('../utils/hooks');
 const HOOKNAMES = require('../constants/hooknames');
 const { IGNORE_ORDER_STATUS } = require('../constants');
+const { getStringBooleanValue } = require('../utils/string.utils');
 const logger = global.logger;
 const LIMIT = config.defaultLimit;
 
@@ -212,6 +213,33 @@ const updateOrder = async(req) => {
     }
 }
 
+/** Gets the basic order entry data from totals and base */
+const getOrderBaseEntry = (totals, baseData) => {
+    return {
+        'subtotal': totals.subtotal,
+        'grandtotal': totals.grandTotal,
+        'tax': totals.taxes,
+        'totalSaved': totals.saved,
+        'delivery': totals.delivery,
+        'coupon': totals.coupon,
+        'shipping_name': checkIfEmpty(baseData.shipping_name) ? null : baseData.shipping_name,
+        'shipping_address': checkIfEmpty(baseData.shipping_address) ? null : baseData.shipping_address,
+        'shipping_addressB': checkIfEmpty(baseData.shipping_addressB) ? null : baseData.shipping_addressB,
+        'shipping_email': checkIfEmpty(baseData.shipping_email) ? null : baseData.shipping_email,
+        'shipping_city': checkIfEmpty(baseData.shipping_city) ? null : baseData.shipping_city,
+        'shipping_country': checkIfEmpty(baseData.shipping_country) ? null : baseData.shipping_country,
+        'shipping_phone': checkIfEmpty(baseData.shipping_phone) ? null : baseData.shipping_phone,
+        'shipping_province': checkIfEmpty(baseData.shipping_province) ? null : baseData.shipping_province,
+        'shipping_township': checkIfEmpty(baseData.shipping_township) ? null : baseData.shipping_township,
+        'shipping_corregimiento': checkIfEmpty(baseData.shipping_corregimiento) ? null : baseData.shipping_corregimiento,
+        'shipping_zip': checkIfEmpty(baseData.shipping_zip) ? null : baseData.shipping_zip,
+        'shipping_zone': checkIfEmpty(baseData.shipping_zone) ? null : baseData.shipping_zone,
+        'shipping_district': checkIfEmpty(baseData.shipping_district) ? null : baseData.shipping_district,
+        'shipping_note': checkIfEmpty(baseData.shipping_note) ? null : baseData.shipping_note,
+        'taxable': getStringBooleanValue(baseData.taxable)
+    };
+}
+
 const updateAdminOrder = async(req) => {
     const body = req.body;
     body['cart'] = body.products;
@@ -221,31 +249,10 @@ const updateAdminOrder = async(req) => {
     const order = await getOrder(id, req.user);
 
     const carts = JSON.parse(body.cart);
-    let email =body.shipping_email;
+    let email = body.shipping_email;
     const getTotal = await calculateTotal(body);
 
-    let entry = {
-      'subtotal': getTotal.subtotal,
-      'grandtotal': getTotal.grandTotal,
-      'tax': getTotal.taxes,
-      'totalSaved': getTotal.saved,
-      'delivery': getTotal.delivery,
-      'coupon': getTotal.coupon,
-      'shipping_name': checkIfEmpty(body.shipping_name) ? null : body.shipping_name,
-      'shipping_address': checkIfEmpty(body.shipping_address) ? null : body.shipping_address,
-      'shipping_addressB': checkIfEmpty(body.shipping_addressB) ? null : body.shipping_addressB,
-      'shipping_email': checkIfEmpty(body.shipping_email) ? null : body.shipping_email,
-      'shipping_city': checkIfEmpty(body.shipping_city) ? null : body.shipping_city,
-      'shipping_country': checkIfEmpty(body.shipping_country) ? null : body.shipping_country,
-      'shipping_phone': checkIfEmpty(body.shipping_phone) ? null : body.shipping_phone,
-      'shipping_province': checkIfEmpty(body.shipping_province) ? null : body.shipping_province,
-      'shipping_township': checkIfEmpty(body.shipping_township) ? null : body.shipping_township,
-      'shipping_corregimiento': checkIfEmpty(body.shipping_corregimiento) ? null : body.shipping_corregimiento,
-      'shipping_zip': checkIfEmpty(body.shipping_zip) ? null : body.shipping_zip,
-      'shipping_zone': checkIfEmpty(body.shipping_zone) ? null : body.shipping_zone,
-      'shipping_district': checkIfEmpty(body.shipping_district) ? null : body.shipping_district,
-      'shipping_note': checkIfEmpty(body.shipping_note) ? null : body.shipping_note,
-    }
+    let entry = getOrderBaseEntry(getTotal, body);
     
     if (!!!isNaN(body.deliveryOptionId)) {
       entry['deliveryOptionId'] = body.deliveryOptionId;
@@ -492,6 +499,8 @@ const getAllOrderWithFilter = async(user, filter) => {
 
     const page = filter.page;
 
+    const limit = filter.limit ? filter.limit : LIMIT;
+
     const sortBy = filter.sortBy ? filter.sortBy : null;
 
     const searchValue = filter.searchValue ? filter.searchValue : null;
@@ -589,10 +598,10 @@ const getAllOrderWithFilter = async(user, filter) => {
     if (page) {
         query = {
             ...query,
-            limit: LIMIT,
+            limit: +limit,
             distinct: true,
             order: orderBy,
-            offset: paginate(page),
+            offset: paginate(page, limit),
         }
     } else {
         query = {
@@ -620,27 +629,7 @@ const createOrder = async(req) => {
     let email =body.shipping_email;;
     const getTotal = await calculateTotal(body);
 
-    let entry = {
-      'subtotal': getTotal.subtotal,
-      'grandtotal': getTotal.grandTotal,
-      'tax': getTotal.taxes,
-      'totalSaved': getTotal.saved,
-      'delivery': getTotal.delivery,
-      'coupon': getTotal.coupon,
-      'shipping_name': checkIfEmpty(body.shipping_name) ? null : body.shipping_name,
-      'shipping_address': checkIfEmpty(body.shipping_address) ? null : body.shipping_address,
-      'shipping_email': checkIfEmpty(body.shipping_email) ? null : body.shipping_email,
-      'shipping_city': checkIfEmpty(body.shipping_city) ? null : body.shipping_city,
-      'shipping_country': checkIfEmpty(body.shipping_country) ? null : body.shipping_country,
-      'shipping_phone': checkIfEmpty(body.shipping_phone) ? null : body.shipping_phone,
-      'shipping_province': checkIfEmpty(body.shipping_province) ? null : body.shipping_province,
-      'shipping_township': checkIfEmpty(body.shipping_township) ? null : body.shipping_township,
-      'shipping_corregimiento': checkIfEmpty(body.shipping_corregimiento) ? null : body.shipping_corregimiento,
-      'shipping_zip': checkIfEmpty(body.shipping_zip) ? null : body.shipping_zip,
-      'shipping_zone': checkIfEmpty(body.shipping_zone) ? null : body.shipping_zone,
-      'shipping_district': checkIfEmpty(body.shipping_district) ? null : body.shipping_district,
-      'shipping_note': checkIfEmpty(body.shipping_note) ? null : body.shipping_note,
-    }
+    let entry = getOrderBaseEntry(getTotal, body)
     
     if (!!!isNaN(body.deliveryOptionId)) {
       entry['deliveryOptionId'] = body.deliveryOptionId;

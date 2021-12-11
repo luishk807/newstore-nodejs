@@ -130,6 +130,10 @@ const Order = sequelize.define('orders', {
   },
   deliveryServiceFee: {
     type: Sequelize.DECIMAL
+  },
+  taxable: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: true
   }
 });
 
