@@ -499,6 +499,8 @@ const getAllOrderWithFilter = async(user, filter) => {
 
     const page = filter.page;
 
+    const limit = filter.limit ? filter.limit : LIMIT;
+
     const sortBy = filter.sortBy ? filter.sortBy : null;
 
     const searchValue = filter.searchValue ? filter.searchValue : null;
@@ -596,10 +598,10 @@ const getAllOrderWithFilter = async(user, filter) => {
     if (page) {
         query = {
             ...query,
-            limit: LIMIT,
+            limit: +limit,
             distinct: true,
             order: orderBy,
-            offset: paginate(page),
+            offset: paginate(page, limit),
         }
     } else {
         query = {
