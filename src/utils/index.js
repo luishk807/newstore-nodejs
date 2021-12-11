@@ -16,7 +16,7 @@ const checkIfEmpty = (data) => {
 }
 
 const validNumber = (data) => {
-  return data == 'null' || data == "undefined" || data != '' ? +data : null;
+  return data == 'null' || data == "undefined" || data == "NaN" || data == '' ? null : +data;
 }
 
 const getTokenData = (authToken) => {
