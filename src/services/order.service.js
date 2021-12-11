@@ -515,14 +515,26 @@ const getAllOrderWithFilter = async(user, filter) => {
     if (searchBy && searchValue) {
         const check  = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name='orders' and column_name='${searchBy}'`, { raw: true});
         if (check && check[0].length) {
+            console.log("ittt good")
             switch(searchBy) {
-                case 'shipping_name':
                 case 'order_number':
                 case 'shipping_phone': {
+                    console.log("its' orderrr")
                     query = {
                         ...query,
                         where: {
                            [`${searchBy}`]: {
+                                [Op.iLike]: `%${searchValue}%`
+                            }
+                        }
+                    }
+                    break;
+                }
+                case 'shipping_name': {
+                    query = {
+                        ...query,
+                        where: {
+                            shipping_name: {
                                 [Op.iLike]: `%${searchValue}%`
                             }
                         }
@@ -545,7 +557,7 @@ const getAllOrderWithFilter = async(user, filter) => {
         query = {
             ...query,
             where: {
-                ...where,
+                ...query.where,
                 orderStatusId: {
                     [Op.notIn]: IGNORE_ORDER_STATUS
                 }
