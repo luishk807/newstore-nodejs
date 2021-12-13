@@ -236,7 +236,7 @@ const getOrderBaseEntry = (totals, baseData) => {
         'shipping_zone': checkIfEmpty(baseData.shipping_zone) ? null : baseData.shipping_zone,
         'shipping_district': checkIfEmpty(baseData.shipping_district) ? null : baseData.shipping_district,
         'shipping_note': checkIfEmpty(baseData.shipping_note) ? null : baseData.shipping_note,
-        'taxable': getStringBooleanValue(baseData.taxable)
+        'taxable': (typeof baseData.taxable === 'undefined') ? true : getStringBooleanValue(baseData.taxable)
     };
 }
 
