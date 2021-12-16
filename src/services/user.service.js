@@ -56,6 +56,18 @@ const findById = async(id) => {
       where:{
         id: id
       },
+      attributes: [
+        'first_name',
+        'last_name',
+        'email',
+        'mobile',
+        'userRole',
+        'phone',
+        'img',
+        'status',
+        'gender',
+        'date_of_birth'
+      ],
       include: includes
     });
 }
@@ -215,7 +227,12 @@ const create = async (user, file, isAdmin = false) => {
 
         try {
             const user = await User.create(dataEntry);
-            sendToHook('create', user.get({ plain: true }));
+            try {
+              const plainUser = user.get({ plain: true });
+              sendToHook('create', { ...plainUser, password: null }); // Send to hook without password
+            } catch (error) {
+              logger.error('Error during sendToHook for user create event');
+            }
             return user;
         } catch (err) {
             logger.error("Error creating user", err);
