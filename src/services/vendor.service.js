@@ -38,8 +38,10 @@ const deleteVendor = async(id) => {
 
 const updateVendor = async(body, file = null, id) => {
   let dataInsert = null;
+  const body = req.body;
   const vid = id;
 
+    
   if (file) {
     // insert image
     let myFile = file.originalname.split('.');
