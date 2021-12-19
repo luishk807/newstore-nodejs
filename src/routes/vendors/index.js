@@ -72,7 +72,7 @@ router.get('/user', [verify], async(req, res, next) => {
   // get products
 
   if (!req.query.id) {
-    res.status(200).json(null);
+    res.status(200).json([]);
     return;
   }
 
@@ -90,7 +90,7 @@ router.get('/user', [verify], async(req, res, next) => {
 
 router.get('/:id', async(req, res, next) => {
   if (!req.params.id) {
-    res.status(200).json(null);
+    res.status(200).json([]);
     return;
   }
   
