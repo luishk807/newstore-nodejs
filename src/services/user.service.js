@@ -66,7 +66,6 @@ const findById = async(id) => {
         'img',
         'status',
         'gender',
-        'date_of_birth'
       ],
       include: includes
     });
@@ -141,7 +140,6 @@ const update = async(body, id, file, isAdmin = false) => {
       dataInsert = {
         'last_name': body.last_name,
         'first_name': body.first_name,
-        'date_of_birth': body.date_of_birth,
         'phone': body.phone,
         'gender': body.gender,
         'mobile': body.mobile,
@@ -153,7 +151,6 @@ const update = async(body, id, file, isAdmin = false) => {
       dataInsert = {
         'last_name': body.last_name,
         'first_name': body.first_name,
-        'date_of_birth': body.date_of_birth,
         'phone': body.phone,
         'gender': body.gender,
         'mobile': body.mobile,
@@ -202,7 +199,6 @@ const create = async (user, file, isAdmin = false) => {
             last_name: user.last_name,
             first_name: user.first_name,
             password: hash,
-            date_of_birth: user.date_of_birth,
             phone: user.phone,
             gender: user.gender,
             mobile: user.mobile,
