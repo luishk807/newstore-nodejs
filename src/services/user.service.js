@@ -104,6 +104,25 @@ const getAllUsers = async(req) => {
   return await User.findAll(query)
 }
 
+const checkEmailAvailable = async(email, id = null) => {
+
+  const where = {
+    email: email
+  }
+
+  if (id) {
+    where['id'] = {
+      [Op.ne]: id
+    }
+  }
+
+  const resp = await User.findOne({
+    where
+  });
+
+  return !resp;
+}
+
 const update = async(body, id, file, isAdmin = false) => {
     let dataInsert = null;
   
@@ -244,6 +263,7 @@ const create = async (user, file, isAdmin = false) => {
 
 module.exports = {
     findById,
+    checkEmailAvailable,
     getAllUsers,
     deleteById,
     create,

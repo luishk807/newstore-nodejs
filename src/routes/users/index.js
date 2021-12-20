@@ -37,6 +37,13 @@ router.put('/:id',[verify, parser.single('image')], async(req, res, next) => {
   const body = req.body;
   const id = req.params.id;
 
+  const isEmailAvailable = await controller.checkEmailAvailable(body.email, id);
+
+  if (!isEmailAvailable) {
+    res.status(500).json({status: false, message: "Email address already in use"});
+    return;
+  }
+  
   
   const role = req.user ? req.user.type : null;
 
@@ -64,6 +71,14 @@ router.post('/', [parser.single('image')], async(req, res, next) => {
   const userData = getTokenData(req.headers['authorization']);
 
   const userRole = userData ? Number(userData.type) : -1;
+
+  const isEmailAvailable = await controller.checkEmailAvailable(body.email);
+
+  if (!isEmailAvailable) {
+    res.status(400).json({status: false, message: "Email address already in use"});
+    return;
+  }
+  
 
   try {
     const user = await controller.create(body, req.file, config.adminRoles.includes(userRole));
