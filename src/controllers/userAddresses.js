@@ -8,5 +8,6 @@ module.exports = {
     getUserAdressByUserId: userAddress.getUserAdressByUserId,
     getUserAdresses: userAddress.getUserAdresses,
     getUserAdressesByIdAndUser: userAddress.getUserAdressesByIdAndUser,
-    checkValidUser: userAddress.checkValidUser
+    checkValidUser: userAddress.checkValidUser,
+    setFavoriteAddressByUser: userAddress.setFavoriteAddressByUser
 }
