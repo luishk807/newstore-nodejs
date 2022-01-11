@@ -8,15 +8,16 @@ router.all('*', cors());
 router.post('/', [parser.none()], async(req, res, next) => {
   const body = req.body;
   const resp = await sendgrid.sendContactEmail(body.email, body.subject, body.message);
-  if (resp) {
+  console.log("heeeee", resp)
+  if (resp.status) {
     res.status(200).json({
       status: true,
-      message: 'Email Sent',
+      message: resp.message,
     });
   } else {
     res.status(500).json({
       status: false,
-      message: 'Unable to send email, please try again later',
+      message: resp.message,
     });
   }
 });
