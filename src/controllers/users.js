@@ -2,7 +2,7 @@ const service = require('../services/user.service');
 
 module.exports = {
     findById: service.findById,
-    checkEmailAvailable: service.checkEmailAvailable,
+    isEmailTaken: service.isEmailTaken,
     deleteById: service.deleteById,
     create: service.create,
     getAllUsers: service.getAllUsers,

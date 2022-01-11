@@ -104,7 +104,7 @@ const getAllUsers = async(req) => {
   return await User.findAll(query)
 }
 
-const checkEmailAvailable = async(email, id = null) => {
+const isEmailTaken = async(email, id = null) => {
 
   const where = {
     email: email
@@ -120,7 +120,7 @@ const checkEmailAvailable = async(email, id = null) => {
     where
   });
 
-  return !resp;
+  return !!resp;
 }
 
 const update = async(body, id, file, isAdmin = false) => {
@@ -263,7 +263,7 @@ const create = async (user, file, isAdmin = false) => {
 
 module.exports = {
     findById,
-    checkEmailAvailable,
+    isEmailTaken,
     getAllUsers,
     deleteById,
     create,
