@@ -17,19 +17,34 @@ router.delete('/:id', verify, async(req, res, next) => {
   }
 });
 
+router.put('/favorite/:id/address', [verify, parser.none()], async(req, res, next) => {
+  const body = req.body;
+
+  const userId = +req.user.id;
+
+  try {
+    const address = await controller.setFavoriteAddressByUser(req.params.id, userId);
+    res.status(200).json({status: true, message: 'Success: Adddress Saved', data: address});
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
 
 router.put('/:id', [verify, parser.none()], async(req, res, next) => {
   const body = req.body;
 
-  if (req.user && !req.body.user) {
-    body['user'] = req.user.id;
+  const userId = +req.body?.user;
+
+  if (req.user && !userId) {
+    body['user'] = +req.user.id;
   }
+
+  console.log("the body", body, ' the id', req.params.id)
 
   try {
     const address = await controller.saveUserAdress(body, req.params.id);
     res.status(200).json({status: true, message: 'Success: Adddress Saved', data: address});
   } catch(err) {
-    console.log("err", err)
     res.status(500).json({status: false, message: err});
   }
 });

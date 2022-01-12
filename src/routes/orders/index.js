@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const cors = require('cors');
 const verify = require('../../middlewares/verifyToken');
+const verifyTokenPublic = require('../../middlewares/verifyTokenPublic');
 const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const parser = require('../../middlewares/multerParser');
 const controller = require('../../controllers/orders');
@@ -92,7 +93,7 @@ router.put('/admin-status/bulk/update', [verifyAdmin, parser.none()], async(req,
   }
 });
 
-router.post('/', [parser.none()], async(req, res, next) => {
+router.post('/', [verifyTokenPublic, parser.none()], async(req, res, next) => {
   try {
     const resp = await controller.createOrder(req);
     if (resp) {

@@ -1,5 +1,7 @@
 const UserAddress = require('../pg/models/UserAddresses');
 const includes = ['addressesUsers', 'addressCountry', 'addressProvince', 'addressDistrict', 'addressCorregimiento', 'addressZone']; 
+const { checkIfEmpty } = require('../utils');
+
 const { Op } = require('sequelize');
 
 const deleteUserAdressById = async(id) => {
@@ -37,23 +39,28 @@ const createUserAdress = async (obj) => {
     )
   }
   
+  let cleanObj = {}
+  for(const key in body) {
+    cleanObj[key] = !checkIfEmpty(body[key]) ? body[key] : null;
+  }
+
   return await UserAddress.create({
-    'address': body.address,
-    'addressB': body.addressB,
-    'note': body.note,
-    'name': body.name,
-    'zip': body.zip,
+    'address': cleanObj?.address,
+    'addressB': cleanObj?.addressB,
+    'note': cleanObj?.note,
+    'name': cleanObj?.name,
+    'zip': cleanObj?.zip,
     'user': user,
-    'country': body.country,
-    'phone': body.phone,
-    'mobile': body.mobile,
-    'email': body.email,
+    'country': cleanObj?.country,
+    'phone': cleanObj?.phone,
+    'mobile': cleanObj?.mobile,
+    'email': cleanObj?.email,
     'selected': selected,
-    'province': body.province,
-    'district': body.district,
-    'zone': body.zone,
-    'note': body.note,
-    'corregimiento': body.corregimiento,
+    'province': cleanObj?.province,
+    'district': cleanObj?.district,
+    'zone': cleanObj?.zone,
+    'note': cleanObj?.note,
+    'corregimiento': cleanObj?.corregimiento,
   });
 }
 
@@ -63,25 +70,30 @@ const saveUserAdress = async(obj, id) => {
   } else if (obj.unfavorite) {
     return await UserAddress.update({'selected': null},{ where: { id: obj.unfavorite }});
  } else {
-   console.log(obj, 'and', id, 'user', )
     const user = obj && obj.user ? obj.user : null;
+
+    let cleanObj = {}
+    for(const key in obj) {
+      cleanObj[key] = !checkIfEmpty(obj[key]) ? obj[key] : null;
+    }
+
     return await UserAddress.update(
       {
-        'address': obj.address,
-        'addressB': obj.addressB,
-        'note': obj.note,
-        'name': obj.name,
-        'zip': obj.zip,
+        'address': cleanObj?.address,
+        'addressB': cleanObj?.addressB,
+        'note': cleanObj?.note,
+        'name': cleanObj?.name,
+        'zip': cleanObj?.zip,
         'user': user,
-        'email': obj.email,
-        'country': obj.country,
-        'phone': obj.phone,
-        'mobile': obj.mobile,
-        'province': obj.province,
-        'district': obj.district,
-        'zone': obj.zone,
-        'note': obj.note,
-        'corregimiento': obj.corregimiento,
+        'email': cleanObj?.email,
+        'country': cleanObj?.country,
+        'phone': cleanObj?.phone,
+        'mobile': cleanObj?.mobile,
+        'province': cleanObj?.province,
+        'district': cleanObj?.district,
+        'zone': cleanObj?.zone,
+        'note': cleanObj?.note,
+        'corregimiento': cleanObj?.corregimiento,
       },
       {
         where: {
@@ -89,6 +101,35 @@ const saveUserAdress = async(obj, id) => {
         }
       }
     )
+  }
+}
+
+const setFavoriteAddressByUser = async(id, userId) => {
+  const getAddress = await UserAddress.findOne({
+    where: {
+      id: id,
+      userId: userId
+    }
+  })
+
+  if (getAddress) {
+    if (getAddress.selected) {
+      return await UserAddress.update({
+        selected: null
+      },{
+        where: {
+          id: id
+        }
+      })
+    } else {
+      return await UserAddress.update({
+        selected: true
+      },{
+        where: {
+          id: id
+        }
+      })
+    }
   }
 }
 
@@ -116,5 +157,6 @@ module.exports = {
     getUserAdressByUserId,
     getUserAdresses,
     getUserAdressesByIdAndUser,
-    checkValidUser
+    checkValidUser,
+    setFavoriteAddressByUser
 }

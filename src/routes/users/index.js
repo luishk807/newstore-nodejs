@@ -1,17 +1,10 @@
 const router = require('express').Router();
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const { Op } = require('sequelize');
-const uuid = require('uuid');
-const { response } = require('express');
 const config = require('../../config');
-const User = require('../../pg/models/Users');
 const verify = require('../../middlewares/verifyToken');
 const verifyAdmin = require('../../middlewares/verifyTokenAdmin');
 const parser = require('../../middlewares/multerParser');
-const s3 = require('../../services/storage.service');
 const controller = require('../../controllers/users');
-const includes = ['useStatus','userRoles'];
 const { checkCorsOrigins } = require('../../utils/server');
 const { getTokenData } = require('../../utils');
 const corsOption = {
@@ -19,8 +12,6 @@ const corsOption = {
 }
 
 router.all('*', cors(corsOption));
-
-const aw3Bucket = `${config.s3.bucketName}/users`;
 
 // TODO: only admin can delete
 router.delete('/:id',verifyAdmin, async(req, res, next) => {
@@ -33,12 +24,10 @@ router.delete('/:id',verifyAdmin, async(req, res, next) => {
       if (user.notFound) {
         res.status(400).json(user);
       } else {
-        console.log("err", user)
         res.status(500).json(user);
       }
     }
   } catch(err) {
-    console.log("err", err)
     res.status(500).json({status:false, message: err})
   }
 });
@@ -48,6 +37,13 @@ router.put('/:id',[verify, parser.single('image')], async(req, res, next) => {
   const body = req.body;
   const id = req.params.id;
 
+  const isEmailTaken = await controller.isEmailTaken(body.email, id);
+
+  if (isEmailTaken) {
+    res.status(500).json({status: false, message: "Email address already in use"});
+    return;
+  }
+  
   
   const role = req.user ? req.user.type : null;
 
@@ -75,6 +71,13 @@ router.post('/', [parser.single('image')], async(req, res, next) => {
   const userData = getTokenData(req.headers['authorization']);
 
   const userRole = userData ? Number(userData.type) : -1;
+
+  const isEmailTaken = await controller.isEmailTaken(body.email);
+
+  if (isEmailTaken) {
+    res.status(400).json({status: false, message: "Email address already in use"});
+    return;
+  }
 
   try {
     const user = await controller.create(body, req.file, config.adminRoles.includes(userRole));
