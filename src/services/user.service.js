@@ -56,6 +56,17 @@ const findById = async(id) => {
       where:{
         id: id
       },
+      attributes: [
+        'first_name',
+        'last_name',
+        'email',
+        'mobile',
+        'userRole',
+        'phone',
+        'img',
+        'status',
+        'gender',
+      ],
       include: includes
     });
 }
@@ -91,6 +102,25 @@ const getAllUsers = async(req) => {
   ]
 
   return await User.findAll(query)
+}
+
+const isEmailTaken = async(email, id = null) => {
+
+  const where = {
+    email: email
+  }
+
+  if (id) {
+    where['id'] = {
+      [Op.ne]: id
+    }
+  }
+
+  const resp = await User.findOne({
+    where
+  });
+
+  return !!resp;
 }
 
 const update = async(body, id, file, isAdmin = false) => {
@@ -129,7 +159,6 @@ const update = async(body, id, file, isAdmin = false) => {
       dataInsert = {
         'last_name': body.last_name,
         'first_name': body.first_name,
-        'date_of_birth': body.date_of_birth,
         'phone': body.phone,
         'gender': body.gender,
         'mobile': body.mobile,
@@ -141,7 +170,6 @@ const update = async(body, id, file, isAdmin = false) => {
       dataInsert = {
         'last_name': body.last_name,
         'first_name': body.first_name,
-        'date_of_birth': body.date_of_birth,
         'phone': body.phone,
         'gender': body.gender,
         'mobile': body.mobile,
@@ -190,7 +218,6 @@ const create = async (user, file, isAdmin = false) => {
             last_name: user.last_name,
             first_name: user.first_name,
             password: hash,
-            date_of_birth: user.date_of_birth,
             phone: user.phone,
             gender: user.gender,
             mobile: user.mobile,
@@ -215,7 +242,12 @@ const create = async (user, file, isAdmin = false) => {
 
         try {
             const user = await User.create(dataEntry);
-            sendToHook('create', user.get({ plain: true }));
+            try {
+              const plainUser = user.get({ plain: true });
+              sendToHook('create', { ...plainUser, password: null }); // Send to hook without password
+            } catch (error) {
+              logger.error('Error during sendToHook for user create event');
+            }
             return user;
         } catch (err) {
             logger.error("Error creating user", err);
@@ -231,6 +263,7 @@ const create = async (user, file, isAdmin = false) => {
 
 module.exports = {
     findById,
+    isEmailTaken,
     getAllUsers,
     deleteById,
     create,

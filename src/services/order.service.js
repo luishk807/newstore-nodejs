@@ -236,7 +236,7 @@ const getOrderBaseEntry = (totals, baseData) => {
         'shipping_zone': checkIfEmpty(baseData.shipping_zone) ? null : baseData.shipping_zone,
         'shipping_district': checkIfEmpty(baseData.shipping_district) ? null : baseData.shipping_district,
         'shipping_note': checkIfEmpty(baseData.shipping_note) ? null : baseData.shipping_note,
-        'taxable': getStringBooleanValue(baseData.taxable)
+        'taxable': (typeof baseData.taxable === 'undefined') ? true : getStringBooleanValue(baseData.taxable)
     };
 }
 
@@ -635,9 +635,9 @@ const getAllOrderWithFilter = async(user, filter) => {
 
 const createOrder = async(req) => {
     const body = req.body;
-    const userId = req.user ? req.user.id : null;
     const carts = JSON.parse(body.cart);
-    const entryUser = parseInt(body.userid);
+    const userId = req.user ? req.user.id : null;
+    const entryUser = body.userid ? +body.userid : userId;
     let email =body.shipping_email;;
     const getTotal = await calculateTotal(body);
 
@@ -660,8 +660,8 @@ const createOrder = async(req) => {
         entry['promotionCode'] = body.promotionCode;
       }
     if (!!!isNaN(entryUser)) {
-      entry['userId'] = body.userid;
-      const findUser = await User.findOne({where: { id: body.userid}});
+      entry['userId'] = entryUser;
+      const findUser = await User.findOne({where: { id: entryUser}});
       if (findUser) {
           email = findUser.email;
       }
