@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "mocha": "^8.4.0",
-    "prisma": "~2.21.2"
+    "prisma": "~2.21.2",
+    "sequelize-cli": "^6.4.1"
   }
 }
