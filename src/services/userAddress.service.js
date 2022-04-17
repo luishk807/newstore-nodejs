@@ -1,7 +1,7 @@
 const UserAddress = require('../pg/models/UserAddresses');
-const includes = ['addressesUsers', 'addressCountry', 'addressProvince', 'addressDistrict', 'addressCorregimiento', 'addressZone']; 
+const includes = ['addressesUsers', 'addressCountry', 'addressProvince', 'addressDistrict', 'addressCorregimiento', 'addressZone', 'userAddressStatus']; 
 const { checkIfEmpty } = require('../utils');
-
+const { TRASHED_STATUS } = require('../constants');
 const { Op } = require('sequelize');
 
 const deleteUserAdressById = async(id) => {
@@ -10,6 +10,19 @@ const deleteUserAdressById = async(id) => {
       id: id
     }
   })
+}
+
+const softDeleteUserAdressById = async(id) => {
+  return await UserAddress.update(
+    {
+      'status': TRASHED_STATUS,
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
 }
 
 const checkValidUser = async(id, user) => {
@@ -25,6 +38,48 @@ const checkValidUser = async(id, user) => {
 const createUserAdress = async (obj) => {
   const body = obj.body;
   const user = obj.body && obj.body.user ? obj.body.user : obj.user.id;
+  let selected = body.selected ? body.selected : null;
+  if (body.selected) {
+    await UserAddress.update(
+      {
+        'selected': null
+      },
+      {
+        where: {
+          userId: user
+        }
+      }
+    )
+  }
+  
+  let cleanObj = {}
+  for(const key in body) {
+    cleanObj[key] = !checkIfEmpty(body[key]) ? body[key] : null;
+  }
+
+  return await UserAddress.create({
+    'address': cleanObj?.address,
+    'addressB': cleanObj?.addressB,
+    'note': cleanObj?.note,
+    'name': cleanObj?.name,
+    'zip': cleanObj?.zip,
+    'user': user,
+    'country': cleanObj?.country,
+    'phone': cleanObj?.phone,
+    'mobile': cleanObj?.mobile,
+    'email': cleanObj?.email,
+    'selected': selected,
+    'province': cleanObj?.province,
+    'district': cleanObj?.district,
+    'zone': cleanObj?.zone,
+    'note': cleanObj?.note,
+    'corregimiento': cleanObj?.corregimiento,
+  });
+}
+
+const createUserAdressByUserId = async (obj, id) => {
+  const body = obj.body;
+  const user = obj.params.id;
   let selected = body.selected ? body.selected : null;
   if (body.selected) {
     await UserAddress.update(
@@ -137,26 +192,48 @@ const getUserAdressById = async(id) => {
   return await UserAddress.findOne({ where: { id: id }, include: includes});
 }
 
+const getActiveUserAdressById = async(id) => {
+  return await UserAddress.findOne({ where: { id: id, statusId: 1 }, include: includes});
+}
+
 const getUserAdressByUserId = async(id) => {
   return await UserAddress.findAll({ where: { userId: id }, include: includes});
+}
+
+const getActiveUserAdressByUserId = async(id) => {
+  return await UserAddress.findAll({ where: { userId: id, statusId: 1 }, include: includes});
 }
 
 const getUserAdresses = async(id) => {
   return await UserAddress.findAll({ include: includes});
 }
 
+const getActiveUserAdresses = async(id) => {
+  return await UserAddress.findAll({ where: { statusId: 1 }, include: includes});
+}
+
 const getUserAdressesByIdAndUser = async(id, user) => {
   return await UserAddress.findOne({ where: { id: id, userId: user }, include: includes});
 }
 
+const getActiveUserAdressesByIdAndUser = async(id, user) => {
+  return await UserAddress.findOne({ where: { id: id, userId: user, statusId: 1 }, include: includes});
+}
+
 module.exports = {
     deleteUserAdressById,
+    softDeleteUserAdressById,
     createUserAdress,
+    createUserAdressByUserId,
     saveUserAdress,
     getUserAdressById,
     getUserAdressByUserId,
     getUserAdresses,
     getUserAdressesByIdAndUser,
+    getActiveUserAdressById,
+    getActiveUserAdresses,
+    getActiveUserAdressesByIdAndUser,
+    getActiveUserAdressByUserId,
     checkValidUser,
     setFavoriteAddressByUser
 }

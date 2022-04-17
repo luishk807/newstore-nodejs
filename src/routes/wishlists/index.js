@@ -9,6 +9,21 @@ router.all('*', cors());
 router.delete('/:id', verify, async(req, res, next) => {
   // delete wishlist
   try {
+    const wishlist = await controller.softDeleteUserWishlist(req.params.id);
+    if (wishlist) {
+      res.status(200).json({ status: true, message: "Wishlist successfully deleted" });
+    } else {
+      res.status(400).json({ status: false, message: "Error on deleting Wishlist!", error: e.toString(), req: req.body });
+    }
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+
+});
+
+router.delete('/admin/:id', verify, async(req, res, next) => {
+  // delete wishlist
+  try {
     const wishlist = await controller.deleteWishlist(req.params.id);
     if (wishlist) {
       res.status(200).json({ status: true, message: "Wishlist successfully deleted" });

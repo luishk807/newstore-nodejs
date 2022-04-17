@@ -1,6 +1,7 @@
 const Vendor = require('../pg/models/Vendors');
 const { Op } = require('sequelize');
-const includes = ['vendor_rates', 'vendorUser','vendorCountry'];
+const { TRASHED_STATUS } = require('../constants');
+const includes = ['vendor_rates', 'vendorUser','vendorCountry', 'vendorStatus'];
 const config = require('../config');
 const s3 = require('../services/storage.service');
 const uuid = require('uuid');
@@ -34,6 +35,19 @@ const deleteVendor = async(id) => {
       return false;
     }
   }
+}
+
+const softDeleteVendorById = async(id) => {
+  return await Vendor.update(
+    {
+      'status': TRASHED_STATUS,
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
 }
 
 const updateVendor = async(body, file = null, id) => {
@@ -174,27 +188,38 @@ const createVendor = async(body, file = null) => {
 }
 
 const getVendorByUserId = async(userId) => {
-  await Vendor.findOne({ where: {user: userId}, include: includes});
+  return await Vendor.findOne({ where: {user: userId}, include: includes});
+}
+
+const getVendorsByIds = async(ids) => {
+  return await Vendor.findAll({ where: { id: { [Op.in]: ids}}, include: includes});
+}
+
+const getActiveVendorById = async(id) => {
+  return await Vendor.findOne({ where: {id: id, statusId: 1}, include: includes});
 }
 
 const getVendorById = async(id) => {
-  await Vendor.findOne({ where: {id: id}, include: includes});
+  return await Vendor.findOne({ where: {id: id}, include: includes});
 }
 
 const getAllActiveVendors = async() => {
-  await Vendor.findOne({ where: {status: 1}, include: includes});
+  return await Vendor.findAll({ where: {statusId: 1}, include: includes});
 }
 
 const getAllVendors = async() => {
-  await Vendor.findAll({include: includes});
+  return await Vendor.findAll({include: includes});
 }
 
 module.exports = {
   deleteVendor,
+  softDeleteVendorById,
   updateVendor,
   createVendor,
   getVendorByUserId,
   getVendorById,
+  getVendorsByIds,
+  getActiveVendorById,
   getAllActiveVendors,
   getAllVendors
 }

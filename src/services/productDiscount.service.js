@@ -26,6 +26,27 @@ const createProductDiscount = async (value) => {
     });
 }
 
+const deleteProductDiscount = async (id) => {
+    if (id) {
+        const colors = await ProductDiscount.findOne({ where: { id: id }, include: includes});
+        return colors;
+    }
+    return null;
+}
+
+const softDeleteProductDiscountById = async (id) => {
+    return await ProductDiscount.update(
+        {
+            'status': TRASHED_STATUS,
+        },
+        {
+            where: {
+                id: id
+            }
+        }
+    )
+}
+
 const updateProductDiscount = async (value) => {
     const body = value.body;
     const id = value.params.id;
@@ -122,6 +143,8 @@ const getProductDiscounts = async (page = null) => {
 
 module.exports = {
     createProductDiscount,
+    softDeleteProductDiscountById,
+    deleteProductDiscount,
     updateProductDiscount,
     getProductDiscountById,
     getProductDiscountByProductId,

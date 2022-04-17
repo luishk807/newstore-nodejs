@@ -11,6 +11,8 @@ const User = require('./Users');
 
 const Country = require('./Countries');
 
+const Statuses = require('./Statuses');
+
 const Vendor = sequelize.define('vendor', {
   name: {
     type: Sequelize.TEXT
@@ -72,5 +74,6 @@ Vendor.hasMany(Product);
 Vendor.belongsTo(Country, {foreignKey: 'countryId', as: "vendorCountry"});
 Vendor.belongsTo(User, {foreignKey: 'userId', as: "vendorUser"});
 Product.belongsTo(Vendor, {foreignKey: 'vendorId', as: 'productVendor'});
+Vendor.belongsTo(Statuses, { foreignKey: 'statusId', as: 'vendorStatus'});
 
 module.exports = Vendor;
