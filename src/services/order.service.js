@@ -2,23 +2,20 @@ const Order = require('../pg/models/Orders');
 const OrderActivity = require('../pg/models/OrderActivities');
 const OrderProduct = require('../pg/models/OrderProducts');
 const ProductBundle = require('../pg/models/ProductBundles');
-const Category = require('../pg/models/Categories');
-const Brand = require('../pg/models/Brands');
 const ProductDiscount = require('../pg/models/ProductDiscounts');
 const User = require('../pg/models/Users');
 const sendgrid = require('../controllers/sendgrid/orders');
 const { calculateTotal, checkIfEmpty, paginate } = require('../utils');
 const config = require('../config');
-const s3 = require('./storage.service');
 const includes = ['orderCancelReasons', 'orderStatuses', 'orderUser', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost', 'orderPromotion'];
 const includes_non_user = ['orderCancelReasons', 'orderStatuses', 'orderOrderProduct', 'deliveryOrder', 'orderOrderPayment', 'orderDeliveryServiceGroupCost'];
 const orderBy = [['createdAt', 'DESC'], ['updatedAt', 'DESC']];
-const { Op, where } = require('sequelize');
+const { Op } = require('sequelize');
 const sequelize = require('../pg/sequelize')
 const { updateStock, STOCK_MODE } = require('../services/product.stock.service');
 const { callHook } = require('../utils/hooks');
 const HOOKNAMES = require('../constants/hooknames');
-const { IGNORE_ORDER_STATUS } = require('../constants');
+const { IGNORE_ORDER_STATUS, TRASHED_ORDER } = require('../constants');
 const { getStringBooleanValue } = require('../utils/string.utils');
 const logger = global.logger;
 const LIMIT = config.defaultLimit;
@@ -78,9 +75,20 @@ const getOrder = async(id, user) => {
 
     let order = null;
     if (!config.adminRoles.includes(+user.type)) {
-        order = await Order.findOne({ where: {id: id, userId: user.id }, include: includes});
+        order = await Order.findOne({ where: {
+            id: id, 
+            userId: user.id,
+            orderStatusId: {
+                [Op.notIn]: TRASHED_ORDER
+            }
+        }, include: includes});
     } else {
-        order = await Order.findOne({ where: {id: id }, include: includes});
+        order = await Order.findOne({ where: {
+            id: id,
+            orderStatusId: {
+                [Op.notIn]: TRASHED_ORDER
+            }
+        }, include: includes});
     }
 
     return order;
@@ -97,6 +105,27 @@ const deleteOrderById = async(id, user) => {
         // STOCK_MODE.INCREASE, because we want to increase our product stock again
         await updateStock(order.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
         const result = await Order.destroy({ where: { id: order.id } }, { transaction: t });
+        t.commit();
+        return result;
+    } catch (error) {
+        logger.error(`Error updating stock and delting the order: ${id}`, error);
+        t.rollback();
+    }
+}
+
+const trashedOrderById = async(id, user) => {
+    const order = await getOrder(id, user);
+
+    if (!order) {
+        return { code: 500, status: false, message: "Order invalido" }
+    }
+   const t  = await sequelize.transaction();
+    try {
+        // STOCK_MODE.INCREASE, because we want to increase our product stock again
+        await updateStock(order.orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
+        const result = await Order.update({
+            orderStatusId: TRASHED_ORDER
+        }, { where: { id: id } }, { transaction: t });
         t.commit();
         return result;
     } catch (error) {
@@ -139,6 +168,63 @@ const deleteOrderStatusOnBulkOrderNumber = async(req) => {
                 }   
             }
         }
+    } else {
+        return { code: 401, status: false, message: 'not authorized'}
+    }
+}
+
+const trashedOrderStatusOnBulkOrderNumber = async(req) => {
+    let ids = null;
+
+    const getIds = req.params.ids.split(',');
+
+    if (getIds) {
+        ids = getIds.map(item => String(item));
+    } else {
+        ids = req.params.ids
+    }
+
+    const user = req.user;
+
+    if (ids) {
+        const orders = await Order.findAll({where: {order_number: ids}})
+
+        var orderPromises = [];
+        var orderUpdatePromises = [];
+        var stockUpdatePromises = [];
+        
+        const t  = await sequelize.transaction();
+
+        for (let orderKey = 0; orderKey < orders.length; ++orderKey) {
+            const currOrder = orders[orderKey];
+
+            let getCurrOrderQuery = getOrder(currOrder.id, user);
+            orderPromises.push(getCurrOrderQuery);
+        }
+
+        const ord = await Promise.all(orderPromises);
+
+        for (let orderKey = 0; orderKey < ord.length; ++orderKey) {
+            let getCurrOrderQuery = Order.update({
+                orderStatusId: TRASHED_ORDER
+            }, { where: { id: ord[orderKey].id } }, { transaction: t });
+
+            let updateStockQuery = updateStock(ord[orderKey].orderOrderProduct, { transaction: t, stockMode: STOCK_MODE.INCREASE });
+
+            orderUpdatePromises.push(getCurrOrderQuery);
+            stockUpdatePromises.push(updateStockQuery);
+        }
+
+        try {
+            await Promise.all(stockUpdatePromises); 
+            await Promise.all(orderUpdatePromises);
+
+            t.commit();
+        } catch (error) {
+            logger.error(`Error updating stock and delting the order: ${getCurrOrder.id}`, error);
+            t.rollback();
+        } 
+
     } else {
         return { code: 401, status: false, message: 'not authorized'}
     }
@@ -317,8 +403,10 @@ const updateAdminOrder = async(req) => {
             } else {
                 await isolatedTransaction.commit();
             }
-
-            await OrderProduct.destroy({
+            
+            await OrderProduct.update({
+                orderStatusId: TRASHED_ORDER,
+            },{
                 where: {
                     orderId: id
                 }
@@ -461,23 +549,50 @@ const cancelOrder = async(req) => {
 }
 
 const getOrderByOrderNumberEmail = async(orderNumber, email) => {
-    return await Order.findOne({ where: {order_number: orderNumber, shipping_email: email}, include: includes_non_user, order: orderBy});
+    return await Order.findOne({ where: {
+        order_number: orderNumber, 
+        shipping_email: email,
+        orderStatusId: {
+            [Op.ne]: TRASHED_ORDER
+        }
+    }, include: includes_non_user, order: orderBy});
 }
 
 const getOrderByOrderNumber = async(orderNumber) => {
-    return await Order.findOne({ where: {order_number: orderNumber}, include: includes, order: orderBy});
+    return await Order.findOne({ where: {
+        order_number: orderNumber,
+        orderStatusId: {
+            [Op.ne]: TRASHED_ORDER
+        }
+    }, include: includes, order: orderBy});
 }
 
 const getOrderByUser = async(loggedInUser, userId) => {
     if (config.adminRoles.includes(+loggedInUser.type)) {
-        return await Order.findAll({ where: {userId: userId}, include: includes, order: orderBy });
+        return await Order.findAll({ where: {
+            userId: userId,
+            orderStatusId: {
+                [Op.ne]: TRASHED_ORDER
+            }
+        }, include: includes, order: orderBy });
     } else {
-        return await Order.findAll({ where: {userId: userId, userId: loggedInUser.id}, include: includes, order: orderBy });
+        return await Order.findAll({ where: {
+            userId: userId, 
+            userId: loggedInUser.id,
+            orderStatusId: {
+                [Op.ne]: TRASHED_ORDER
+            }
+        }, include: includes, order: orderBy });
     }
 }
 
 const getMyOrders = async(user) => {
-    return await Order.findAll({ where: {userId: user.id}, include: includes, order: orderBy });
+    return await Order.findAll({ where: {
+        userId: user.id, 
+        orderStatusId: {
+            [Op.ne]: TRASHED_ORDER
+        }
+    }, include: includes, order: orderBy });
 }
 
 const getOrderById = async(id, user) => {
@@ -515,7 +630,6 @@ const getAllOrderWithFilter = async(user, filter) => {
     if (searchBy && searchValue) {
         const check  = await sequelize.query(`SELECT column_name FROM information_schema.columns WHERE table_name='orders' and column_name='${searchBy}'`, { raw: true});
         if (check && check[0].length) {
-            console.log("ittt good")
             switch(searchBy) {
                 case 'order_number':
                 case 'shipping_phone': {
@@ -560,6 +674,16 @@ const getAllOrderWithFilter = async(user, filter) => {
                 ...query.where,
                 orderStatusId: {
                     [Op.notIn]: IGNORE_ORDER_STATUS
+                }
+            }
+        };
+    } else {
+        query = {
+            ...query,
+            where: {
+                ...query.where,
+                orderStatusId: {
+                    [Op.notIn]: TRASHED_ORDER
                 }
             }
         };
@@ -777,7 +901,9 @@ const createOrder = async(req) => {
 
 module.exports = {
     deleteOrderById,
+    trashedOrderById,
     deleteOrderStatusOnBulkOrderNumber,
+    trashedOrderStatusOnBulkOrderNumber,
     saveStatusOrder,
     updateOrder,
     updateAdminOrder,

@@ -14,13 +14,14 @@ const moment = require('moment');
 
 const authenticate = async (email, password, onlyAdmin = false) => {
     const cleanEmail = cleanData(email);
+    const userNotMatchRetVal = { code: 500, status: false, message: 'No user found under that information' };
     if (cleanEmail && password) {
         try {
             const credentialsNotMatchRetVal = { code: 401, status: false, message: 'Credentials do not match' };
-            const user = await User.findOne({ where: { email: cleanEmail } });
+            const user = await User.findOne({ where: { email: cleanEmail, status: 1 } });
             
             if (!user) {
-                return credentialsNotMatchRetVal;
+                return userNotMatchRetVal;
             }
 
             const pwdMatch = await bcrypt.compare(password, user.dataValues.password);
@@ -37,7 +38,7 @@ const authenticate = async (email, password, onlyAdmin = false) => {
             return { status: true, message: "Login successful", user: user, authorization: token };
 
         } catch(err) {
-            return { code: 500, status: false, message: "Unable to find user" }
+            return userNotMatchRetVal
         }
     } else {
         return { code: 500, status:false, message: 'Email required and password' }

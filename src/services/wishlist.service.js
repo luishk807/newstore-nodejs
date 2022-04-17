@@ -1,10 +1,24 @@
 const UserWishlist = require('../pg/models/UserWishlists');
 const { Op } = require('sequelize');
+const { TRASHED_STATUS } = require('../constants');
 const includes = ['wishlistProduct','userWishlistUser','userWishlistStatus'];
 
 const deleteWishlist = async(id) => {
   const wishlist = await UserWishlist.findOne({ where: {id: id}});
   return await UserWishlist.destroy({ where: {id: wishlist.id }})
+}
+
+const softDeleteUserWishlist = async(id) => {
+  return await UserWishlist.update(
+    {
+      'status': TRASHED_STATUS
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
 }
 
 const deleteUserWishlist = async(req) => {
@@ -63,6 +77,7 @@ const getAllWishlistByUser = async(user) => {
 
 module.exports = {
   deleteWishlist,
+  softDeleteUserWishlist,
   updateWishlist,
   createWishlist,
   getWishlistById,

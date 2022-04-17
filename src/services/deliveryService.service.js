@@ -1,6 +1,7 @@
 const DeliveryService = require('../pg/models/DeliveryServices');
 const includes = ['deliveryServiceStatus'];
 const { Op } = require('sequelize');
+const { TRASHED_STATUS } = require('../constants');
 
 const createDeliveryService = async(obj) => {
   return await DeliveryService.create({
@@ -32,6 +33,19 @@ const saveDeliveryService = async(obj, id) => {
   })
 }
 
+const softDeleteDeliveryServiceById = async(id) => {
+  return await DeliveryService.update(
+    {
+      'status': TRASHED_STATUS,
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
+}
+
 const deleteDeliveryServiceById = async(id) => {
   return await DeliveryService.destroy({
     where: {
@@ -55,6 +69,7 @@ module.exports = {
     createDeliveryService,
     saveDeliveryService,
     deleteDeliveryServiceById,
+    softDeleteDeliveryServiceById,
     getDeliveryServiceById,
     getDeliveryServices
 }

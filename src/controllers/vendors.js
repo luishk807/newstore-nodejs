@@ -1,11 +1,14 @@
-const service = require('../services/vendor.service');
+const vendor = require('../services/vendor.service');
 
 module.exports = {
-  deleteVendor: service.deleteVendor,
-  updateVendor: service.updateVendor,
-  createVendor: service.createVendor,
-  getVendorByUserId: service.getVendorByUserId,
-  getAllActiveVendors: service.getAllActiveVendors,
-  getVendorById: service.getVendorById,
-  getAllVendors: service.getAllVendors
+  deleteVendor: vendor.deleteVendor,
+  softDeleteVendorById: vendor.softDeleteVendorById,
+  updateVendor: vendor.updateVendor,
+  createVendor: vendor.createVendor,
+  getVendorsByIds: vendor.getVendorsByIds,
+  getVendorByUserId: vendor.getVendorByUserId,
+  getAllActiveVendors: vendor.getAllActiveVendors,
+  getActiveVendorById: vendor.getActiveVendorById,
+  getVendorById: vendor.getVendorById,
+  getAllVendors: vendor.getAllVendors
 }

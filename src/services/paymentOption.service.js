@@ -1,6 +1,7 @@
 const PaymentOption = require('../pg/models/PaymentOptions');
 const includes = ['paymentOptionStatus'];
 const { Op } = require('sequelize');
+const { TRASHED_STATUS } = require('../constants');
 
 const createPaymentOption = async(obj) => {
   return await PaymentOption.create({
@@ -42,6 +43,19 @@ const deletePaymentOptionById = async(id) => {
   })
 }
 
+const softDeletePaymentOptionById = async(id) => {
+  return await PaymentOption.update(
+    {
+      'status': TRASHED_STATUS,
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
+}
+
 const getPaymentOptionById = async(id) => {
     if (id) {
         return await PaymentOption.findOne({ where: { id: id }, include: includes});
@@ -61,6 +75,7 @@ module.exports = {
     createPaymentOption,
     savePaymentOption,
     deletePaymentOptionById,
+    softDeletePaymentOptionById,
     getPaymentOptionById,
     getPaymentOptions,
     getActivePaymentOptions,

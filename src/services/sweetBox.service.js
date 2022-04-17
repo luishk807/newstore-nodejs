@@ -1,4 +1,5 @@
 const SweetBox = require('../pg/models/SweetBoxes');
+const { TRASHED_STATUS } = require('../constants');
 
 const includes = [
   'sweetBoxSweetboxProduct', 
@@ -60,6 +61,19 @@ const deleteSweetBox = async (id) => {
     }
 }
 
+const softDeleteSweetBox = async (id) => {
+    return await SweetBox.update(
+        {
+            'status': TRASHED_STATUS,
+        },
+        {
+            where: {
+                id: id
+            }
+        }
+    )
+}
+
 const searchSweetBoxById = async (id) => {
     const where = {
         id: id
@@ -101,6 +115,7 @@ module.exports = {
     searchSweetBoxById,
     searchActiveSweetBoxById,
     deleteSweetBox,
+    softDeleteSweetBox,
     saveSweetBox,
     createSweetBox,
     getSweetBoxById,

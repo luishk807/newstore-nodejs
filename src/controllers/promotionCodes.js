@@ -9,4 +9,5 @@ module.exports = {
     getPromotionCodes: promotionCode.getPromotionCodes,
     getPromotionCodeByCode: promotionCode.getPromotionCodeByCode,
     deletePromotionCode: promotionCode.deletePromotionCode,
+    softDeletePromotionCodeById: promotionCode.softDeletePromotionCodeById
 }

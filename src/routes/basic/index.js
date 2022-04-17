@@ -41,7 +41,13 @@ router.get('/user', async(req, res, next) => {
     const vendor = await Vendor.findAll({where: {statusId: 1}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
     const brand = await Brand.findAll({where: {statusId: 1}, include:['brandStatus']});
     const gender = await Gender.findAll();
-    const status = await Status.findAll();
+    const status = await Status.findAll({
+      where: {
+        hidden: {
+          [Op.not]: true
+        }
+      }
+    });
     const country = await Country.findAll({
       attributes: ['id', ['nicename', 'name']] //id, first AS firstName
     });
@@ -107,7 +113,13 @@ router.get('/admin', [verify], async(req, res, next) => {
       const vendor = await Vendor.findAll({where: {statusId: 1}, include: ['vendor_rates', 'vendorUser','vendorCountry']});
       const brand = await Brand.findAll({where: {statusId: 1}, include:['brandStatus']});
       const gender = await Gender.findAll();
-      const status = await Status.findAll();
+      const status = await Status.findAll({
+        where: {
+          hidden: {
+            [Op.not]: true
+          }
+        }
+      });
       const zone = await Zone.findAll();
       const country = await Country.findAll({
         attributes: ['id', ['nicename', 'name']] //id, first AS firstName
@@ -129,7 +141,9 @@ router.get('/admin', [verify], async(req, res, next) => {
       const corregimiento = await Corregimiento.findAll();
       const district = await District.findAll();
       const orderCancelReason = await OrderCancelReason.findAll();
-      const orderStatus = await OrderStatus.findAll({where: {statusId: 1}});
+      const orderStatus = await OrderStatus.findAll({where: {
+        statusId: 1
+      }});
       const deliveryService = await DeliveryService.findAll();
       data['user'] = user;
       data['sweetBoxType'] = sweetboxtype;

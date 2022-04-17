@@ -16,7 +16,7 @@ router.all('*', cors(corsOption));
 router.delete('/:id', verify, async(req, res, next) => {
   // delete order
   try {
-    const resp = await controller.deleteOrderById(req.params.id, req.user);
+    const resp = await controller.trashedOrderById(req.params.id, req.user);
     if (resp) {
       res.status(200).json({ status: true, message: "Order successfully deleted" });
     } else {
@@ -33,7 +33,7 @@ router.delete('/admin-delete/bulk/delete/:ids', [verifyAdmin, parser.none()], as
   }
   
   try {
-    const resp = await controller.deleteOrderStatusOnBulkOrderNumber(req);
+    const resp = await controller.trashedOrderStatusOnBulkOrderNumber(req);
     res.status(200).json(resp)
   } catch(err) {
     res.status(400).json({status: false, message: err});

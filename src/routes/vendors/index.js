@@ -14,6 +14,21 @@ router.all('*', cors(corsOption));
 router.delete('/:id', verify, async(req, res, next) => {
   // delete vendor
   try {
+    const resp = await controller.softDeleteVendorById(req.params.id);
+    if (resp) {
+      res.status(200).json({ status: true, message: "Vendor successfully removed" });
+    } else {
+      res.status(500).json({status: false, message: "Error removed vendor, please try again later"});
+    }
+  } catch(err) {
+    console.log(err)
+    res.status(500).json({status: false, message: err});
+  }
+});
+
+router.delete('/admin/:id', verify, async(req, res, next) => {
+  // delete vendor
+  try {
     const resp = await controller.deleteVendor(req.params.id);
     if (resp) {
       res.status(200).json({ status: true, message: "Vendor successfully deleted" });
@@ -102,11 +117,21 @@ router.get('/:id', async(req, res, next) => {
   }
 });
 
+router.get('/filters/bulk', async(req, res, next) => {
+  // get vendors
+  try {
+    const vendors = await controller.getVendorsByIds(req.query.ids);
+    res.status(200).json(vendors)
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
 router.get('/', verifyAdmin, async(req, res, next) => {
   // get vendors
   if (req.query.id) {
     try {
-      const vendor = await controller.getVendorById(req.params.id);
+      const vendor = await controller.getActiveVendorById(req.params.id);
       res.status(200).json(vendor)
     } catch(err) {
       res.status(500).json({status: false, message: err})
