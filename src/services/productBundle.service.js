@@ -2,6 +2,7 @@ const ProductBundle = require('../pg/models/ProductBundles');
 const includes = ['productBundleStatus', 'productBundleProductItem'];
 const orderBy = [['updatedAt', 'DESC'], ['createdAt', 'DESC']]
 const { Op } = require('sequelize');
+const { TRASHED_STATUS } = require('../constants');
 
 const createProductBundle = async (value) => {
   if (value) {
@@ -30,6 +31,17 @@ const deleteProductBundleById = async(id) => {
   } else {
     return { code: 500, status: false, message: "Invalid product bundle" }
   }
+}
+
+const softDeleteProductBundleById = async(id) => {
+  return ProductBundle.update({
+      'status': TRASHED_STATUS,
+  },
+  {
+      where: {
+          id: id
+      }
+  });
 }
 
 const saveProductBundle = async (value) => {
@@ -122,6 +134,7 @@ const getActiveProductBundleByProductItemId = async (id) => {
 module.exports = {
     createProductBundle,
     deleteProductBundleById,
+    softDeleteProductBundleById,
     saveProductBundle,
     getProductBundleByProductItemId,
     getActiveProductBundleByProductItemId,

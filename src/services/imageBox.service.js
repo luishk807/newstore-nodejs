@@ -3,6 +3,7 @@ const ImageBoxImages = require('../pg/models/ImageBoxImages');
 const parser = require('../middlewares/multerParser');
 const uuid = require('uuid');
 const config = require('../config');
+const { TRASHED_STATUS } = require('../constants');
 const s3 = require('../services/storage.service');
 const aw3Bucket = `${config.s3.bucketName}/slideImages`;
 const AWS_BUCKET_NAME = config.s3.bucketName;
@@ -44,6 +45,19 @@ const deleteImageBox = async(id) => {
   }
 }
 
+const softDeleteImageBoxById = async(id) => {
+  return await DeliveryServiceGroupCost.update(
+    {
+      'status': TRASHED_STATUS,
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
+}
+
 const searchImageBoxById = async (id) => {
   return await ImageBox.findOne({ where: { id: id}, include: includes});
 }
@@ -64,6 +78,7 @@ const searchActiveImageBoxByKey = async(key) => {
 
 module.exports = {
   deleteImageBox,
+  softDeleteImageBoxById,
   searchImageBoxById,
   searchImageBoxByKey,
   searchActiveImageBoxByKey

@@ -1,18 +1,45 @@
 const Category = require('../pg/models/Categories');
 const includes = ['categoryStatus'];
+const { TRASHED_STATUS } = require('../constants');
 const { returnSlugName } = require('../utils');
 
 const deleteCategoryById = async(id) => {
-    const category = await Category.findOne({ where: {id: id}})
+    const item = await Category.findOne({ where: {id: id}})
+    if (item) {
+        return await Category.destroy({
+            where: {
+                id: id
+            }
+        })
+    } else {
+        return {code: 500, status: false, message: 'Invalid category'};
+    }
+}
 
+const softDeleteCategoryById = async(id) => {
+    const category = await Category.findOne({ where: {id: id}})
     if (category) {
-      return await Category.update({
-          status: 2
-      },{
-        where: {
-          id: id
-        }
-      })
+        const deleteCategory = await Category.update({
+            'status': TRASHED_STATUS,
+        },
+        {
+            where: {
+                id: id
+            }
+        });
+        if (deleteCategory) {
+            return {
+              code: 200, 
+              status: true,
+              message: "Category deleted"
+            }
+          } else {
+            return {
+              code: 400, 
+              status: false,
+              message: "ERROR: Unable to delete category"
+            }
+          }
     } else {
       return { code: 500, status: false, message: "Invalid category" }
     }
@@ -115,5 +142,6 @@ module.exports = {
     getCategoryById,
     createCategory,
     deleteCategoryById,
+    softDeleteCategoryById,
     setPriority
 }

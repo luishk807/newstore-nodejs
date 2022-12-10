@@ -5,6 +5,7 @@ module.exports = {
     getCategoryById: category.getCategoryById,
     createCategory: category.createCategory,
     deleteCategoryById: category.deleteCategoryById,
+    softDeleteCategoryById: category.softDeleteCategoryById,
     saveCategories: category.saveCategories,
     saveCategory: category.saveCategory,
     setPriority: category.setPriority
