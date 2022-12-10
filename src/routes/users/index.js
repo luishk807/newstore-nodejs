@@ -17,7 +17,7 @@ router.all('*', cors(corsOption));
 router.delete('/:id',verifyAdmin, async(req, res, next) => {
 
   try {
-    const user = await controller.deleteById(req.params.id)
+    const user = await controller.trashedUserById(req.params.id)
     if (user.status) {
       res.status(200).json({status: true, message: "User succesfully deleted"});
     } else {
@@ -81,8 +81,7 @@ router.post('/', [parser.single('image')], async(req, res, next) => {
 
   try {
     const user = await controller.create(body, req.file, config.adminRoles.includes(userRole));
-    
-    if (user) {
+    if (user.status) {
       res.status(200).json({status: true, message: "User succesfully created"});
     } else {
       res.status(400).json({status: false, message: "Unable to create user, please try again later"});
@@ -100,7 +99,30 @@ router.get('/:id', [verify], async(req, res, next) => {
   res.json(user);
 });
 
+router.get('/admin/:id', [verifyAdmin], async(req, res, next) => {
+  const user = await controller.findAdminById(req.params.id);
+  res.json(user);
+});
+
 router.get('/all/users', [verifyAdmin], async(req, res, next) => {
+  try {
+    const user = await controller.getAllActiveUsers(req);
+    res.status(200).json(user)
+  } catch(err) {
+    res.status(500).json({status: false, message: err})
+  }
+});
+
+router.get('/admin/users/pages/all', [verifyAdmin, parser.none()], async(req, res, next) => {
+  try {
+    const order = await controller.getAllActiveUsersWithFilters(req.user, req.query);
+    res.status(200).json(order)
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
+router.get('/all/entire/users', [verifyAdmin], async(req, res, next) => {
   try {
     const user = await controller.getAllUsers(req);
     res.status(200).json(user)
@@ -111,10 +133,10 @@ router.get('/all/users', [verifyAdmin], async(req, res, next) => {
 
 router.get('/', [verify], async(req, res, next) => {
   try {
-    const user = await controller.findById(req.user.id);
+    const user = await controller.findActiveById(req.user.id);
     res.status(200).json(user)
   } catch(err) {
-    res.status(404).json({status:false, message: err})
+    res.status(400).json({status:false, message: err})
   }
 });
 

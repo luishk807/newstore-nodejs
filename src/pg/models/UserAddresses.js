@@ -6,6 +6,7 @@ const User = require('./Users');
 const Country = require('./Countries');
 const Province = require('./Provinces');
 const District = require('./Districts');
+const Statuses = require('./Statuses');
 const Zone = require('./Zones');
 const Corregimiento = require('./Corregimientos');
 const UserAddress = sequelize.define('user_addresses', {
@@ -72,6 +73,10 @@ const UserAddress = sequelize.define('user_addresses', {
     type: Sequelize.BIGINT,
     field: 'userId'
   },
+  status: {
+    type: Sequelize.BIGINT,
+    field: 'statusId'
+  },
 });
 
 UserAddress.belongsTo(User, { foreignKey: 'userId', as: 'addressesUsers'})
@@ -87,5 +92,7 @@ UserAddress.belongsTo(Province, { foreignKey: 'provinceId', as: 'addressProvince
 UserAddress.belongsTo(Corregimiento, { foreignKey: 'corregimientoId', as: 'addressCorregimiento'});
 
 User.hasMany(UserAddress, { foreignKey: 'userId', as: 'userAddresses' })
+
+UserAddress.belongsTo(Statuses, { foreignKey: 'statusId', as: 'userAddressStatus'});
 
 module.exports = UserAddress;

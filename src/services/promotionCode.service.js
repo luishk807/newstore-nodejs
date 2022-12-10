@@ -1,5 +1,6 @@
 const PromotionCode = require('../pg/models/PromotionCodes');
 const { Op } = require('sequelize');
+const { TRASHED_STATUS } = require('../constants');
 const { paginate } = require('../utils');
 const includes = ['promotionCodeStatus'];
 
@@ -11,6 +12,35 @@ const deletePromotionCode = async (id) => {
               id: id
           }
       })
+  } else {
+      return {code: 500, status: false, message: 'Invalid promotion'};
+  }
+}
+
+const softDeletePromotionCodeById = async (id) => {
+  const item = await PromotionCode.findOne({ where: {id: id}})
+  if (item) {
+    const softDelete = await PromotionCode.update({
+        'statusId': TRASHED_STATUS,
+    },
+    {
+        where: {
+            id: id
+        }
+    });
+    if (softDelete) {
+      return {
+        code: 200, 
+        status: true,
+        message: "Promotion deleted"
+      }
+    } else {
+      return {
+        code: 400, 
+        status: false,
+        message: "ERROR: Unable to delete promotion"
+      }
+    }
   } else {
       return {code: 500, status: false, message: 'Invalid promotion'};
   }
@@ -148,11 +178,21 @@ const getPromotionCodeByIds = async (ids, page = null, isActive = false) => {
     }
 }
 
-const getPromotionCodeByCode = async (code) => {
-  return await PromotionCode.findOne({where: {
+const getPromotionCodeByCode = async (code, isActive = false) => {
+  let query = {
     promoCode: code,
-    statusId: 1
-  }});
+  }
+
+  if (isActive) {
+    query = {
+      ...query,
+      statusId: 1
+    }
+  }
+
+  return await PromotionCode.findOne({
+    where: query
+  });
 }
 
 const getPromotionCodes = async (page = null, isActive = false) => {
@@ -162,7 +202,10 @@ const getPromotionCodes = async (page = null, isActive = false) => {
 
     if (isActive) {
       query = {
-        ...query
+        ...query,
+        where: {
+          statusId: 1
+        }
       }
     }
 
@@ -187,5 +230,6 @@ module.exports = {
     getPromotionCodeByIds,
     getPromotionCodes,
     getPromotionCodeByCode,
-    deletePromotionCode
+    deletePromotionCode,
+    softDeletePromotionCodeById
 }

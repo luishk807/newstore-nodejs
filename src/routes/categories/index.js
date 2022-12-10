@@ -9,6 +9,16 @@ router.all('*', cors());
 router.delete('/:id', verifyAdmin, async(req, res, next) => {
   // delete item
   try {
+    const resp = await controller.softDeleteCategoryById(req.params.id);
+    res.status(resp.code).json(resp);
+  } catch(err) {
+    res.status(500).json({status: false, message: err});
+  }
+});
+
+router.delete('/admin/:id', verifyAdmin, async(req, res, next) => {
+  // delete item
+  try {
     const resp = await controller.deleteCategoryById(req.params.id);
     
     if (resp) {

@@ -5,12 +5,16 @@ const s3 = require('../services/storage.service');
 const config = require('../config');
 const uuid = require('uuid');
 const aw3Bucket = `${config.s3.bucketName}/users`;
+// TODO: failing with useraddresses
 const includes = ['useStatus','userRoles', 'userAddresses'];
 const { Op } = require('sequelize');
 const { callHook } = require('../utils/hooks');
 const HOOKNAMES = require('../constants/hooknames');
+const { TRASHED_STATUS } = require('../constants');
+const { paginate } = require('../utils');
 const { getGlobalLogger } = require('../utils/logger.utils');
 const logger  = getGlobalLogger();
+const LIMIT = config.defaultLimit;
 
 const sendToHook = async (eventName, params) => {
     try {
@@ -24,19 +28,30 @@ const sendToHook = async (eventName, params) => {
 const deleteById = async (id) => {
     const user = await User.findOne({ where: { id: id } });
     if (user) {
-        const userImage = user.img;
-        const deletedUser = await User.destroy({ where: { id: user.id } });
+        const cancelledUser = await User.delete({ where: { id: user.id } });
         sendToHook('delete', { id: user.id });
-        if (deletedUser) {
-            const result = await deleteFromStorage(userImage);
-            if (result.status) {
-                return { status: true, message: "User successfully deleted" };
-            } else {
-                return { status: true, message: "User deleted, but error on deleting image!" }
-            }
+        if (cancelledUser) {
+          return { status: true, message: "User successfully deleted" };
+        } else {
+          return { status: true, message: "User deleted, but error on deleting image!" }
         }
     }
     return { status: false, message: "User does not exist", notFound: true };
+}
+
+const trashedUserById = async (id) => {
+  const user = await User.findOne({ where: { id: id } });
+  if (user) {
+      const cancelledUser = await User.update({
+        status: TRASHED_STATUS,
+      },{ where: { id: user.id } });
+      if (cancelledUser) {
+        return { status: true, message: "User successfully deleted" };
+      } else {
+        return { status: true, message: "User deleted, but error on deleting image!" }
+      }
+  }
+  return { status: false, message: "User does not exist", notFound: true };
 }
 
 const deleteFromStorage = async (fileKey) => {
@@ -69,6 +84,39 @@ const findById = async(id) => {
       ],
       include: includes
     });
+}
+
+const findAdminById = async(id) => {
+  return await User.findOne({
+    where:{
+      id: id
+    },
+    attributes: [
+      'id',
+      'first_name',
+      'last_name',
+      'email',
+      'mobile',
+      'userRole',
+      'phone',
+      'img',
+      'status',
+      'gender',
+    ],
+    include: includes
+  });
+}
+
+const findActiveById = async(id) => {
+  return await User.findOne({
+    where:{
+      statusId: {
+        [Op.ne]: TRASHED_STATUS,
+      },  
+      id: id
+    },
+    include: includes
+  });
 }
 
 const getAllUsers = async(req) => {
@@ -104,10 +152,130 @@ const getAllUsers = async(req) => {
   return await User.findAll(query)
 }
 
+const getAllActiveUsers = async(req) => {
+  let query = {}
+  if (req.user) {
+    query = {
+      where: {
+        status: {
+          [Op.ne]: TRASHED_STATUS
+        },
+        id: { 
+          [Op.ne]: req.user.id 
+        } // This does not work
+      },
+      include: includes,
+    };
+  } else {
+    query = {
+      include: includes
+    };
+  }
+
+  query['order'] = [
+    ['createdAt', 'DESC'],
+    ['updatedAt', 'DESC'],
+  ]
+  query['attributes'] = [
+    'first_name',
+    'id',
+    'last_name',
+    'email',
+    'createdAt',
+    'status'
+  ]
+
+  return await User.findAll(query)
+}
+
+const getAllActiveUsersWithFilters = async(user, filter) => {
+    // pagination doesn't work with hasMany association, in this case remove userAddress
+    const includes = ['useStatus', 'userRoles'];
+    let query = {}
+    if (user) {
+      query = {
+        where: {
+          status: {
+            [Op.ne]: TRASHED_STATUS
+          },
+          id: { 
+            [Op.ne]: user.id 
+          } // This does not work
+        },
+        include: includes,
+      };
+    } else {
+      query = {
+        include: includes
+      };
+    }
+
+    const page = filter.page;
+
+    const limit = filter.limit ? filter.limit : LIMIT;
+
+    const sortBy = filter.sortBy ? filter.sortBy : null;
+
+    query['order'] = [
+      ['createdAt', 'DESC'],
+      ['updatedAt', 'DESC'],
+    ]
+    query['attributes'] = [
+      'first_name',
+      'id',
+      'last_name',
+      'email',
+      'createdAt',
+      'status'
+    ]
+
+    if (sortBy) {
+        switch(sortBy) {
+            case 'date_new': {
+                orderBy = [
+                    ['createdAt', 'DESC'],
+                ]
+                break;
+            }
+            case 'date_old': {
+                orderBy = [
+                    ['createdAt', 'ASC'],
+                ]
+                break;
+            }
+        }
+    } else {
+        orderBy = [
+            ['updatedAt', 'DESC'],
+            ['createdAt', 'DESC'],
+        ]
+    }
+
+    if (page) {
+        query = {
+            ...query,
+            distinct: true,
+            order: orderBy,
+            limit: limit,
+            offset: paginate(page, limit),
+        }
+        return await User.findAndCountAll(query);
+    } else {
+        query = {
+            ...query,
+            order: orderBy,
+        }
+        return await User.findAll(query);
+    }
+}
+
 const isEmailTaken = async(email, id = null) => {
 
   const where = {
-    email: email
+    email: email,
+    status: {
+      [Op.ne]: 5
+    }
   }
 
   if (id) {
@@ -201,7 +369,9 @@ const update = async(body, id, file, isAdmin = false) => {
 }
 
 const create = async (user, file, isAdmin = false) => {
-    const count = await User.count({ where: { email: user.email } } );
+    const count = await User.count({ where: { email: user.email, statusId: {
+      [Op.ne]: TRASHED_STATUS
+    } } } );
     if (count) {
         return { status: false, message: 'Email already registered' };
     } else {
@@ -263,9 +433,14 @@ const create = async (user, file, isAdmin = false) => {
 
 module.exports = {
     findById,
+    findAdminById,
+    findActiveById,
     isEmailTaken,
     getAllUsers,
+    getAllActiveUsers,
+    getAllActiveUsersWithFilters,
     deleteById,
+    trashedUserById,
     create,
     update
 }

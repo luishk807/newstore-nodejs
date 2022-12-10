@@ -1,6 +1,7 @@
 const DeliveryOption = require('../pg/models/DeliveryOptions');
 const includes = ['deliveryOptionStatus', 'deliveryOptionDeliveryServiceGroupCost'];
 const { Op } = require('sequelize');
+const { TRASHED_STATUS } = require('../constants');
 
 const createDeliveryOption = async(obj) => {
   let total = 0;
@@ -38,6 +39,19 @@ const deleteDeliveryOptionById = async(id) => {
   })
 }
 
+const softDeleteDeliveryOptionById = async(id) => {
+  return await DeliveryOption.update(
+    {
+      'status': TRASHED_STATUS,
+    },
+    {
+      where: {
+        id: id
+      }
+    }
+  )
+}
+
 const getDeliveryOptionById = async(id) => {
     if (id) {
         return await DeliveryOption.findOne({ where: { id: id }, include: includes});
@@ -53,6 +67,7 @@ module.exports = {
     createDeliveryOption,
     saveDeliveryOption,
     deleteDeliveryOptionById,
+    softDeleteDeliveryOptionById,
     getDeliveryOptionById,
     getDeliveryOptions
 }
