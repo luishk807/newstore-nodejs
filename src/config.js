@@ -23,7 +23,7 @@ const config = {
       'https://avenidaz-dev.herokuapp.com',
       'https://avenidaz-master.herokuapp.com',
       'https://avenidaz-sample.herokuapp.com',
-      'https://avenidaz-feature.herokuapp.com/'
+      'https://avenidaz-feature.herokuapp.com'
     ]
   },
   db: {
