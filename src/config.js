@@ -7,7 +7,6 @@ const config = {
     whitelist: [
       'http://localhost:3000',
       'http://localhost:8080',
-      'https://avenidaz.herokuapp.com/', 
       'https://avenidaz.com', 
       'http://avenidaz.com', 
       'http://www.avenidaz.com', 
@@ -18,7 +17,13 @@ const config = {
       'https://beta.avenidaz.com',
       'http://beta.avenidaz.com',
       'http://feature507.avenidaz.com',
-      'https://feature507.avenidaz.com'
+      'https://feature507.avenidaz.com',
+      'https://avenidaz.herokuapp.com/', 
+      'https://avenidaz-beta.herokuapp.com',
+      'https://avenidaz-dev.herokuapp.com',
+      'https://avenidaz-master.herokuapp.com',
+      'https://avenidaz-sample.herokuapp.com',
+      'https://avenidaz-feature.herokuapp.com'
     ]
   },
   db: {
